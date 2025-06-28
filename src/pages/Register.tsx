@@ -1,12 +1,13 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,10 +18,33 @@ const Register = () => {
     confirmPassword: "",
     agreeToTerms: false
   });
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/app');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Register attempt:", formData);
+    
+    if (formData.password !== formData.confirmPassword) {
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    const { error } = await signUp(formData.email, formData.password, formData.name);
+    
+    if (!error) {
+      // Stay on register page to show success message
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -43,6 +67,7 @@ const Register = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -54,6 +79,7 @@ const Register = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -66,6 +92,7 @@ const Register = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -73,6 +100,7 @@ const Register = () => {
                   size="icon"
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -87,20 +115,29 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                 required
+                disabled={isLoading}
               />
+              {formData.password !== formData.confirmPassword && formData.confirmPassword && (
+                <p className="text-sm text-destructive">Passwords do not match</p>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="terms"
                 checked={formData.agreeToTerms}
                 onCheckedChange={(checked) => setFormData({...formData, agreeToTerms: checked as boolean})}
+                disabled={isLoading}
               />
               <Label htmlFor="terms" className="text-sm">
                 I agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
               </Label>
             </div>
-            <Button type="submit" className="w-full" disabled={!formData.agreeToTerms}>
-              Create Account
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={!formData.agreeToTerms || formData.password !== formData.confirmPassword || isLoading}
+            >
+              {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
           <div className="mt-6 text-center text-sm">

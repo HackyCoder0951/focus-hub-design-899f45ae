@@ -21,19 +21,21 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-const navigation = [
-  { name: "Feed", href: "/app", icon: Activity },
-  { name: "Q&A", href: "/app/qa", icon: Book },
-  { name: "Resources", href: "/app/resources", icon: FileText },
-  { name: "Chat", href: "/app/chat", icon: MessageCircle },
-  { name: "Profile", href: "/app/profile", icon: User },
-  { name: "Settings", href: "/app/settings", icon: Settings },
-  { name: "Admin", href: "/app/admin", icon: Cog },
-];
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AppSidebar() {
   const { state } = useSidebar();
+  const { isAdmin } = useAuth();
+
+  const navigation = [
+    { name: "Feed", href: "/app", icon: Activity },
+    { name: "Q&A", href: "/app/qa", icon: Book },
+    { name: "Resources", href: "/app/resources", icon: FileText },
+    { name: "Chat", href: "/app/chat", icon: MessageCircle },
+    { name: "Profile", href: "/app/profile", icon: User },
+    { name: "Settings", href: "/app/settings", icon: Settings },
+    ...(isAdmin ? [{ name: "Admin", href: "/app/admin", icon: Cog }] : []),
+  ];
 
   return (
     <Sidebar collapsible="icon">

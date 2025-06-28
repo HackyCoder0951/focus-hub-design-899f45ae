@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -28,22 +30,32 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/app" element={<Layout />}>
-              <Route index element={<Feed />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="qa" element={<QandA />} />
-              <Route path="resources" element={<Resources />} />
-              <Route path="chat" element={<Chat />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="admin" element={<AdminDashboard />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/app" element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<Feed />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="qa" element={<QandA />} />
+                <Route path="resources" element={<Resources />} />
+                <Route path="chat" element={<Chat />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="admin" element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

@@ -1,11 +1,12 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,10 +14,28 @@ const Login = () => {
     email: "",
     password: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      navigate('/app');
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);
+    setIsLoading(true);
+    
+    const { error } = await signIn(formData.email, formData.password);
+    
+    if (!error) {
+      navigate('/app');
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -39,6 +58,7 @@ const Login = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -51,6 +71,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
                   required
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
@@ -58,6 +79,7 @@ const Login = () => {
                   size="icon"
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -68,8 +90,8 @@ const Login = () => {
                 Forgot password?
               </Link>
             </div>
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-6 text-center text-sm">
