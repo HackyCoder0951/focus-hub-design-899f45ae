@@ -89,7 +89,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     }
   }, [editing]);
 
-  // Fetch comments for this post
+  // Fetch comments for this post (threaded)
   useEffect(() => {
     const fetchComments = async () => {
       const { data, error } = await supabase
@@ -214,6 +214,152 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     if (commentInputRef.current) commentInputRef.current.focus();
   };
 
+  // Helper: recursively render comments and replies
+  const CommentThread = ({ comments, parentId, user, onRefresh }: any) => {
+    return comments
+      .filter((c: any) => c.parent_id === parentId)
+      .map((comment: any) => <CommentItem key={comment.id} comment={comment} comments={comments} user={user} onRefresh={onRefresh} />);
+  };
+
+  const CommentItem = ({ comment, comments, user, onRefresh }: any) => {
+    const [editing, setEditing] = useState(false);
+    const [editContent, setEditContent] = useState(comment.content);
+    const [replying, setReplying] = useState(false);
+    const [replyContent, setReplyContent] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [likeCount, setLikeCount] = useState(comment.likes_count || 0);
+    const [liked, setLiked] = useState(false);
+
+    // Check if user liked this comment
+    useEffect(() => {
+      const checkLiked = async () => {
+        if (!user) return;
+        const { data } = await supabase
+          .from('comment_likes')
+          .select('id')
+          .eq('comment_id', comment.id)
+          .eq('user_id', user.id)
+          .single();
+        setLiked(!!data);
+      };
+      checkLiked();
+    }, [user, comment.id]);
+
+    const handleLike = async () => {
+      if (!user) return;
+      setLoading(true);
+      if (liked) {
+        await supabase.from('comment_likes').delete().eq('comment_id', comment.id).eq('user_id', user.id);
+        setLikeCount((c: number) => c - 1);
+        setLiked(false);
+      } else {
+        await supabase.from('comment_likes').insert({ comment_id: comment.id, user_id: user.id });
+        setLikeCount((c: number) => c + 1);
+        setLiked(true);
+      }
+      setLoading(false);
+      if (onRefresh) onRefresh();
+    };
+
+    const handleEdit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setLoading(true);
+      await supabase.from('comments').update({ content: editContent }).eq('id', comment.id);
+      setEditing(false);
+      setLoading(false);
+      if (onRefresh) onRefresh();
+    };
+
+    const handleDelete = async () => {
+      setLoading(true);
+      await supabase.from('comments').delete().eq('id', comment.id);
+      setLoading(false);
+      if (onRefresh) onRefresh();
+    };
+
+    const handleReply = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!user || !replyContent.trim()) return;
+      setLoading(true);
+      await supabase.from('comments').insert({
+        post_id: comment.post_id,
+        user_id: user.id,
+        content: replyContent.trim(),
+        parent_id: comment.id
+      });
+      setReplyContent("");
+      setReplying(false);
+      setLoading(false);
+      if (onRefresh) onRefresh();
+    };
+
+    const isOwner = user && user.id === comment.user_id;
+
+    return (
+      <div className="flex gap-2 items-start mt-2">
+        <Avatar className="h-7 w-7">
+          <AvatarImage src={comment.profiles?.avatar_url} />
+          <AvatarFallback>{comment.profiles?.full_name?.charAt(0) || "?"}</AvatarFallback>
+        </Avatar>
+        <div className="bg-muted rounded-lg px-3 py-2 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-xs">{comment.profiles?.full_name || "Unknown User"}</span>
+            <span className="text-xs text-muted-foreground">{formatTimestamp(comment.created_at)}</span>
+          </div>
+          {editing ? (
+            <form onSubmit={handleEdit} className="flex flex-col gap-2 mt-1">
+              <Textarea
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                rows={2}
+                maxLength={500}
+                className="w-full rounded border p-2 text-sm"
+                disabled={loading}
+              />
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" type="submit" disabled={loading}>Save</Button>
+                <Button size="sm" variant="outline" type="button" onClick={() => setEditing(false)} disabled={loading}>Cancel</Button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-sm mt-1">{comment.content}</div>
+          )}
+          <div className="flex gap-2 mt-1 items-center">
+            <Button size="sm" variant="ghost" onClick={handleLike} disabled={loading} className={liked ? "text-primary" : ""}>
+              <Heart className="h-3 w-3" /> {likeCount}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setReplying(!replying)} disabled={loading}>Reply</Button>
+            {isOwner && !editing && (
+              <>
+                <Button size="sm" variant="ghost" onClick={() => setEditing(true)} disabled={loading}>Edit</Button>
+                <Button size="sm" variant="ghost" onClick={handleDelete} disabled={loading}>Delete</Button>
+              </>
+            )}
+          </div>
+          {replying && (
+            <form onSubmit={handleReply} className="flex gap-2 mt-2">
+              <Textarea
+                value={replyContent}
+                onChange={e => setReplyContent(e.target.value)}
+                rows={2}
+                maxLength={500}
+                className="w-full rounded border p-2 text-sm"
+                disabled={loading}
+                placeholder="Write a reply..."
+              />
+              <Button size="sm" type="submit" disabled={loading || !replyContent.trim()}>Reply</Button>
+              <Button size="sm" variant="outline" type="button" onClick={() => setReplying(false)} disabled={loading}>Cancel</Button>
+            </form>
+          )}
+          {/* Render replies recursively */}
+          <div className="pl-6">
+            <CommentThread comments={comments} parentId={comment.id} user={user} onRefresh={onRefresh} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
@@ -321,23 +467,17 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             </div>
             {/* Comments Section */}
             <div className="mt-3">
-              {comments.length > 0 && (
+              {comments.filter(c => !c.parent_id).length > 0 && (
                 <div className="space-y-3">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-2 items-start">
-                      <Avatar className="h-7 w-7">
-                        <AvatarImage src={comment.profiles?.avatar_url} />
-                        <AvatarFallback>{comment.profiles?.full_name?.charAt(0) || "?"}</AvatarFallback>
-                      </Avatar>
-                      <div className="bg-muted rounded-lg px-3 py-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-xs">{comment.profiles?.full_name || "Unknown User"}</span>
-                          <span className="text-xs text-muted-foreground">{formatTimestamp(comment.created_at)}</span>
-                        </div>
-                        <div className="text-sm mt-1">{comment.content}</div>
-                      </div>
-                    </div>
-                  ))}
+                  <CommentThread comments={comments} parentId={null} user={user} onRefresh={() => {
+                    // refetch comments
+                    supabase
+                      .from('comments')
+                      .select(`*, profiles:profiles(full_name, avatar_url)`)
+                      .eq('post_id', post.id)
+                      .order('created_at', { ascending: true })
+                      .then(({ data }) => setComments(data || []));
+                  }} />
                 </div>
               )}
               {user && (
