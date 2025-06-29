@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,56 +6,26 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, Plus, TrendingUp, ChevronUp, ChevronDown, MessageCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
 const QandA = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      const { data, error } = await supabase
+        .from('questionanswers')
+        .select('*, profiles: user_id (full_name, avatar_url)')
+        .order('created_at', { ascending: false });
+      if (!error && data) setQuestions(data);
+      setLoading(false);
+    };
+    fetchQuestions();
+  }, []);
+
   const categories = ["All", "React", "JavaScript", "Python", "Design", "Career"];
-  
-  const questions = [
-    {
-      id: 1,
-      title: "How to handle state management in large React applications?",
-      content: "I'm working on a large React app and struggling with state management. What are the best practices?",
-      author: {
-        name: "Alex Thompson",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face"
-      },
-      votes: 15,
-      answers: 8,
-      tags: ["React", "State Management"],
-      timestamp: "2 hours ago",
-      trending: true
-    },
-    {
-      id: 2,
-      title: "Best practices for API design in Node.js?",
-      content: "Looking for recommendations on structuring RESTful APIs with Node.js and Express.",
-      author: {
-        name: "Maria Garcia",
-        avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face"
-      },
-      votes: 23,
-      answers: 12,
-      tags: ["Node.js", "API", "Backend"],
-      timestamp: "4 hours ago",
-      trending: false
-    },
-    {
-      id: 3,
-      title: "How to transition from design to frontend development?",
-      content: "I'm a UI/UX designer wanting to learn frontend development. Where should I start?",
-      author: {
-        name: "Sarah Chen",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face"
-      },
-      votes: 8,
-      answers: 15,
-      tags: ["Career", "Frontend", "Design"],
-      timestamp: "1 day ago",
-      trending: false
-    }
-  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -71,7 +40,6 @@ const QandA = () => {
           Ask Question
         </Button>
       </div>
-
       {/* Search and Filters */}
       <Card>
         <CardContent className="p-6">
@@ -99,7 +67,6 @@ const QandA = () => {
           </div>
         </CardContent>
       </Card>
-
       {/* Questions List */}
       <Tabs defaultValue="recent" className="space-y-6">
         <TabsList>
@@ -110,81 +77,64 @@ const QandA = () => {
           </TabsTrigger>
           <TabsTrigger value="unanswered">Unanswered</TabsTrigger>
         </TabsList>
-
         <TabsContent value="recent" className="space-y-4">
-          {questions.map((question) => (
-            <Card key={question.id} className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardContent className="p-6">
-                <div className="flex gap-4">
-                  {/* Vote Section */}
-                  <div className="flex flex-col items-center space-y-1 min-w-[60px]">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <ChevronUp className="h-4 w-4" />
-                    </Button>
-                    <span className="font-semibold text-lg">{question.votes}</span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Question Content */}
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-lg hover:text-primary">
-                            {question.title}
-                          </h3>
-                          {question.trending && (
-                            <Badge variant="destructive" className="text-xs">
-                              <TrendingUp className="h-3 w-3 mr-1" />
-                              Trending
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-muted-foreground text-sm line-clamp-2">
-                          {question.content}
-                        </p>
-                      </div>
+          {loading ? (
+            <div className="text-center py-10">Loading...</div>
+          ) : questions.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">No questions found.</div>
+          ) : (
+            questions.map((question) => (
+              <Card key={question.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex gap-4">
+                    {/* Vote Section */}
+                    <div className="flex flex-col items-center space-y-1 min-w-[60px]">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <span className="font-semibold text-lg">{question.votes ?? 0}</span>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {question.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={question.author.avatar} />
-                            <AvatarFallback>{question.author.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span>{question.author.name}</span>
-                        </div>
-                        <span>{question.timestamp}</span>
+                    {/* Question Content */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg hover:text-primary">
+                          {question.question}
+                        </h3>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{question.answers} answers</span>
+                      <p className="text-muted-foreground text-sm line-clamp-2">
+                        {question.answer || "No answer yet."}
+                      </p>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={question.profiles?.avatar_url} />
+                              <AvatarFallback>{question.profiles?.full_name?.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span>{question.profiles?.full_name}</span>
+                          </div>
+                          <span>{question.created_at ? new Date(question.created_at).toLocaleDateString() : ''}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="h-4 w-4" />
+                          <span>{question.answers_count ?? 0} answers</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))
+          )}
         </TabsContent>
-
         <TabsContent value="trending">
           <div className="text-center py-8">
             <p className="text-muted-foreground">Trending questions will appear here</p>
           </div>
         </TabsContent>
-
         <TabsContent value="unanswered">
           <div className="text-center py-8">
             <p className="text-muted-foreground">Unanswered questions will appear here</p>
