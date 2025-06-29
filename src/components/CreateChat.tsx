@@ -91,24 +91,29 @@ const CreateChat = ({ onChatCreated }: CreateChatProps) => {
 
       if (chatError) throw chatError;
 
-      // Add current user to chat
-      await supabase
+      // Add current user (creator) to chat
+      const { error: creatorError } = await supabase
         .from('chat_members')
         .insert({
           chat_id: chat.id,
           user_id: user.id
         });
+      if (creatorError) console.error('Error adding creator to chat:', creatorError);
 
-      // Add selected users to chat
-      const memberPromises = selectedUsers.map(userId =>
-        supabase
-          .from('chat_members')
-          .insert({
-            chat_id: chat.id,
-            user_id: userId
-          })
-      );
-
+      // Add selected users (excluding yourself) to chat
+      const memberPromises = selectedUsers
+        .filter(userId => userId !== user.id)
+        .map(userId =>
+          supabase
+            .from('chat_members')
+            .insert({
+              chat_id: chat.id,
+              user_id: userId
+            })
+            .then(({ error }) => {
+              if (error) console.error('Error adding member to chat:', error, userId);
+            })
+        );
       await Promise.all(memberPromises);
 
       // Reset form

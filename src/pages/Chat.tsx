@@ -314,17 +314,21 @@ const Chat = () => {
                         selectedChat === chat.id && "bg-muted"
                       )}
                     >
-                      <div className="relative">
-                        <Avatar>
-                          <AvatarImage src={chat.chat_members[0]?.profiles?.avatar_url} />
-                          <AvatarFallback>
-                            {isGroup ? <Users className="h-4 w-4" /> : displayName.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {isGroup && (
-                          <Badge variant="secondary" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
-                            {chat.chat_members.length}
-                          </Badge>
+                      <div className="relative flex items-center">
+                        {chat.is_group ? (
+                          <>
+                            <Users className="h-7 w-7 text-muted-foreground" />
+                            <Badge variant="secondary" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
+                              {chat.chat_members.length}
+                            </Badge>
+                          </>
+                        ) : (
+                          <Avatar>
+                            <AvatarImage src={chat.chat_members.find(m => m.user_id !== user?.id)?.profiles?.avatar_url} />
+                            <AvatarFallback className="text-xs">
+                              {chat.chat_members.find(m => m.user_id !== user?.id)?.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </AvatarFallback>
+                          </Avatar>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -357,33 +361,30 @@ const Chat = () => {
             <>
               {/* Chat Header */}
               <CardHeader className="flex-row items-center space-y-0 pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar>
-                      <AvatarImage src={otherMembers[0]?.profiles?.avatar_url} />
-                      <AvatarFallback>
-                        {currentChat.is_group ? <Users className="h-4 w-4" /> : getChatDisplayName(currentChat).charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    {currentChat.is_group && (
+                <div className="relative flex items-center">
+                  {currentChat.is_group ? (
+                    <>
+                      <Users className="h-10 w-10 text-muted-foreground" />
                       <Badge variant="secondary" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
                         {currentChat.chat_members.length}
                       </Badge>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{getChatDisplayName(currentChat)}</h3>
-                    {currentChat.is_group && (
-                      <p className="text-sm text-muted-foreground">
-                        {currentChat.chat_members.length} members
-                      </p>
-                    )}
-                  </div>
+                    </>
+                  ) : (
+                    <Avatar>
+                      <AvatarImage src={otherMembers[0]?.profiles?.avatar_url} />
+                      <AvatarFallback className="text-lg">
+                        {otherMembers[0]?.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
-                <div className="ml-auto">
-                  <Button size="icon" variant="ghost">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
+                <div>
+                  <h3 className="font-semibold">{getChatDisplayName(currentChat)}</h3>
+                  {currentChat.is_group && (
+                    <p className="text-sm text-muted-foreground">
+                      {currentChat.chat_members.length} members
+                    </p>
+                  )}
                 </div>
               </CardHeader>
 
