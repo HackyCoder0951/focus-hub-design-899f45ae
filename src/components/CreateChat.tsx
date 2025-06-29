@@ -140,7 +140,7 @@ const CreateChat = ({ onChatCreated }: CreateChatProps) => {
           <Plus className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>New Conversation</DialogTitle>
         </DialogHeader>
@@ -216,7 +216,7 @@ const CreateChat = ({ onChatCreated }: CreateChatProps) => {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user.avatar_url} />
-                    <AvatarFallback>{user.full_name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{user.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{user.full_name}</p>
@@ -238,23 +238,26 @@ const CreateChat = ({ onChatCreated }: CreateChatProps) => {
               <label className="text-sm font-medium">
                 {isGroup ? "Selected Members" : "Selected User"}
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
                 {selectedUsers.map(userId => {
                   const user = users.find(u => u.id === userId);
                   return (
-                    <Badge key={userId} variant="outline" className="gap-1">
-                      <Avatar className="h-4 w-4">
+                    <span key={userId} className="inline-flex items-center bg-muted rounded-full px-2 py-1">
+                      <Avatar className="h-6 w-6">
                         <AvatarImage src={user?.avatar_url} />
-                        <AvatarFallback className="text-xs">{user?.full_name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-xs">
+                          {user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </AvatarFallback>
                       </Avatar>
-                      {user?.full_name}
                       <button
                         onClick={() => handleUserToggle(userId)}
-                        className="ml-1 hover:text-destructive"
+                        className="ml-1 text-lg font-bold text-destructive hover:text-destructive/80 focus:outline-none"
+                        title="Remove"
+                        type="button"
                       >
                         ×
                       </button>
-                    </Badge>
+                    </span>
                   );
                 })}
               </div>
