@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -8,7 +7,7 @@ import {
   Book,
   FileText,
   Settings,
-  Cog
+  Cog,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,7 +23,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const { isAdmin } = useAuth();
 
   const navigation = [
@@ -40,6 +39,20 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
+        <div className="flex items-center justify-end p-2">
+          <button
+            onClick={toggleSidebar}
+            className="rounded hover:bg-muted transition-colors p-1 text-sidebar-foreground"
+            aria-label={state === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
+            style={{ background: 'transparent' }}
+          >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect y="6" width="28" height="2.5" rx="1.25" fill="currentColor" />
+              <rect y="13" width="28" height="2.5" rx="1.25" fill="currentColor" />
+              <rect y="20" width="28" height="2.5" rx="1.25" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
         <SidebarGroup>
           <SidebarGroupLabel>Focus</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -60,7 +73,17 @@ export function AppSidebar() {
                       }
                     >
                       <item.icon className="h-4 w-4" />
-                      {state === "expanded" && <span>{item.name}</span>}
+                      <span
+                        className={
+                          cn(
+                            "transition-opacity duration-300",
+                            state === "collapsed" ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto ml-2"
+                          )
+                        }
+                        style={{ display: state === "collapsed" ? 'none' : 'inline' }}
+                      >
+                        {item.name}
+                      </span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
