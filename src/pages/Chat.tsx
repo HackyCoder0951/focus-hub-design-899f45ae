@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,97 +6,69 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Send, Search, Plus, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Chat = () => {
-  const [selectedChat, setSelectedChat] = useState(1);
+  const { user } = useAuth();
+  const [chats, setChats] = useState<any[]>([]);
+  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  
-  const conversations = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face",
-      lastMessage: "Thanks for the help with the React component!",
-      timestamp: "2m ago",
-      online: true,
-      unread: 2
-    },
-    {
-      id: 2,
-      name: "Alex Chen",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-      lastMessage: "Let's schedule a meeting for tomorrow",
-      timestamp: "1h ago",
-      online: false,
-      unread: 0
-    },
-    {
-      id: 3,
-      name: "Maria Garcia",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-      lastMessage: "The design mockups look great!",
-      timestamp: "3h ago",
-      online: true,
-      unread: 1
-    },
-    {
-      id: 4,
-      name: "John Smith",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      lastMessage: "Can you review the pull request?",
-      timestamp: "1d ago",
-      online: false,
-      unread: 0
-    }
-  ];
+  const [loadingChats, setLoadingChats] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
-  const messages = [
-    {
-      id: 1,
-      sender: "Sarah Johnson",
-      content: "Hey! I saw your post about React state management. Could you help me with something?",
-      timestamp: "10:30 AM",
-      isOwn: false
-    },
-    {
-      id: 2,
-      sender: "You",
-      content: "Sure! What do you need help with?",
-      timestamp: "10:32 AM",
-      isOwn: true
-    },
-    {
-      id: 3,
-      sender: "Sarah Johnson",
-      content: "I'm having trouble with useEffect dependencies. The effect keeps running on every render.",
-      timestamp: "10:33 AM",
-      isOwn: false
-    },
-    {
-      id: 4,
-      sender: "You",
-      content: "That's a common issue! You probably need to add the dependencies to the dependency array or use useCallback for functions.",
-      timestamp: "10:35 AM",
-      isOwn: true
-    },
-    {
-      id: 5,
-      sender: "Sarah Johnson",
-      content: "Thanks for the help with the React component! That fixed it perfectly. 🎉",
-      timestamp: "10:45 AM",
-      isOwn: false
-    }
-  ];
+  useEffect(() => {
+    const fetchChats = async () => {
+      setLoadingChats(true);
+      const { data, error } = await supabase
+        .from('chats')
+        .select('*, chat_members(*, profiles: user_id (full_name, avatar_url))')
+        .order('created_at', { ascending: false });
+      if (!error && data) setChats(data);
+      setLoadingChats(false);
+    };
+    fetchChats();
+  }, []);
 
-  const currentConversation = conversations.find(c => c.id === selectedChat);
+  useEffect(() => {
+    if (!selectedChat) return;
+    const fetchMessages = async () => {
+      setLoadingMessages(true);
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*, profiles: user_id (full_name, avatar_url)')
+        .eq('chat_id', selectedChat)
+        .order('created_at', { ascending: true });
+      if (!error && data) setMessages(data);
+      setLoadingMessages(false);
+    };
+    fetchMessages();
+  }, [selectedChat]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      console.log("Sending message:", newMessage);
+    if (!newMessage.trim() || !user || !selectedChat) return;
+    const { error } = await supabase
+      .from('chat_messages')
+      .insert({
+        chat_id: selectedChat,
+        user_id: user.id,
+        content: newMessage
+      });
+    if (!error) {
       setNewMessage("");
+      // Refetch messages
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('*, profiles: user_id (full_name, avatar_url)')
+        .eq('chat_id', selectedChat)
+        .order('created_at', { ascending: true });
+      setMessages(data || []);
     }
   };
+
+  const currentChat = chats.find((c) => c.id === selectedChat);
 
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-12rem)]">
@@ -118,63 +89,57 @@ const Chat = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-1">
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  onClick={() => setSelectedChat(conversation.id)}
-                  className={cn(
-                    "flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-muted/50",
-                    selectedChat === conversation.id && "bg-muted"
-                  )}
-                >
-                  <div className="relative">
-                    <Avatar>
-                      <AvatarImage src={conversation.avatar} />
-                      <AvatarFallback>{conversation.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    {conversation.online && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold truncate">{conversation.name}</h4>
-                      <span className="text-xs text-muted-foreground">{conversation.timestamp}</span>
+              {loadingChats ? (
+                <div className="text-center py-10">Loading...</div>
+              ) : chats.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">No conversations found.</div>
+              ) : (
+                chats.map((chat) => {
+                  const member = chat.chat_members.find((m: any) => m.user_id !== user?.id);
+                  return (
+                    <div
+                      key={chat.id}
+                      onClick={() => setSelectedChat(chat.id)}
+                      className={cn(
+                        "flex items-center gap-3 p-4 cursor-pointer transition-colors hover:bg-muted/50",
+                        selectedChat === chat.id && "bg-muted"
+                      )}
+                    >
+                      <div className="relative">
+                        <Avatar>
+                          <AvatarImage src={member?.profiles?.avatar_url} />
+                          <AvatarFallback>{member?.profiles?.full_name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold truncate">{member?.profiles?.full_name || "Group Chat"}</h4>
+                          {/* Optionally show last message time */}
+                        </div>
+                        {/* Optionally show last message preview */}
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
-                  </div>
-                  {conversation.unread > 0 && (
-                    <Badge className="h-5 w-5 p-0 text-xs flex items-center justify-center">
-                      {conversation.unread}
-                    </Badge>
-                  )}
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
-
         {/* Chat Area */}
         <Card className="lg:col-span-2 flex flex-col">
-          {currentConversation ? (
+          {currentChat ? (
             <>
               {/* Chat Header */}
               <CardHeader className="flex-row items-center space-y-0 pb-3">
                 <div className="flex items-center gap-3">
                   <div className="relative">
                     <Avatar>
-                      <AvatarImage src={currentConversation.avatar} />
-                      <AvatarFallback>{currentConversation.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={currentChat.chat_members[0]?.profiles?.avatar_url} />
+                      <AvatarFallback>{currentChat.chat_members[0]?.profiles?.full_name?.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    {currentConversation.online && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
-                    )}
                   </div>
                   <div>
-                    <h3 className="font-semibold">{currentConversation.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {currentConversation.online ? "Online" : "Offline"}
-                    </p>
+                    <h3 className="font-semibold">{currentChat.chat_members[0]?.profiles?.full_name || "Group Chat"}</h3>
                   </div>
                 </div>
                 <div className="ml-auto">
@@ -183,41 +148,45 @@ const Chat = () => {
                   </Button>
                 </div>
               </CardHeader>
-
               {/* Messages */}
               <CardContent className="flex-1 overflow-y-auto space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex",
-                      message.isOwn ? "justify-end" : "justify-start"
-                    )}
-                  >
+                {loadingMessages ? (
+                  <div className="text-center py-10">Loading...</div>
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-10 text-muted-foreground">No messages yet.</div>
+                ) : (
+                  messages.map((message) => (
                     <div
+                      key={message.id}
                       className={cn(
-                        "max-w-[70%] rounded-lg p-3 space-y-1",
-                        message.isOwn
-                          ? "bg-primary text-primary-foreground ml-4"
-                          : "bg-muted mr-4"
+                        "flex",
+                        message.user_id === user?.id ? "justify-end" : "justify-start"
                       )}
                     >
-                      <p className="text-sm">{message.content}</p>
-                      <p
+                      <div
                         className={cn(
-                          "text-xs",
-                          message.isOwn
-                            ? "text-primary-foreground/70"
-                            : "text-muted-foreground"
+                          "max-w-[70%] rounded-lg p-3 space-y-1",
+                          message.user_id === user?.id
+                            ? "bg-primary text-primary-foreground ml-4"
+                            : "bg-muted mr-4"
                         )}
                       >
-                        {message.timestamp}
-                      </p>
+                        <p className="text-sm">{message.content}</p>
+                        <p
+                          className={cn(
+                            "text-xs",
+                            message.user_id === user?.id
+                              ? "text-primary-foreground/70"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {message.created_at ? new Date(message.created_at).toLocaleTimeString() : ""}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </CardContent>
-
               {/* Message Input */}
               <div className="p-4 border-t">
                 <form onSubmit={handleSendMessage} className="flex gap-2">
