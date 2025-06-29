@@ -351,8 +351,11 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             <div className="text-sm mt-1">{comment.content}</div>
           )}
           <div className="flex gap-2 mt-1 items-center">
-            <Button size="sm" variant="ghost" onClick={handleLike} disabled={loading} className={liked ? "text-primary" : ""}>
-              <Heart className={cn("h-3 w-3", liked && "fill-current text-red-500")} /> {likeCount}
+            <Button size="sm" variant="ghost" onClick={handleLike} disabled={loading} className={liked ? "text-red-500" : ""}>
+              <span className={cn("flex items-center gap-1", liked && "text-red-500")}> 
+                <Heart className={cn("h-3 w-3", liked && "fill-current text-red-500")} />
+                <span>{likeCount}</span>
+              </span>
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setReplying(!replying)} disabled={loading}>Reply</Button>
             {isOwner && !editing && (
