@@ -14,8 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+// import { Input } from "@/components/ui/input";
+// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
 interface Post {
@@ -46,7 +46,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [isLiking, setIsLiking] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const [deleting, setDeleting] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -76,14 +76,14 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   }, [user, post.id]);
 
   useEffect(() => {
-    if (!editOpen) {
+    if (!editing) {
       setEditLoading(false);
       // Remove pointer-events from all elements that might have it
       document.querySelectorAll('[style*="pointer-events: none"]').forEach(el => {
         (el as HTMLElement).style.pointerEvents = '';
       });
     }
-  }, [editOpen]);
+  }, [editing]);
 
   const handleLike = async () => {
     if (!user) {
@@ -141,12 +141,12 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     }
   };
 
-  const handleEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEdit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setEditLoading(true);
     await supabase.from('posts').update({ content: editContent, updated_at: new Date().toISOString() }).eq('id', post.id);
     setEditLoading(false);
-    setEditOpen(false);
+    setEditing(false);
     if (onPostUpdated) onPostUpdated();
   };
 
@@ -200,7 +200,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {isOwner && (
-                    <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setEditing(true); setEditContent(post.content); }}>Edit</DropdownMenuItem>
                   )}
                   {isOwner && (
                     <DropdownMenuItem onClick={() => setConfirmingDelete(true)} disabled={deleting}>Delete</DropdownMenuItem>
@@ -216,9 +216,34 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             </div>
             
             <div className="mt-3 space-y-3">
-              <p className="text-sm leading-relaxed">{post.content}</p>
-              
-              {post.media_url && (
+              {editing ? (
+                <form onSubmit={handleEdit} className="flex flex-col gap-2">
+                  <Textarea
+                    value={editContent}
+                    onChange={e => setEditContent(e.target.value)}
+                    rows={5}
+                    maxLength={1000}
+                    className="w-full rounded-lg border border-input p-3 text-base resize-none focus:ring-2 focus:ring-primary focus:border-primary bg-background"
+                    disabled={editLoading}
+                    placeholder="What do you want to talk about?"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{editContent.length}/1000</span>
+                    <div className="flex gap-2">
+                      <Button size="sm" type="submit" disabled={editLoading}>
+                        {editLoading ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : null}
+                        Save
+                      </Button>
+                      <Button size="sm" variant="outline" type="button" onClick={() => setEditing(false)} disabled={editLoading}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              ) : (
+                <p className="text-sm leading-relaxed">{post.content}</p>
+              )}
+              {post.media_url && !editing && (
                 <div className="rounded-lg overflow-hidden">
                   <img
                     src={post.media_url}
@@ -258,49 +283,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             </div>
           </div>
         </div>
-        <Dialog
-          open={editOpen}
-          onOpenChange={(open) => {
-            setEditOpen(open);
-            if (!open) setEditLoading(false);
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Post</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleEdit} className="space-y-4 relative">
-              <div className="relative">
-                <Textarea
-                  value={editContent}
-                  onChange={e => setEditContent(e.target.value)}
-                  rows={5}
-                  maxLength={1000}
-                  className="w-full rounded-lg border border-input p-3 text-base resize-none focus:ring-2 focus:ring-primary focus:border-primary bg-background"
-                  disabled={editLoading}
-                  placeholder="What do you want to talk about?"
-                />
-                <div className="absolute bottom-2 right-3 text-xs text-muted-foreground">
-                  {editContent.length}/1000
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={editLoading} className="w-full h-10 text-base font-semibold">
-                  {editLoading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : null}
-                  Save
-                </Button>
-                <DialogClose asChild>
-                  <Button type="button" variant="outline" disabled={editLoading}>Cancel</Button>
-                </DialogClose>
-              </DialogFooter>
-              {editLoading && (
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 rounded-lg">
-                  <Loader2 className="animate-spin h-8 w-8 text-primary" />
-                </div>
-              )}
-            </form>
-          </DialogContent>
-        </Dialog>
         {confirmingDelete && (
           <div className="mt-2 flex gap-2 items-center bg-muted p-3 rounded shadow">
             <span>Are you sure you want to delete this post?</span>
