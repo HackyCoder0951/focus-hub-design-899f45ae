@@ -9,14 +9,17 @@ import { useNavigate } from "react-router-dom";
 import BackgroundAtom from "@/components/BackgroundAtom";
 
 const Index = () => {
-  const { user, loading } = useAuth();
+  const { isAdmin, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user) {
-      navigate('/app');
+    if (loading) return;
+    if (isAdmin) {
+      navigate("/app/admin", { replace: true });
+    } else {
+      navigate("/app", { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [isAdmin, loading, navigate]);
 
   const features = [
     {

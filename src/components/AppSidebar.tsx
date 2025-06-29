@@ -24,17 +24,31 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
-  const { isAdmin } = useAuth();
+  const { isAdmin, loading } = useAuth();
 
-  const navigation = [
+  // Show nothing until user role is loaded
+  if (loading) {
+    return null;
+  }
+
+  // Navigation for regular users
+  const userNavigation = [
     { name: "Feed", href: "/app", icon: Activity },
     { name: "Q&A", href: "/app/qa", icon: Book },
     { name: "Resources", href: "/app/resources", icon: FileText },
     { name: "Chat", href: "/app/chat", icon: MessageCircle },
     { name: "Profile", href: "/app/profile", icon: User },
     { name: "Settings", href: "/app/settings", icon: Settings },
-    ...(isAdmin ? [{ name: "Admin", href: "/app/admin", icon: Cog }] : []),
   ];
+
+  // Navigation for admin users
+  const adminNavigation = [
+    { name: "Admin", href: "/app/admin", icon: Cog },
+    { name: "Profile", href: "/app/profile", icon: User },
+    { name: "Settings", href: "/app/settings", icon: Settings },
+  ];
+
+  const navigation = isAdmin ? adminNavigation : userNavigation;
 
   return (
     <Sidebar collapsible="icon">

@@ -16,25 +16,22 @@ const Login = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signIn, user } = useAuth();
+  const { signIn, user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/app');
+    if (loading || !user) return;
+    if (isAdmin) {
+      navigate('/app/admin', { replace: true });
+    } else {
+      navigate('/app', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, isAdmin, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    const { error } = await signIn(formData.email, formData.password);
-    
-    if (!error) {
-      navigate('/app');
-    }
-    
+    await signIn(formData.email, formData.password);
     setIsLoading(false);
   };
 
