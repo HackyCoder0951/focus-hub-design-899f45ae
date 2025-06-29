@@ -200,6 +200,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     e.preventDefault();
     if (!user || !commentInput.trim()) return;
     setCommentLoading(true);
+    console.log("user.id:", user.id);
     const { error } = await supabase.from('comments').insert({
       post_id: post.id,
       user_id: user.id,
