@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
+import AdminWelcome from "./pages/AdminWelcome";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +48,7 @@ const App = () => (
                 <Route path="resources" element={<Resources />} />
                 <Route path="chat" element={<Chat />} />
                 <Route path="settings" element={<Settings />} />
-                <Route path="admin" element={
+                <Route path="/app/admin" element={
                   <ProtectedRoute requireAdmin={true}>
                     <AdminDashboard />
                   </ProtectedRoute>

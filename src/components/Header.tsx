@@ -1,4 +1,3 @@
-
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +14,11 @@ import {
 import { ThemeToggle } from "./ThemeToggle";
 import NotificationDropdown from "./NotificationDropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const { user, profile, signOut, isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   const getInitials = (name: string) => {
     return name
@@ -74,14 +75,14 @@ const Header = () => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => window.location.href = '/app/profile'}>
+              <DropdownMenuItem onClick={() => navigate('/app/profile')}>
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.href = '/app/settings'}>
+              <DropdownMenuItem onClick={() => navigate('/app/settings')}>
                 Settings
               </DropdownMenuItem>
               {isAdmin && (
-                <DropdownMenuItem onClick={() => window.location.href = '/app/admin'}>
+                <DropdownMenuItem onClick={() => navigate('/app/admin')}>
                   Admin Dashboard
                 </DropdownMenuItem>
               )}

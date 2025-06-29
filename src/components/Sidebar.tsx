@@ -26,9 +26,10 @@ const Sidebar = () => {
 
   // Define navigation items for admin users
   const adminNavigation = [
+    { name: "Admin Dashboard", href: "/app/admin", icon: Cog },
     { name: "Profile", href: "/app/profile", icon: User },
     { name: "Settings", href: "/app/settings", icon: Settings },
-    { name: "Admin", href: "/app/admin", icon: Cog },
+    
   ];
 
   // Use appropriate navigation based on user role

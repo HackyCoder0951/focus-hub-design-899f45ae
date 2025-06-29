@@ -43,7 +43,7 @@ export function AppSidebar() {
 
   // Navigation for admin users
   const adminNavigation = [
-    { name: "Admin", href: "/app/admin", icon: Cog },
+    { name: "Admin Dashboard", href: "/app/admin", icon: Cog },
     { name: "Profile", href: "/app/profile", icon: User },
     { name: "Settings", href: "/app/settings", icon: Settings },
   ];

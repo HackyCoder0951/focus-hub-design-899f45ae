@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import BackgroundAtom from "@/components/BackgroundAtom";
+import AdminWelcome from "@/pages/AdminWelcome";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -43,7 +44,7 @@ const Login = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
             <CardDescription className="text-center">
-              Sign in to your Focus account
+              Sign in to your Focus Hub account
             </CardDescription>
           </CardHeader>
           <CardContent>
