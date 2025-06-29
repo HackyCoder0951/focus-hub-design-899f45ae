@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileFollowButton from "@/components/ProfileFollowButton";
 import FollowersStats from "@/components/FollowersStats";
+import ProfileEditForm from "@/components/ProfileEditForm";
 
 const Profile = () => {
   const { user, profile } = useAuth();
@@ -77,12 +78,7 @@ const Profile = () => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {user && user.id === profileData.id ? (
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </Button>
-                  ) : (
+                  {user && user.id === profileData.id ? null : (
                     <ProfileFollowButton profileUserId={profileData.id} />
                   )}
                 </div>
