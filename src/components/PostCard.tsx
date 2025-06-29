@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Post {
   id: string;
@@ -51,6 +52,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [sharing, setSharing] = useState(false);
   const postUrl = `${window.location.origin}/app/post/${post.id}`;
   const isOwner = user && user.id === post.user_id;
+  const [editLoading, setEditLoading] = useState(false);
 
   // Check if user has liked this post
   useEffect(() => {
@@ -71,6 +73,16 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
 
     checkLikeStatus();
   }, [user, post.id]);
+
+  useEffect(() => {
+    if (!editOpen) {
+      setEditLoading(false);
+      // Remove pointer-events from all elements that might have it
+      document.querySelectorAll('[style*="pointer-events: none"]').forEach(el => {
+        (el as HTMLElement).style.pointerEvents = '';
+      });
+    }
+  }, [editOpen]);
 
   const handleLike = async () => {
     if (!user) {
@@ -130,7 +142,9 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEditLoading(true);
     await supabase.from('posts').update({ content: editContent, updated_at: new Date().toISOString() }).eq('id', post.id);
+    setEditLoading(false);
     setEditOpen(false);
     if (onPostUpdated) onPostUpdated();
   };
@@ -243,23 +257,46 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             </div>
           </div>
         </div>
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <Dialog
+          open={editOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) setEditLoading(false);
+          }}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Post</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleEdit} className="space-y-4">
-              <Input
-                value={editContent}
-                onChange={e => setEditContent(e.target.value)}
-                required
-              />
+            <form onSubmit={handleEdit} className="space-y-4 relative">
+              <div className="relative">
+                <Textarea
+                  value={editContent}
+                  onChange={e => setEditContent(e.target.value)}
+                  rows={5}
+                  maxLength={1000}
+                  className="w-full rounded-lg border border-input p-3 text-base resize-none focus:ring-2 focus:ring-primary focus:border-primary bg-background"
+                  disabled={editLoading}
+                  placeholder="What do you want to talk about?"
+                />
+                <div className="absolute bottom-2 right-3 text-xs text-muted-foreground">
+                  {editContent.length}/1000
+                </div>
+              </div>
               <DialogFooter>
-                <Button type="submit">Save</Button>
+                <Button type="submit" disabled={editLoading} className="w-full h-10 text-base font-semibold">
+                  {editLoading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : null}
+                  Save
+                </Button>
                 <DialogClose asChild>
-                  <Button type="button" variant="outline">Cancel</Button>
+                  <Button type="button" variant="outline" disabled={editLoading}>Cancel</Button>
                 </DialogClose>
               </DialogFooter>
+              {editLoading && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 rounded-lg">
+                  <Loader2 className="animate-spin h-8 w-8 text-primary" />
+                </div>
+              )}
             </form>
           </DialogContent>
         </Dialog>
