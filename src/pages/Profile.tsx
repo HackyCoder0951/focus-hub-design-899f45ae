@@ -8,11 +8,14 @@ import { Edit, MapPin, Calendar, Link as LinkIcon } from "lucide-react";
 import PostCard from "@/components/PostCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import ProfileFollowButton from "@/components/ProfileFollowButton";
+import FollowersStats from "@/components/FollowersStats";
 
 const Profile = () => {
   const { user, profile } = useAuth();
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [userPosts, setUserPosts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -27,6 +30,26 @@ const Profile = () => {
     };
     fetchProfile();
   }, [user]);
+
+  useEffect(() => {
+    const fetchUserPosts = async () => {
+      if (!profileData) return;
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profiles: profiles (
+            full_name,
+            avatar_url,
+            email
+          )
+        `)
+        .eq('user_id', profileData.id)
+        .order('created_at', { ascending: false });
+      if (!error) setUserPosts(data || []);
+    };
+    fetchUserPosts();
+  }, [profileData]);
 
   if (loading) return <div className="text-center py-10">Loading...</div>;
   if (!profileData) return <div className="text-center py-10">Profile not found.</div>;
@@ -49,15 +72,19 @@ const Profile = () => {
                   <h1 className="text-3xl font-bold">{profileData.full_name}</h1>
                   <p className="text-muted-foreground">{profileData.email}</p>
                   <Badge variant="secondary" className="mt-1">Pro Member</Badge>
+                  <div className="flex gap-4 mt-2">
+                    <FollowersStats profileUserId={profileData.id} />
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  {user && user.id === profileData.id && (
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Button>
+                  {user && user.id === profileData.id ? (
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <ProfileFollowButton profileUserId={profileData.id} />
                   )}
-                  {/* Follow button for other users could go here */}
                 </div>
               </div>
               <p className="text-sm">{profileData.bio}</p>
@@ -89,14 +116,14 @@ const Profile = () => {
       <Tabs defaultValue="posts" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
+          <TabsTrigger value="about">About</TabsTrigger>          
         </TabsList>
         <TabsContent value="posts" className="space-y-6">
           {/* TODO: Fetch and map real posts for this user */}
-          {/* {userPosts.map((post) => (
+          {userPosts.map((post) => (
             <PostCard key={post.id} post={post} />
-          ))} */}
+          ))}
           <div className="text-muted-foreground">User posts will appear here.</div>
         </TabsContent>
         <TabsContent value="about">

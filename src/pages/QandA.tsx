@@ -24,7 +24,7 @@ const QandA = () => {
 
   const categories = ["All", "React", "JavaScript", "Python", "Design", "Career"];
 
-  const fetchQuestions = async () => {
+    const fetchQuestions = async () => {
     setLoading(true);
     try {
       let query = supabase
@@ -50,7 +50,7 @@ const QandA = () => {
     } finally {
       setLoading(false);
     }
-  };
+    };
 
   useEffect(() => {
     fetchQuestions();
@@ -125,10 +125,10 @@ const QandA = () => {
         </div>
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Ask Question
-            </Button>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Ask Question
+        </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -310,7 +310,7 @@ const QandA = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
+          </div>
                 </CardContent>
               </Card>
             ))

@@ -132,12 +132,12 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         <div className="flex items-start gap-3">
           <Avatar>
             <AvatarImage src={post.profiles?.avatar_url} />
-            <AvatarFallback>{post.profiles?.full_name?.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{post.profiles?.full_name?.charAt(0) || "?"}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold">{post.profiles?.full_name}</h4>
+                <h4 className="font-semibold">{post.profiles?.full_name || "Unknown User"}</h4>
                 <p className="text-sm text-muted-foreground">
                   {formatTimestamp(post.created_at)}
                 </p>

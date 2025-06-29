@@ -22,7 +22,7 @@ const Feed = () => {
         .from('posts')
         .select(`
           *,
-          profiles: user_id (
+          profiles: profiles (
             full_name,
             avatar_url,
             email
@@ -44,6 +44,7 @@ const Feed = () => {
       })) || [];
 
       setPosts(transformedPosts);
+      console.log("Fetched posts:", transformedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
@@ -121,6 +122,7 @@ const Feed = () => {
               key={post.id} 
               post={post} 
               onPostUpdated={handlePostUpdated}
+              
             />
           ))
         )}
