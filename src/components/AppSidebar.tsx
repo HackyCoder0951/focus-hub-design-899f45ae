@@ -41,26 +41,26 @@ export function AppSidebar() {
       <div
         className={cn(
           "transition-all duration-700 bg-background text-sidebar-foreground min-h-screen overflow-hidden flex flex-col items-start",
-          state === "collapsed" ? "w-16" : "w-72"
+          state === "collapsed" ? "w-14" : "w-68"
         )}
       >
-        <div className="p-2 w-full flex items-center">
-          <button
-            onClick={toggleSidebar}
-            className="rounded hover:bg-muted transition-colors p-1 text-sidebar-foreground"
-            aria-label={state === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
-            style={{ background: 'transparent' }}
-          >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect y="6" width="28" height="2.5" rx="1.25" fill="currentColor" />
-              <rect y="13" width="28" height="2.5" rx="1.25" fill="currentColor" />
-              <rect y="20" width="28" height="2.5" rx="1.25" fill="currentColor" />
-            </svg>
-          </button>
-        </div>
         <SidebarContent className="flex-1 w-full">
+          <div className="p-2 w-full flex items-center justify-end">
+            <button
+              onClick={toggleSidebar}
+              className="rounded hover:bg-muted transition-colors p-1 text-sidebar-foreground"
+              aria-label={state === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
+              style={{ background: 'transparent' }}
+            >
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect y="6" width="28" height="2.5" rx="1.25" fill="currentColor" />
+                <rect y="13" width="28" height="2.5" rx="1.25" fill="currentColor" />
+                <rect y="20" width="28" height="2.5" rx="1.25" fill="currentColor" />
+              </svg>
+            </button>
+          </div>
           <SidebarGroup>
-            <SidebarGroupLabel>Focus</SidebarGroupLabel>
+           <SidebarGroupLabel className="w-full justify-center">Focus Hub</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {navigation.map((item) => (
