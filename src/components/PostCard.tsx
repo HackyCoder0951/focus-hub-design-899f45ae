@@ -97,7 +97,10 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         .select(`*, profiles:profiles(full_name, avatar_url)`)
         .eq('post_id', post.id)
         .order('created_at', { ascending: true });
-      if (!error) setComments(data || []);
+      if (!error) {
+        setComments(data || []);
+        console.log("Fetched comments:", data);
+      }
     };
     fetchComments();
   }, [post.id, editing, confirmingDelete]);
@@ -217,7 +220,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   // Helper: recursively render comments and replies
   const CommentThread = ({ comments, parentId, user, onRefresh }: any) => {
     return comments
-      .filter((c: any) => c.parent_id === parentId)
+      .filter((c: any) => c.parent_id == parentId)
       .map((comment: any) => <CommentItem key={comment.id} comment={comment} comments={comments} user={user} onRefresh={onRefresh} />);
   };
 
