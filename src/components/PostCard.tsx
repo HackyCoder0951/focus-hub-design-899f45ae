@@ -53,6 +53,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const postUrl = `${window.location.origin}/app/post/${post.id}`;
   const isOwner = user && user.id === post.user_id;
   const [editLoading, setEditLoading] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // Check if user has liked this post
   useEffect(() => {
@@ -150,10 +151,10 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return;
     setDeleting(true);
     await supabase.from('posts').update({ is_deleted: true }).eq('id', post.id);
     setDeleting(false);
+    setConfirmingDelete(false);
     if (onPostUpdated) onPostUpdated();
   };
 
@@ -202,7 +203,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                     <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit</DropdownMenuItem>
                   )}
                   {isOwner && (
-                    <DropdownMenuItem onClick={handleDelete} disabled={deleting}>{deleting ? "Deleting..." : "Delete"}</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setConfirmingDelete(true)} disabled={deleting}>Delete</DropdownMenuItem>
                   )}
                   {(isOwner || !isOwner) && (
                     <>
@@ -300,6 +301,17 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             </form>
           </DialogContent>
         </Dialog>
+        {confirmingDelete && (
+          <div className="mt-2 flex gap-2 items-center bg-muted p-3 rounded shadow">
+            <span>Are you sure you want to delete this post?</span>
+            <Button size="sm" variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setConfirmingDelete(false)} disabled={deleting}>
+              Cancel
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
