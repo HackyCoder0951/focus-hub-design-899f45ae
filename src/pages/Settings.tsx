@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,11 +10,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Shield, User, Palette, Globe, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
 
   const [profileData, setProfileData] = useState({
     name: "John Doe",
@@ -40,6 +44,29 @@ const Settings = () => {
     showLocation: true,
     allowMessages: true
   });
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: profileData.name,
+        email: profileData.email,
+        bio: profileData.bio,
+        website: profileData.website,
+        location: profileData.location,
+        settings: {
+          notifications,
+          privacy
+        }
+      })
+      .eq('id', user.id);
+    if (error) {
+      toast({ title: 'Profile update failed', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Profile updated', description: 'Your profile has been updated.' });
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -143,7 +170,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveProfile}>Save Changes</Button>
             </CardContent>
           </Card>
         </TabsContent>

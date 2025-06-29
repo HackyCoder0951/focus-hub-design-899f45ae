@@ -56,15 +56,15 @@ const Index = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-16">
             <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              Focus
+              Focus Hub
             </h1>
             {/* <AnimatedAtom /> */}
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              A modern social platform that brings together communication, knowledge sharing, and collaboration in one beautiful interface.
+              A modern alumni social platform that brings together communication, knowledge sharing, and collaboration in one beautiful interface.
             </p>
             <div className="flex gap-4 justify-center">
               <Button asChild variant="outline" size="lg" className="px-8">
-                <Link to="/login">Get Started</Link>
+                <Link to="/login">Login</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="px-8">
                 <Link to="/register">Sign Up</Link>
