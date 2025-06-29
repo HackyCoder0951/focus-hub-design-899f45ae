@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import ChatNotification from "./ChatNotification";
 import {
   Activity,
   MessageCircle,
@@ -11,21 +12,28 @@ import {
   Cog
 } from "lucide-react";
 
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  showNotification?: boolean;
+}
+
 const Sidebar = () => {
   const { isAdmin } = useAuth();
 
   // Define navigation items for regular users
-  const userNavigation = [
+  const userNavigation: NavigationItem[] = [
     { name: "Feed", href: "/app", icon: Activity },
     { name: "Q&A", href: "/app/qa", icon: Book },
     { name: "Resources", href: "/app/resources", icon: FileText },
-    { name: "Chat", href: "/app/chat", icon: MessageCircle },
+    { name: "Chat", href: "/app/chat", icon: MessageCircle, showNotification: true },
     { name: "Profile", href: "/app/profile", icon: User },
     { name: "Settings", href: "/app/settings", icon: Settings },
   ];
 
   // Define navigation items for admin users
-  const adminNavigation = [
+  const adminNavigation: NavigationItem[] = [
     { name: "Admin Dashboard", href: "/app/admin", icon: Cog },
     { name: "Profile", href: "/app/profile", icon: User },
     { name: "Settings", href: "/app/settings", icon: Settings },
@@ -56,7 +64,12 @@ const Sidebar = () => {
                         )
                       }
                     >
-                      <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                      <div className="relative">
+                        <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                        {item.showNotification && (
+                          <ChatNotification className="absolute -top-1 -right-1" />
+                        )}
+                      </div>
                       {item.name}
                     </NavLink>
                   </li>
