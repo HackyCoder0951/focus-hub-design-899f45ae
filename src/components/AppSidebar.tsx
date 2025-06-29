@@ -33,7 +33,7 @@ export function AppSidebar() {
 
   // Navigation for regular users
   const userNavigation = [
-    { name: "Feed", href: "/app", icon: Activity },
+    { name: "Feed", href: "/app/feed", icon: Activity },
     { name: "Q&A", href: "/app/qa", icon: Book },
     { name: "Resources", href: "/app/resources", icon: FileText },
     { name: "Chat", href: "/app/chat", icon: MessageCircle },
@@ -43,7 +43,7 @@ export function AppSidebar() {
 
   // Navigation for admin users
   const adminNavigation = [
-    { name: "Admin Dashboard", href: "/app/admin", icon: Cog },
+    { name: "Admin Dashboard", href: "/app/AdminDashboard", icon: Cog },
     { name: "Profile", href: "/app/profile", icon: User },
     { name: "Settings", href: "/app/settings", icon: Settings },
   ];

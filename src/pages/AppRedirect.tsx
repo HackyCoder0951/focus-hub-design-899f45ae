@@ -11,7 +11,7 @@ const AppRedirect = () => {
     if (isAdmin) {
       navigate("/app/admin", { replace: true });
     } else {
-      navigate("/app", { replace: true }); // Change to /app/feed if that's your feed route
+      navigate("/app/feed", { replace: true }); // Change to /app/feed if that's your feed route
     }
   }, [isAdmin, loading, navigate]);
 

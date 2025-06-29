@@ -82,9 +82,11 @@ const Header = () => {
                 Settings
               </DropdownMenuItem>
               {isAdmin && (
-                <DropdownMenuItem onClick={() => navigate('/app/admin')}>
-                  Admin Dashboard
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem onClick={() => navigate('/app/AdminDashboard')}>
+                    Admin Dashboard
+                  </DropdownMenuItem>
+                </>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut}>
