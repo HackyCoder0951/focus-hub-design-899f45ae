@@ -38,8 +38,13 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarContent>
-        <div className="flex items-center justify-end p-2">
+      <div
+        className={cn(
+          "transition-all duration-700 bg-background text-sidebar-foreground min-h-screen overflow-hidden flex flex-col items-start",
+          state === "collapsed" ? "w-16" : "w-72"
+        )}
+      >
+        <div className="p-2 w-full flex items-center">
           <button
             onClick={toggleSidebar}
             className="rounded hover:bg-muted transition-colors p-1 text-sidebar-foreground"
@@ -53,45 +58,48 @@ export function AppSidebar() {
             </svg>
           </button>
         </div>
-        <SidebarGroup>
-          <SidebarGroupLabel>Focus</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigation.map((item) => (
-                <SidebarMenuItem key={item.name}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.href}
-                      end={item.href === "/app"}
-                      className={({ isActive }) =>
-                        cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                          isActive
-                            ? "bg-muted text-primary"
-                            : "text-muted-foreground"
-                        )
-                      }
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span
-                        className={
+        <SidebarContent className="flex-1 w-full">
+          <SidebarGroup>
+            <SidebarGroupLabel>Focus</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {navigation.map((item) => (
+                  <SidebarMenuItem key={item.name}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.href}
+                        end={item.href === "/app"}
+                        className={({ isActive }) =>
                           cn(
-                            "transition-opacity duration-300",
-                            state === "collapsed" ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto ml-2"
+                            "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                            isActive
+                              ? "bg-muted text-primary"
+                              : "text-muted-foreground"
                           )
                         }
-                        style={{ display: state === "collapsed" ? 'none' : 'inline' }}
                       >
-                        {item.name}
-                      </span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+                        <item.icon className="h-4 w-4" />
+                        <span
+                          className={
+                            cn(
+                              "inline-block transition-all duration-700",
+                              state === "collapsed"
+                                ? "opacity-0 ml-0 w-0 pointer-events-none"
+                                : "opacity-100 ml-2 w-auto"
+                            )
+                          }
+                        >
+                          {item.name}
+                        </span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+      </div>
     </Sidebar>
   );
 }
