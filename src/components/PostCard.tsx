@@ -94,7 +94,11 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     const fetchComments = async () => {
       const { data, error } = await supabase
         .from('comments')
-        .select(`*, profiles:profiles(full_name, avatar_url)`)
+        .select(`
+          *,
+          profiles:profiles(full_name, avatar_url),
+          comment_likes(count)
+        `)
         .eq('post_id', post.id)
         .order('created_at', { ascending: true });
       if (!error) {
@@ -129,7 +133,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         if (error) throw error;
 
         setIsLiked(false);
-        setLikesCount(prev => prev - 1);
+        setLikesCount(prev => Math.max(prev - 1, 0));
       } else {
         // Like the post
         const { error } = await supabase
@@ -211,7 +215,11 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     // Refetch comments
     const { data } = await supabase
       .from('comments')
-      .select(`*, profiles:profiles(full_name, avatar_url)`)
+      .select(`
+        *,
+        profiles:profiles(full_name, avatar_url),
+        comment_likes(count)
+      `)
       .eq('post_id', post.id)
       .order('created_at', { ascending: true });
     setComments(data || []);
@@ -239,7 +247,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     const [replying, setReplying] = useState(false);
     const [replyContent, setReplyContent] = useState("");
     const [loading, setLoading] = useState(false);
-    const [likeCount, setLikeCount] = useState(comment.likes_count || 0);
+    const [likeCount, setLikeCount] = useState(comment.comment_likes?.[0]?.count || 0);
     const [liked, setLiked] = useState(false);
 
     // Check if user liked this comment
@@ -262,7 +270,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
       setLoading(true);
       if (liked) {
         await supabase.from('comment_likes').delete().eq('comment_id', comment.id).eq('user_id', user.id);
-        setLikeCount((c: number) => c - 1);
+        setLikeCount((c: number) => Math.max(c - 1, 0));
         setLiked(false);
       } else {
         await supabase.from('comment_likes').insert({ comment_id: comment.id, user_id: user.id });
@@ -344,7 +352,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
           )}
           <div className="flex gap-2 mt-1 items-center">
             <Button size="sm" variant="ghost" onClick={handleLike} disabled={loading} className={liked ? "text-primary" : ""}>
-              <Heart className="h-3 w-3" /> {likeCount}
+              <Heart className={cn("h-3 w-3", liked && "fill-current text-red-500")} /> {likeCount}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setReplying(!replying)} disabled={loading}>Reply</Button>
             {isOwner && !editing && (
@@ -470,7 +478,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 {isLiking ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
+                  <Heart className={cn("h-4 w-4", isLiked && "fill-current text-red-500")} />
                 )}
                 {likesCount}
               </Button>
@@ -491,7 +499,11 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                     // refetch comments
                     supabase
                       .from('comments')
-                      .select(`*, profiles:profiles(full_name, avatar_url)`)
+                      .select(`
+                        *,
+                        profiles:profiles(full_name, avatar_url),
+                        comment_likes(count)
+                      `)
                       .eq('post_id', post.id)
                       .order('created_at', { ascending: true })
                       .then(({ data }) => setComments(data || []));
