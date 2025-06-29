@@ -65,3 +65,5 @@ INSERT INTO public.chat_messages (chat_id, user_id, content, created_at) VALUES
 ('550e8400-e29b-41d4-a716-446655440004', '67f2070a-0399-485a-a8e1-e73241df52c0', 'Hey Priya! I loved your presentation on TypeScript best practices!', '2024-01-18 16:50:00+00'),
 ('550e8400-e29b-41d4-a716-446655440004', '1319be79-c9ec-450f-8115-4445c9da6d98', 'Thank you Vishnu! I\'m glad you found it helpful. 😊', '2024-01-18 16:55:00+00'),
 ('550e8400-e29b-41d4-a716-446655440004', '67f2070a-0399-485a-a8e1-e73241df52c0', 'Do you have any resources you could share?', '2024-01-18 17:00:00+00');
+
+ALTER TABLE public.chat_members ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import CreateChat from "@/components/CreateChat";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { saveAs } from "file-saver";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatMessage {
   id: string;
@@ -27,6 +31,7 @@ interface ChatMember {
   chat_id: string;
   user_id: string;
   joined_at: string;
+  is_admin?: boolean;
   profiles: {
     full_name: string;
     avatar_url: string;
@@ -46,6 +51,13 @@ interface Chat {
   };
 }
 
+interface Profile {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+  email: string;
+}
+
 const Chat = () => {
   const { user } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
@@ -57,6 +69,14 @@ const Chat = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [groupInfoOpen, setGroupInfoOpen] = useState(false);
+  const [editingGroupName, setEditingGroupName] = useState(false);
+  const [groupNameInput, setGroupNameInput] = useState("");
+  const { toast } = useToast();
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [addMemberSearch, setAddMemberSearch] = useState("");
+  const [addMemberLoading, setAddMemberLoading] = useState(false);
+  const [allUsers, setAllUsers] = useState<Profile[]>([]);
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -102,6 +122,7 @@ const Chat = () => {
             profiles: user_id (full_name, avatar_url)
           `)
           .eq('chat_id', chat.id);
+        console.log('Fetched members:', members);
 
         // Get last message
         const { data: lastMessage } = await supabase
@@ -272,6 +293,103 @@ const Chat = () => {
     });
   };
 
+  const handleDeleteChat = async () => {
+    if (!currentChat) return;
+    if (currentChat.is_group) {
+      // For group: remove self from chat_members
+      await supabase.from('chat_members').delete().eq('chat_id', currentChat.id).eq('user_id', user.id);
+    } else {
+      // For direct: remove self from chat_members
+      await supabase.from('chat_members').delete().eq('chat_id', currentChat.id).eq('user_id', user.id);
+    }
+    setSelectedChat(null);
+    fetchChats();
+  };
+
+  const handleExportChat = () => {
+    if (!currentChat) return;
+    let text = `Chat: ${getChatDisplayName(currentChat)}\n`;
+    messages.forEach(msg => {
+      const name = msg.profiles?.full_name || 'Unknown';
+      const time = msg.created_at ? new Date(msg.created_at).toLocaleString() : '';
+      text += `[${time}] ${name}: ${msg.content}\n`;
+    });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    saveAs(blob, `${getChatDisplayName(currentChat)}-chat.txt`);
+  };
+
+  // Handler to update group name (UI only for now)
+  const handleGroupNameSave = async () => {
+    if (!currentChat || !groupNameInput.trim()) return;
+    const { error } = await supabase
+      .from('chats')
+      .update({ name: groupNameInput.trim() })
+      .eq('id', currentChat.id);
+    if (!error) {
+      setEditingGroupName(false);
+      setGroupInfoOpen(false);
+      fetchChats();
+      toast({ title: 'Group name updated!' });
+    } else {
+      toast({ title: 'Error updating group name', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  // Fetch all users for add member
+  useEffect(() => {
+    if (groupInfoOpen && currentChat?.is_group) {
+      supabase.from('profiles').select('id, full_name, avatar_url, email').then(({ data }) => {
+        setAllUsers(data || []);
+      });
+    }
+  }, [groupInfoOpen, currentChat]);
+
+  const isCurrentUserAdmin = useMemo(() => {
+    return currentChat?.chat_members.find(m => m.user_id === user?.id)?.is_admin;
+  }, [currentChat, user]);
+
+  const handleAddMember = async (userId: string) => {
+    setAddMemberLoading(true);
+    const { error } = await supabase.from('chat_members').insert({
+      chat_id: currentChat?.id,
+      user_id: userId,
+      is_admin: false
+    });
+    setAddMemberLoading(false);
+    if (!error) {
+      fetchChats();
+      setAddMemberOpen(false);
+      toast({ title: 'Member added!' });
+    } else {
+      toast({ title: 'Error adding member', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!currentChat) return;
+    const { error } = await supabase.from('chat_members').delete().eq('chat_id', currentChat.id).eq('user_id', userId);
+    if (!error) {
+      fetchChats();
+      toast({ title: 'Member removed!' });
+    } else {
+      toast({ title: 'Error removing member', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleToggleAdmin = async (userId: string, makeAdmin: boolean) => {
+    if (!currentChat) return;
+    const { error } = await supabase.from('chat_members')
+      .update({ is_admin: makeAdmin } as any)
+      .eq('chat_id', currentChat.id)
+      .eq('user_id', userId);
+    if (!error) {
+      fetchChats();
+      toast({ title: makeAdmin ? 'Admin assigned!' : 'Admin removed!' });
+    } else {
+      toast({ title: 'Error updating admin status', description: error.message, variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-12rem)]">
       <div className="grid grid-cols-1 lg:grid-cols-3 h-full gap-6">
@@ -386,6 +504,24 @@ const Chat = () => {
                     </p>
                   )}
                 </div>
+                <div className="ml-auto flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={handleExportChat}>Export Chat to Text</DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleDeleteChat} className="text-destructive">{currentChat.is_group ? 'Leave Group' : 'Delete Chat'}</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {currentChat.is_group && (
+                    <Button size="sm" variant="outline" className="ml-2" onClick={() => { setGroupInfoOpen(true); setGroupNameInput(currentChat.name || ""); }}>
+                      Group Info
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
 
               {/* Messages */}
@@ -465,6 +601,97 @@ const Chat = () => {
           )}
         </Card>
       </div>
+      <Dialog open={groupInfoOpen} onOpenChange={setGroupInfoOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Group Info</DialogTitle>
+          </DialogHeader>
+          {currentChat && (
+            <div className="space-y-4">
+              {/* Group Name Edit */}
+              <div className="flex items-center gap-2">
+                {editingGroupName ? (
+                  <>
+                    <Input value={groupNameInput} onChange={e => setGroupNameInput(e.target.value)} className="flex-1" />
+                    <Button size="sm" onClick={handleGroupNameSave}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingGroupName(false)}>Cancel</Button>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-lg font-semibold flex-1">{currentChat.name}</h2>
+                    <Button size="sm" variant="ghost" onClick={() => setEditingGroupName(true)}>Edit</Button>
+                  </>
+                )}
+              </div>
+              {/* Member List */}
+              <div>
+                <h3 className="font-semibold mb-2">Members ({currentChat.chat_members.length})</h3>
+                <ul className="space-y-1">
+                  {currentChat.chat_members.map(member => (
+                    <li key={member.user_id} className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={member.profiles?.avatar_url} />
+                        <AvatarFallback className="text-xs">
+                          {member.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{member.profiles?.full_name}</span>
+                      {member.is_admin && <Badge variant="secondary">Admin</Badge>}
+                      {isCurrentUserAdmin && user?.id !== member.user_id && (
+                        member.is_admin ? (
+                          <Button size="sm" variant="outline" onClick={() => handleToggleAdmin(member.user_id, false)}>
+                            Remove Admin
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="secondary" onClick={() => handleToggleAdmin(member.user_id, true)}>
+                            Make Admin
+                          </Button>
+                        )
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {isCurrentUserAdmin && (
+                <div className="mt-4">
+                  <Button size="sm" onClick={() => setAddMemberOpen(true)}>Add Member</Button>
+                  <Dialog open={addMemberOpen} onOpenChange={setAddMemberOpen}>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Add Member</DialogTitle>
+                      </DialogHeader>
+                      <Input
+                        placeholder="Search users..."
+                        value={addMemberSearch}
+                        onChange={e => setAddMemberSearch(e.target.value)}
+                      />
+                      <div className="max-h-60 overflow-y-auto space-y-2 mt-2">
+                        {allUsers
+                          .filter(u =>
+                            !currentChat.chat_members.some(m => m.user_id === u.id) &&
+                            (u.full_name.toLowerCase().includes(addMemberSearch.toLowerCase()) ||
+                              u.email.toLowerCase().includes(addMemberSearch.toLowerCase()))
+                          )
+                          .map(u => (
+                            <div key={u.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer" onClick={() => handleAddMember(u.id)}>
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={u.avatar_url} />
+                                <AvatarFallback className="text-xs">{u.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}</AvatarFallback>
+                              </Avatar>
+                              <span className="flex-1">{u.full_name}</span>
+                              <span className="text-xs text-muted-foreground">{u.email}</span>
+                              <Button size="sm" disabled={addMemberLoading}>Add</Button>
+                            </div>
+                          ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
