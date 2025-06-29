@@ -219,9 +219,17 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
 
   // Helper: recursively render comments and replies
   const CommentThread = ({ comments, parentId, user, onRefresh }: any) => {
-    return comments
-      .filter((c: any) => c.parent_id == parentId)
-      .map((comment: any) => <CommentItem key={comment.id} comment={comment} comments={comments} user={user} onRefresh={onRefresh} />);
+    const filtered = comments.filter((c: any) => c.parent_id == parentId);
+    console.log("Rendering CommentThread for parentId:", parentId, filtered);
+    return filtered.map((comment: any) => (
+      <CommentItem
+        key={comment.id}
+        comment={comment}
+        comments={comments}
+        user={user}
+        onRefresh={onRefresh}
+      />
+    ));
   };
 
   const CommentItem = ({ comment, comments, user, onRefresh }: any) => {
@@ -284,6 +292,12 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
       e.preventDefault();
       if (!user || !replyContent.trim()) return;
       setLoading(true);
+      console.log({
+        post_id: comment.post_id,
+        user_id: user.id,
+        content: replyContent.trim(),
+        parent_id: comment.id
+      });
       await supabase.from('comments').insert({
         post_id: comment.post_id,
         user_id: user.id,
