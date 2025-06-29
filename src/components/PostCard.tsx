@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,10 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const isOwner = user && user.id === post.user_id;
   const [editLoading, setEditLoading] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentInput, setCommentInput] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const commentInputRef = useRef<HTMLInputElement>(null);
 
   // Check if user has liked this post
   useEffect(() => {
@@ -84,6 +88,19 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
       });
     }
   }, [editing]);
+
+  // Fetch comments for this post
+  useEffect(() => {
+    const fetchComments = async () => {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`*, profiles:profiles(full_name, avatar_url)`)
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true });
+      if (!error) setComments(data || []);
+    };
+    fetchComments();
+  }, [post.id, editing, confirmingDelete]);
 
   const handleLike = async () => {
     if (!user) {
@@ -174,6 +191,27 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`;
     
     return date.toLocaleDateString();
+  };
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !commentInput.trim()) return;
+    setCommentLoading(true);
+    const { error } = await supabase.from('comments').insert({
+      post_id: post.id,
+      user_id: user.id,
+      content: commentInput.trim(),
+    });
+    setCommentInput("");
+    setCommentLoading(false);
+    // Refetch comments
+    const { data } = await supabase
+      .from('comments')
+      .select(`*, profiles:profiles(full_name, avatar_url)`)
+      .eq('post_id', post.id)
+      .order('created_at', { ascending: true });
+    setComments(data || []);
+    if (commentInputRef.current) commentInputRef.current.focus();
   };
 
   return (
@@ -274,12 +312,55 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
               </Button>
               <Button variant="ghost" size="sm" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
-                {post.comments_count || 0}
+                {comments.length}
               </Button>
               <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={handleCopyLink}>
                 <Share className="h-4 w-4" />
                 Share
               </Button>
+            </div>
+            {/* Comments Section */}
+            <div className="mt-3">
+              {comments.length > 0 && (
+                <div className="space-y-3">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-2 items-start">
+                      <Avatar className="h-7 w-7">
+                        <AvatarImage src={comment.profiles?.avatar_url} />
+                        <AvatarFallback>{comment.profiles?.full_name?.charAt(0) || "?"}</AvatarFallback>
+                      </Avatar>
+                      <div className="bg-muted rounded-lg px-3 py-2 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-xs">{comment.profiles?.full_name || "Unknown User"}</span>
+                          <span className="text-xs text-muted-foreground">{formatTimestamp(comment.created_at)}</span>
+                        </div>
+                        <div className="text-sm mt-1">{comment.content}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {user && (
+                <form onSubmit={handleAddComment} className="flex gap-2 items-center mt-3">
+                  <Avatar className="h-7 w-7">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback>{user?.user_metadata?.full_name?.charAt(0) || "U"}</AvatarFallback>
+                  </Avatar>
+                  <input
+                    ref={commentInputRef}
+                    type="text"
+                    className="flex-1 rounded-full border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Add a comment..."
+                    value={commentInput}
+                    onChange={e => setCommentInput(e.target.value)}
+                    disabled={commentLoading}
+                    maxLength={500}
+                  />
+                  <Button type="submit" size="sm" disabled={commentLoading || !commentInput.trim()}>
+                    Post
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         </div>
