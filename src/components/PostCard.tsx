@@ -7,6 +7,15 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 interface Post {
   id: string;
@@ -36,6 +45,12 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [isLiking, setIsLiking] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editContent, setEditContent] = useState(post.content);
+  const [deleting, setDeleting] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const postUrl = `${window.location.origin}/app/post/${post.id}`;
+  const isOwner = user && user.id === post.user_id;
 
   // Check if user has liked this post
   useEffect(() => {
@@ -113,6 +128,26 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     }
   };
 
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await supabase.from('posts').update({ content: editContent, updated_at: new Date().toISOString() }).eq('id', post.id);
+    setEditOpen(false);
+    if (onPostUpdated) onPostUpdated();
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    setDeleting(true);
+    await supabase.from('posts').update({ is_deleted: true }).eq('id', post.id);
+    setDeleting(false);
+    if (onPostUpdated) onPostUpdated();
+  };
+
+  const handleCopyLink = async () => {
+    await navigator.clipboard.writeText(postUrl);
+    toast({ title: "Link copied!", description: "Post link copied to clipboard." });
+  };
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -142,9 +177,27 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                   {formatTimestamp(post.created_at)}
                 </p>
               </div>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {isOwner && (
+                    <DropdownMenuItem onClick={() => setEditOpen(true)}>Edit</DropdownMenuItem>
+                  )}
+                  {isOwner && (
+                    <DropdownMenuItem onClick={handleDelete} disabled={deleting}>{deleting ? "Deleting..." : "Delete"}</DropdownMenuItem>
+                  )}
+                  {(isOwner || !isOwner) && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleCopyLink}>Copy Link</DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="mt-3 space-y-3">
@@ -183,13 +236,33 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 <MessageCircle className="h-4 w-4" />
                 {post.comments_count || 0}
               </Button>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2" onClick={handleCopyLink}>
                 <Share className="h-4 w-4" />
                 Share
               </Button>
             </div>
           </div>
         </div>
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Post</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEdit} className="space-y-4">
+              <Input
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                required
+              />
+              <DialogFooter>
+                <Button type="submit">Save</Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
