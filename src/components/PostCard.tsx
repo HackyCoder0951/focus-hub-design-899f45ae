@@ -103,7 +103,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         .order('created_at', { ascending: true });
       if (!error) {
         setComments(data || []);
-        console.log("Fetched comments:", data);
       }
     };
     fetchComments();
@@ -204,7 +203,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     e.preventDefault();
     if (!user || !commentInput.trim()) return;
     setCommentLoading(true);
-    console.log("user.id:", user.id);
     const { error } = await supabase.from('comments').insert({
       post_id: post.id,
       user_id: user.id,
@@ -229,7 +227,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   // Helper: recursively render comments and replies
   const CommentThread = ({ comments, parentId, user, onRefresh }: any) => {
     const filtered = comments.filter((c: any) => c.parent_id == parentId);
-    console.log("Rendering CommentThread for parentId:", parentId, filtered);
     return filtered.map((comment: any) => (
       <CommentItem
         key={comment.id}
@@ -301,12 +298,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
       e.preventDefault();
       if (!user || !replyContent.trim()) return;
       setLoading(true);
-      console.log({
-        post_id: comment.post_id,
-        user_id: user.id,
-        content: replyContent.trim(),
-        parent_id: comment.id
-      });
       await supabase.from('comments').insert({
         post_id: comment.post_id,
         user_id: user.id,
