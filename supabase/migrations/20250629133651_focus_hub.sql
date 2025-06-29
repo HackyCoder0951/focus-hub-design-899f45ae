@@ -1,6 +1,13 @@
+-- =====================================================
+-- COMPLETE FOCUS HUB DATABASE SCHEMA
+-- =====================================================
+
 -- USERS: handled by Supabase Auth (auth.users)
 
--- 1. PROFILES
+-- 1. APP ROLES ENUM
+CREATE TYPE public.app_role AS ENUM ('admin', 'user');
+
+-- 2. PROFILES (Enhanced version with all fields)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
@@ -14,7 +21,16 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 2. POSTS
+-- 3. USER ROLES
+CREATE TABLE IF NOT EXISTS public.user_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  role app_role NOT NULL DEFAULT 'user',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (user_id, role)
+);
+
+-- 4. POSTS
 CREATE TABLE IF NOT EXISTS public.posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -26,7 +42,7 @@ CREATE TABLE IF NOT EXISTS public.posts (
 );
 CREATE INDEX IF NOT EXISTS idx_posts_user_id ON public.posts(user_id);
 
--- 3. LIKES
+-- 5. LIKES
 CREATE TABLE IF NOT EXISTS public.likes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -36,7 +52,7 @@ CREATE TABLE IF NOT EXISTS public.likes (
 );
 CREATE INDEX IF NOT EXISTS idx_likes_post_id ON public.likes(post_id);
 
--- 4. FOLLOWERS
+-- 6. FOLLOWERS
 CREATE TABLE IF NOT EXISTS public.followers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   follower_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -47,7 +63,7 @@ CREATE TABLE IF NOT EXISTS public.followers (
 CREATE INDEX IF NOT EXISTS idx_followers_follower_id ON public.followers(follower_id);
 CREATE INDEX IF NOT EXISTS idx_followers_following_id ON public.followers(following_id);
 
--- 5. NOTIFICATIONS
+-- 7. NOTIFICATIONS
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -58,7 +74,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 );
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
 
--- 6. CHATS
+-- 8. CHATS
 CREATE TABLE IF NOT EXISTS public.chats (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   is_group BOOLEAN NOT NULL DEFAULT FALSE,
@@ -66,7 +82,7 @@ CREATE TABLE IF NOT EXISTS public.chats (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 7. CHAT_MEMBERS
+-- 9. CHAT_MEMBERS
 CREATE TABLE IF NOT EXISTS public.chat_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   chat_id UUID REFERENCES public.chats(id) ON DELETE CASCADE,
@@ -77,7 +93,7 @@ CREATE TABLE IF NOT EXISTS public.chat_members (
 CREATE INDEX IF NOT EXISTS idx_chat_members_chat_id ON public.chat_members(chat_id);
 CREATE INDEX IF NOT EXISTS idx_chat_members_user_id ON public.chat_members(user_id);
 
--- 8. CHAT_MESSAGES
+-- 10. CHAT_MESSAGES
 CREATE TABLE IF NOT EXISTS public.chat_messages (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   chat_id UUID REFERENCES public.chats(id) ON DELETE CASCADE,
@@ -88,7 +104,7 @@ CREATE TABLE IF NOT EXISTS public.chat_messages (
 );
 CREATE INDEX IF NOT EXISTS idx_chat_messages_chat_id ON public.chat_messages(chat_id);
 
--- 9. FILEMODELS
+-- 11. FILEMODELS
 CREATE TABLE IF NOT EXISTS public.filemodels (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -102,7 +118,7 @@ CREATE TABLE IF NOT EXISTS public.filemodels (
 );
 CREATE INDEX IF NOT EXISTS idx_filemodels_user_id ON public.filemodels(user_id);
 
--- 10. QUESTIONANSWERS
+-- 12. QUESTIONANSWERS
 CREATE TABLE IF NOT EXISTS public.questionanswers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -114,7 +130,7 @@ CREATE TABLE IF NOT EXISTS public.questionanswers (
 );
 CREATE INDEX IF NOT EXISTS idx_questionanswers_user_id ON public.questionanswers(user_id);
 
--- 11. QANOTIFICATIONS
+-- 13. QANOTIFICATIONS
 CREATE TABLE IF NOT EXISTS public.qanotifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -125,12 +141,72 @@ CREATE TABLE IF NOT EXISTS public.qanotifications (
 );
 CREATE INDEX IF NOT EXISTS idx_qanotifications_user_id ON public.qanotifications(user_id);
 
--- RLS POLICIES
+-- =====================================================
+-- FUNCTIONS
+-- =====================================================
+
+-- Security definer function to check roles
+CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_roles
+    WHERE user_id = _user_id
+      AND role = _role
+  )
+$$;
+
+-- Function to handle new user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = ''
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (
+    new.id,
+    new.email,
+    new.raw_user_meta_data ->> 'full_name'
+  );
+  
+  -- Assign default user role
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (new.id, 'user');
+  
+  RETURN new;
+END;
+$$;
+
+-- =====================================================
+-- TRIGGERS
+-- =====================================================
+
+-- Trigger to create profile and role on user signup
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- =====================================================
+-- ROW LEVEL SECURITY (RLS)
+-- =====================================================
+
 -- PROFILES
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert their own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- USER ROLES
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view their own roles" ON public.user_roles FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can view all roles" ON public.user_roles FOR SELECT USING (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can insert roles" ON public.user_roles FOR INSERT WITH CHECK (public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can update roles" ON public.user_roles FOR UPDATE USING (public.has_role(auth.uid(), 'admin'));
 
 -- POSTS
 ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;

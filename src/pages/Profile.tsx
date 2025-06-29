@@ -52,10 +52,10 @@ const Profile = () => {
                 </div>
                 <div className="flex gap-2">
                   {user && user.id === profileData.id && (
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </Button>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </Button>
                   )}
                   {/* Follow button for other users could go here */}
                 </div>
@@ -63,16 +63,16 @@ const Profile = () => {
               <p className="text-sm">{profileData.bio}</p>
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {profileData.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
                     {profileData.location}
-                  </div>
+                </div>
                 )}
                 {profileData.website && (
-                  <div className="flex items-center gap-1">
-                    <LinkIcon className="h-4 w-4" />
+                <div className="flex items-center gap-1">
+                  <LinkIcon className="h-4 w-4" />
                     <a href={profileData.website} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">{profileData.website}</a>
-                  </div>
+                </div>
                 )}
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
