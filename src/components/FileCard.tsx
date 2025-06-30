@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, Download, Edit, Trash2 } from "lucide-react";
+import { Eye, Download, Edit, Trash2, FileImage, FileVideo, FileText, FileArchive, File, FileAudio, FileCode, FileSpreadsheet, FileType2, Presentation } from "lucide-react";
 import React from "react";
 
 interface FileCardProps {
@@ -20,12 +20,19 @@ const formatFileSize = (bytes: number) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const getFileIcon = (type: string) => {
-  if (!type) return <span className="h-8 w-8" />;
-  if (type.startsWith("image")) return <span className="h-8 w-8 text-green-500">🖼️</span>;
-  if (type.startsWith("video")) return <span className="h-8 w-8 text-purple-500">🎬</span>;
-  if (type.includes("pdf") || type.includes("doc")) return <span className="h-8 w-8 text-blue-500">📄</span>;
-  return <span className="h-8 w-8 text-gray-500">📁</span>;
+const getFileIcon = (type: string, name?: string) => {
+  const ext = name?.split('.').pop()?.toLowerCase() || '';
+  if (type.startsWith("image")) return <FileImage className="h-8 w-8 text-green-500" />;
+  if (type.startsWith("video")) return <FileVideo className="h-8 w-8 text-purple-500" />;
+  if (type === "application/pdf" || ext === "pdf") return <FileText className="h-8 w-8 text-red-500" />;
+  if (["doc", "docx"].includes(ext)) return <FileType2 className="h-8 w-8 text-blue-500" />;
+  if (["xls", "xlsx"].includes(ext)) return <FileSpreadsheet className="h-8 w-8 text-green-700" />;
+  if (["ppt", "pptx"].includes(ext)) return <Presentation className="h-8 w-8 text-orange-500" />;
+  if (["zip", "rar", "7z"].includes(ext)) return <FileArchive className="h-8 w-8 text-yellow-500" />;
+  if (["txt", "md", "json"].includes(ext) || type.startsWith("text/")) return <FileText className="h-8 w-8 text-gray-500" />;
+  if (["mp3", "wav", "ogg"].includes(ext) || type.startsWith("audio/")) return <FileAudio className="h-8 w-8 text-pink-500" />;
+  if (["js", "ts", "jsx", "tsx", "css", "html"].includes(ext)) return <FileCode className="h-8 w-8 text-blue-400" />;
+  return <File className="h-8 w-8 text-gray-400" />;
 };
 
 const FileCard: React.FC<FileCardProps> = ({ file, onPreview, onEdit, onDelete, canManageFile }) => {
@@ -35,7 +42,7 @@ const FileCard: React.FC<FileCardProps> = ({ file, onPreview, onEdit, onDelete, 
         <div className="space-y-3">
           {/* File Preview */}
           <div className="aspect-video bg-muted rounded-lg flex items-center justify-center relative overflow-hidden">
-            {getFileIcon(file.file_type)}
+            {getFileIcon(file.file_type, file.file_name)}
           </div>
           {/* File Info */}
           <div className="space-y-2">
