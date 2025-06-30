@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import FileCard from "@/components/FileCard";
 
 const Resources = () => {
   const { user } = useAuth();
@@ -632,90 +633,14 @@ const Resources = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredFiles.map((file) => (
-                <Card key={file.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer min-w-[320px] w-fit mx-auto">
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      {/* File Preview */}
-                      <div className="aspect-video bg-muted rounded-lg flex items-center justify-center relative overflow-hidden">
-                        {getFileIcon(file.file_type)}
-                      </div>
-                      {/* File Info */}
-                      <div className="space-y-2">
-                        <h3 className="font-semibold text-sm truncate" title={file.file_name}>
-                          {file.file_name}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Avatar className="h-4 w-4">
-                            <AvatarImage src={file.profiles?.avatar_url} />
-                            <AvatarFallback>{file.profiles?.full_name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span>{file.profiles?.full_name}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Uploaded {file.created_at ? new Date(file.created_at).toLocaleDateString() : ''}
-                        </div>
-                        {file.description && (
-                          <div className="text-xs text-muted-foreground">{file.description}</div>
-                        )}
-                        {file.is_public && (
-                          <Badge variant="secondary" className="text-xs">Public</Badge>
-                        )}
-                      </div>
-                      {/* Action Buttons */}
-                      <div className="flex flex-wrap justify-center gap-2 mt-4">
-                        {canPreview(file) && (
-                          <Button 
-                            size="sm" 
-                            variant="secondary"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handlePreview(file);
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Preview
-                          </Button>
-                        )}
-                        <Button size="sm" variant="secondary" asChild>
-                          <a href={file.file_url} download target="_blank" rel="noopener noreferrer">
-                            <Download className="h-4 w-4 mr-1" />
-                            Download
-                          </a>
-                        </Button>
-                        {canManageFile(file) && (
-                          <>
-                            <Button 
-                              size="sm" 
-                              variant="secondary"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                openEditDialog(file);
-                              }}
-                            >
-                              <Edit className="h-4 w-4 mr-1" />
-                              Edit
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                openDeleteDialog(file);
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <FileCard
+                  key={file.id}
+                  file={file}
+                  onPreview={canPreview(file) ? handlePreview : undefined}
+                  onEdit={canManageFile(file) ? openEditDialog : undefined}
+                  onDelete={canManageFile(file) ? openDeleteDialog : undefined}
+                  canManageFile={canManageFile(file)}
+                />
               ))}
             </div>
           )}

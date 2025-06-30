@@ -11,12 +11,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import ProfileFollowButton from "@/components/ProfileFollowButton";
 import FollowersStats from "@/components/FollowersStats";
 import ProfileEditForm from "@/components/ProfileEditForm";
+import FileCard from "@/components/FileCard";
 
 const Profile = () => {
   const { user, profile } = useAuth();
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [userFiles, setUserFiles] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -50,6 +52,19 @@ const Profile = () => {
       if (!error) setUserPosts(data || []);
     };
     fetchUserPosts();
+  }, [profileData]);
+
+  useEffect(() => {
+    const fetchUserFiles = async () => {
+      if (!profileData) return;
+      const { data, error } = await supabase
+        .from('filemodels')
+        .select('*')
+        .eq('user_id', profileData.id)
+        .order('created_at', { ascending: false });
+      if (!error) setUserFiles(data || []);
+    };
+    fetchUserFiles();
   }, [profileData]);
 
   if (loading) return <div className="text-center py-10">Loading...</div>;
@@ -149,8 +164,15 @@ const Profile = () => {
               <CardTitle>Uploaded Files</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* TODO: Fetch and map real uploaded files for this user */}
-              <div className="text-muted-foreground">User files will appear here.</div>
+              {userFiles.length === 0 ? (
+                <div className="text-muted-foreground">User files will appear here.</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {userFiles.map(file => (
+                    <FileCard key={file.id} file={file} />
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
