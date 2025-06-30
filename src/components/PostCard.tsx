@@ -23,6 +23,8 @@ interface Post {
   user_id: string;
   content: string;
   media_url?: string;
+  image_url?: string;
+  file_url?: string;
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -69,10 +71,9 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         .from('likes')
         .select('id')
         .eq('post_id', post.id)
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', user.id);
 
-      if (!error && data) {
+      if (data && data.length > 0) {
         setIsLiked(true);
       }
     };
@@ -469,14 +470,39 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
               ) : (
                 <p className="text-sm leading-relaxed">{post.content}</p>
               )}
-              {post.media_url && !editing && (
-                <div className="rounded-lg overflow-hidden">
-                  <img
-                    src={post.media_url}
-                    alt="Post content"
-                    className="w-full h-auto object-cover"
-                  />
-                </div>
+              {!editing && (
+                <>
+                  {post.image_url && (
+                    <div className="rounded-lg overflow-hidden mt-2">
+                      <img
+                        src={post.image_url}
+                        alt="Post image"
+                        className="w-full h-auto object-cover max-h-96"
+                      />
+                    </div>
+                  )}
+                  {post.file_url && post.file_url.endsWith('.pdf') && (
+                    <div className="rounded-lg overflow-hidden mt-2">
+                      <iframe
+                        src={post.file_url}
+                        title="PDF Preview"
+                        className="w-full h-96 border"
+                      />
+                    </div>
+                  )}
+                  {post.file_url && !post.file_url.endsWith('.pdf') && (
+                    <div className="rounded-lg overflow-hidden mt-2">
+                      <a
+                        href={post.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        Download attached file
+                      </a>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             

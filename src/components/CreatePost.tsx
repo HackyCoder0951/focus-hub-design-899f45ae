@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import Picker from '@emoji-mart/react';
-import 'emoji-mart/css/emoji-mart.css';
 
 interface CreatePostProps {
   onPostCreated?: () => void;
