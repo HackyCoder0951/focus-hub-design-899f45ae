@@ -13,6 +13,7 @@ const Feed = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [search, setSearch] = useState("");
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -44,7 +45,7 @@ const Feed = () => {
       })) || [];
 
       setPosts(transformedPosts);
-      console.log("Fetched posts:", transformedPosts);
+      // console.log("Fetched posts:", transformedPosts);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
@@ -67,7 +68,7 @@ const Feed = () => {
           filter: 'is_deleted=eq.false'
         },
         (payload) => {
-          console.log('Posts change:', payload);
+          // console.log('Posts change:', payload);
           fetchPosts(); // Refresh posts when there are changes
         }
       )
@@ -79,15 +80,31 @@ const Feed = () => {
           table: 'likes'
         },
         (payload) => {
-          console.log('Likes change:', payload);
-          fetchPosts(); // Refresh posts when likes change
+          // console.log('Likes change event received:', payload);
+          const postId = (payload.new as any)?.post_id || (payload.old as any)?.post_id;
+          if (!postId) return;
+          // Fetch the latest like count for the affected post
+          supabase
+            .from('likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', postId)
+            .then(({ count }) => {
+              setPosts((prevPosts) =>
+                prevPosts.map((post) =>
+                  post.id === postId ? { ...post, likes_count: count || 0 } : post
+                )
+              );
+            });
         }
       )
       .subscribe();
 
+    // console.log('Subscribed to posts_changes channel for posts and likes!'); // Debug log
+
     // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(postsSubscription);
+      // console.log('Unsubscribed from posts_changes channel.'); // Debug log
     };
   }, []);
 
@@ -99,35 +116,47 @@ const Feed = () => {
     fetchPosts();
   };
 
+  // Filter posts by search query
+  const filteredPosts = posts.filter(post =>
+    post.content.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {user && <CreatePost onPostCreated={handlePostCreated} />}
+      {/* Search input */}
+      <input
+        type="text"
+        className="w-full mb-4 p-2 border rounded"
+        placeholder="Search posts..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
       <div className="space-y-6">
         {loading ? (
           <div className="text-center py-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="mt-2 text-muted-foreground">Loading posts...</p>
           </div>
-        ) : posts.length === 0 ? (
+        ) : filteredPosts.length === 0 ? (
           <Card>
             <CardContent className="text-center py-10">
               <div className="text-muted-foreground">
-                {user ? "No posts yet. Be the first to share something!" : "Sign in to see posts and share your thoughts."}
+                {user ? "No posts found." : "Sign in to see posts and share your thoughts."}
               </div>
             </CardContent>
           </Card>
         ) : (
-          posts.map((post) => (
+          filteredPosts.map((post) => (
             <PostCard 
               key={post.id} 
               post={post} 
               onPostUpdated={handlePostUpdated}
-              
             />
           ))
         )}
       </div>
-      {posts.length > 0 && (
+      {filteredPosts.length > 0 && (
         <div className="text-center py-8">
           <p className="text-muted-foreground">You're all caught up! 🎉</p>
         </div>

@@ -21,10 +21,10 @@ import {
   DialogContent,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Document, Page } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+// import { Document, Page } from 'react-pdf';
+// import 'react-pdf/dist/Page/AnnotationLayer.css';
+// import 'react-pdf/dist/Page/TextLayer.css';
+// import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
 interface Post {
   id: string;
@@ -50,82 +50,82 @@ interface PostCardProps {
   onPostUpdated?: () => void;
 }
 
-// Custom PDFCanvasViewer component
-function PDFCanvasViewer({ url, open, onClose }) {
-  const canvasRef = useRef(null);
-  const [pageNum, setPageNum] = useState(1);
-  const [numPages, setNumPages] = useState(0);
+// // Custom PDFCanvasViewer component
+// function PDFCanvasViewer({ url, open, onClose }) {
+//   const canvasRef = useRef(null);
+//   const [pageNum, setPageNum] = useState(1);
+//   const [numPages, setNumPages] = useState(0);
 
-  useEffect(() => {
-    if (!open) return;
-    let pdfDoc = null;
-    let isMounted = true;
-    GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-    getDocument(url).promise.then(doc => {
-      if (!isMounted) return;
-      pdfDoc = doc;
-      setNumPages(doc.numPages);
-      return doc.getPage(pageNum);
-    }).then(page => {
-      if (!isMounted) return;
-      const viewport = page.getViewport({ scale: 1.5 });
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      page.render({ canvasContext: context, viewport });
-    });
-    return () => { isMounted = false; };
-  }, [url, pageNum, open]);
+//   useEffect(() => {
+//     if (!open) return;
+//     let pdfDoc = null;
+//     let isMounted = true;
+//     GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+//     getDocument(url).promise.then(doc => {
+//       if (!isMounted) return;
+//       pdfDoc = doc;
+//       setNumPages(doc.numPages);
+//       return doc.getPage(pageNum);
+//     }).then(page => {
+//       if (!isMounted) return;
+//       const viewport = page.getViewport({ scale: 1.5 });
+//       const canvas = canvasRef.current;
+//       const context = canvas.getContext('2d');
+//       canvas.height = viewport.height;
+//       canvas.width = viewport.width;
+//       page.render({ canvasContext: context, viewport });
+//     });
+//     return () => { isMounted = false; };
+//   }, [url, pageNum, open]);
 
-  return (
-    <div className="w-full h-full flex flex-col bg-black">
-      <div className="w-full flex items-center justify-between px-6 py-3 bg-black text-white border-b" style={{ position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
-        <span className="font-semibold text-base truncate mx-auto" style={{ flex: 1, textAlign: 'center' }}>
-          {url.split('/').pop()}
-        </span>
-        <button onClick={onClose} className="text-white text-2xl px-2 absolute right-4 top-1">×</button>
-      </div>
-      <div className="flex-1 flex items-center justify-center bg-neutral-900 overflow-auto">
-        <canvas ref={canvasRef} className="bg-white shadow-xl rounded" />
-      </div>
-      <div className="flex items-center justify-between px-6 py-3 bg-black text-white border-t">
-        <div className="flex gap-2 items-center">
-          <button onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1} className="px-3 py-1 bg-gray-700 rounded text-white">Prev</button>
-          <span className="text-xs">Page {pageNum} of {numPages}</span>
-          <button onClick={() => setPageNum(p => Math.min(numPages, p + 1))} disabled={pageNum >= numPages} className="px-3 py-1 bg-gray-700 rounded text-white">Next</button>
-        </div>
-        <button onClick={() => setPageNum(1)} disabled={pageNum === 1} className="px-3 py-1 bg-gray-700 rounded text-white">First</button>
-      </div>
-    </div>
-  );
-}
+//   return (
+//     <div className="w-full h-full flex flex-col bg-black">
+//       <div className="w-full flex items-center justify-between px-6 py-3 bg-black text-white border-b" style={{ position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
+//         <span className="font-semibold text-base truncate mx-auto" style={{ flex: 1, textAlign: 'center' }}>
+//           {url.split('/').pop()}
+//         </span>
+//         <button onClick={onClose} className="text-white text-2xl px-2 absolute right-4 top-1">×</button>
+//       </div>
+//       <div className="flex-1 flex items-center justify-center bg-neutral-900 overflow-auto">
+//         <canvas ref={canvasRef} className="bg-white shadow-xl rounded" />
+//       </div>
+//       <div className="flex items-center justify-between px-6 py-3 bg-black text-white border-t">
+//         <div className="flex gap-2 items-center">
+//           <button onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1} className="px-3 py-1 bg-gray-700 rounded text-white">Prev</button>
+//           <span className="text-xs">Page {pageNum} of {numPages}</span>
+//           <button onClick={() => setPageNum(p => Math.min(numPages, p + 1))} disabled={pageNum >= numPages} className="px-3 py-1 bg-gray-700 rounded text-white">Next</button>
+//         </div>
+//         <button onClick={() => setPageNum(1)} disabled={pageNum === 1} className="px-3 py-1 bg-gray-700 rounded text-white">First</button>
+//       </div>
+//     </div>
+//   );
+// }
 
-function PDFThumbnail({ url, onClick }) {
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    let isMounted = true;
-    GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
-    getDocument(url).promise.then(doc => doc.getPage(1)).then(page => {
-      if (!isMounted) return;
-      const viewport = page.getViewport({ scale: 0.5 });
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-      page.render({ canvasContext: context, viewport });
-    });
-    return () => { isMounted = false; };
-  }, [url]);
-  return (
-    <div className="relative cursor-pointer w-full flex justify-center bg-white py-2" onClick={onClick}>
-      <canvas ref={canvasRef} className="bg-white shadow rounded w-auto max-w-full max-h-60" />
-      <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
-        PDF Preview
-      </div>
-    </div>
-  );
-}
+// function PDFThumbnail({ url, onClick }) {
+//   const canvasRef = useRef(null);
+//   useEffect(() => {
+//     let isMounted = true;
+//     GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+//     getDocument(url).promise.then(doc => doc.getPage(1)).then(page => {
+//       if (!isMounted) return;
+//       const viewport = page.getViewport({ scale: 0.5 });
+//       const canvas = canvasRef.current;
+//       const context = canvas.getContext('2d');
+//       canvas.height = viewport.height;
+//       canvas.width = viewport.width;
+//       page.render({ canvasContext: context, viewport });
+//     });
+//     return () => { isMounted = false; };
+//   }, [url]);
+//   return (
+//     <div className="relative cursor-pointer w-full flex justify-center bg-white py-2" onClick={onClick}>
+//       <canvas ref={canvasRef} className="bg-white shadow rounded w-auto max-w-full max-h-60" />
+//       <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+//         PDF Preview
+//       </div>
+//     </div>
+//   );
+// }
 
 const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const { user } = useAuth();
@@ -241,10 +241,10 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         setLikesCount(prev => prev + 1);
       }
 
-      // Notify parent component to refresh
-      if (onPostUpdated) {
-        onPostUpdated();
-      }
+      // // Notify parent component to refresh
+      // if (onPostUpdated) {
+      //   onPostUpdated();
+      // }
     } catch (error: any) {
       console.error('Error toggling like:', error);
       toast({
