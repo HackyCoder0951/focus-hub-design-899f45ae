@@ -16,7 +16,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const Header = () => {
+const Header = ({ search, setSearch }) => {
   const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
 
@@ -40,6 +40,8 @@ const Header = () => {
             className="h-9 w-full border-0 bg-muted/50 pl-11 pr-3 text-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
             placeholder="Search Focus..."
             type="search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-x-4 lg:gap-x-6">

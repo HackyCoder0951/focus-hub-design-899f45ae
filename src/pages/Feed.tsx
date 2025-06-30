@@ -8,12 +8,18 @@ import PostCard from "@/components/PostCard";
 import CreatePost from "@/components/CreatePost";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOutletContext } from "react-router-dom";
+
+// Add a type for the outlet context
+interface FeedOutletContext {
+  search: string;
+}
 
 const Feed = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const [search, setSearch] = useState("");
+  const { search } = useOutletContext<FeedOutletContext>();
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -116,22 +122,18 @@ const Feed = () => {
     fetchPosts();
   };
 
-  // Filter posts by search query
-  const filteredPosts = posts.filter(post =>
-    post.content.toLowerCase().includes(search.toLowerCase())
-  );
+  // Robust filter for posts by search query (content or author name)
+  const filteredPosts = posts.filter(post => {
+    const content = post.content?.toLowerCase() || "";
+    const author = post.profiles?.full_name?.toLowerCase() || "";
+    const query = search.toLowerCase();
+    return content.includes(query) || author.includes(query);
+  });
+  console.log({ posts, search, filteredPosts });
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {user && <CreatePost onPostCreated={handlePostCreated} />}
-      {/* Search input */}
-      <input
-        type="text"
-        className="w-full mb-4 p-2 border rounded"
-        placeholder="Search posts..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-      />
       <div className="space-y-6">
         {loading ? (
           <div className="text-center py-10">
