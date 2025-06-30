@@ -77,6 +77,7 @@ const Chat = () => {
   const [addMemberSearch, setAddMemberSearch] = useState("");
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
+  const [showAdminLeaveWarning, setShowAdminLeaveWarning] = useState(false);
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -296,6 +297,14 @@ const Chat = () => {
 
   const handleDeleteChat = async () => {
     if (!currentChat) return;
+    if (currentChat.is_group) {
+      // Check if user is the only admin
+      const adminMembers = currentChat.chat_members.filter(m => m.is_admin);
+      if (adminMembers.length === 1 && adminMembers[0].user_id === user.id) {
+        setShowAdminLeaveWarning(true);
+        return;
+      }
+    }
     
     try {
       if (currentChat.is_group) {
@@ -733,6 +742,18 @@ const Chat = () => {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      {/* Admin Leave Warning Dialog */}
+      <Dialog open={showAdminLeaveWarning} onOpenChange={setShowAdminLeaveWarning}>
+        <DialogContent>
+          <DialogTitle>Cannot Leave Group</DialogTitle>
+          <p>
+            You are the only admin in this group. Please assign admin rights to another member before leaving.
+          </p>
+          <Button onClick={() => { setShowAdminLeaveWarning(false); setGroupInfoOpen(true); }}>
+            Open Group Info
+          </Button>
         </DialogContent>
       </Dialog>
     </div>
