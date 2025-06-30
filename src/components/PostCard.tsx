@@ -14,9 +14,17 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-// import { Input } from "@/components/ui/input";
-// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle
+} from "@/components/ui/dialog";
+import { Document, Page } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 
 interface Post {
   id: string;
@@ -42,6 +50,83 @@ interface PostCardProps {
   onPostUpdated?: () => void;
 }
 
+// Custom PDFCanvasViewer component
+function PDFCanvasViewer({ url, open, onClose }) {
+  const canvasRef = useRef(null);
+  const [pageNum, setPageNum] = useState(1);
+  const [numPages, setNumPages] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+    let pdfDoc = null;
+    let isMounted = true;
+    GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+    getDocument(url).promise.then(doc => {
+      if (!isMounted) return;
+      pdfDoc = doc;
+      setNumPages(doc.numPages);
+      return doc.getPage(pageNum);
+    }).then(page => {
+      if (!isMounted) return;
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      page.render({ canvasContext: context, viewport });
+    });
+    return () => { isMounted = false; };
+  }, [url, pageNum, open]);
+
+  return (
+    <div className="w-full h-full flex flex-col bg-black">
+      <div className="w-full flex items-center justify-between px-6 py-3 bg-black text-white border-b" style={{ position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
+        <span className="font-semibold text-base truncate mx-auto" style={{ flex: 1, textAlign: 'center' }}>
+          {url.split('/').pop()}
+        </span>
+        <button onClick={onClose} className="text-white text-2xl px-2 absolute right-4 top-1">×</button>
+      </div>
+      <div className="flex-1 flex items-center justify-center bg-neutral-900 overflow-auto">
+        <canvas ref={canvasRef} className="bg-white shadow-xl rounded" />
+      </div>
+      <div className="flex items-center justify-between px-6 py-3 bg-black text-white border-t">
+        <div className="flex gap-2 items-center">
+          <button onClick={() => setPageNum(p => Math.max(1, p - 1))} disabled={pageNum <= 1} className="px-3 py-1 bg-gray-700 rounded text-white">Prev</button>
+          <span className="text-xs">Page {pageNum} of {numPages}</span>
+          <button onClick={() => setPageNum(p => Math.min(numPages, p + 1))} disabled={pageNum >= numPages} className="px-3 py-1 bg-gray-700 rounded text-white">Next</button>
+        </div>
+        <button onClick={() => setPageNum(1)} disabled={pageNum === 1} className="px-3 py-1 bg-gray-700 rounded text-white">First</button>
+      </div>
+    </div>
+  );
+}
+
+function PDFThumbnail({ url, onClick }) {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    let isMounted = true;
+    GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`;
+    getDocument(url).promise.then(doc => doc.getPage(1)).then(page => {
+      if (!isMounted) return;
+      const viewport = page.getViewport({ scale: 0.5 });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      page.render({ canvasContext: context, viewport });
+    });
+    return () => { isMounted = false; };
+  }, [url]);
+  return (
+    <div className="relative cursor-pointer w-full flex justify-center bg-white py-2" onClick={onClick}>
+      <canvas ref={canvasRef} className="bg-white shadow rounded w-auto max-w-full max-h-60" />
+      <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+        PDF Preview
+      </div>
+    </div>
+  );
+}
+
 const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -61,6 +146,11 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [commentInput, setCommentInput] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'video' | null>(null);
+  const [numPages, setNumPages] = useState<number>(0);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [mediaType, setMediaType] = useState<'image' | 'pdf' | 'video' | null>(null);
 
   // Check if user has liked this post
   useEffect(() => {
@@ -403,6 +493,14 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     );
   };
 
+  // Helper to determine file type
+  const getFileType = (url: string) => {
+    if (url.match(/\.(pdf)$/i)) return 'pdf';
+    if (url.match(/\.(mp4|webm|ogg)$/i)) return 'video';
+    if (url.match(/\.(jpg|jpeg|png|gif|bmp|svg|webp)$/i)) return 'image';
+    return null;
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
@@ -472,25 +570,33 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
               )}
               {!editing && (
                 <>
+                  {/* IMAGE PREVIEW */}
                   {post.image_url && (
-                    <div className="rounded-lg overflow-hidden mt-2">
+                    <div className="rounded-lg overflow-hidden mt-2 relative">
                       <img
                         src={post.image_url}
                         alt="Post image"
-                        className="w-full h-auto object-cover max-h-96"
+                        className="w-full h-auto object-cover max-h-96 cursor-pointer"
+                        onClick={() => { setPreviewType('image'); setMediaType('image'); setPreviewOpen(true); }}
                       />
+                      <Dialog open={previewOpen && previewType === 'image'} onOpenChange={open => setPreviewOpen(open)}>
+                        <DialogContent className="w-screen max-w-full h-screen max-h-full flex flex-col p-0 bg-black">
+                          <div className="flex items-center justify-between px-6 py-3 bg-black text-white border-b">
+                            <span className="font-semibold text-base truncate">Image Preview</span>
+                            <Button size="icon" variant="ghost" className="text-white" onClick={() => setPreviewOpen(false)}>
+                              <span className="sr-only">Close</span>
+                              ×
+                            </Button>
+                          </div>
+                          <div className="flex-1 flex items-center justify-center bg-neutral-900">
+                            <img src={post.image_url} alt="Post image" className="max-h-[80vh] max-w-full object-contain bg-white shadow-xl rounded" />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   )}
-                  {post.file_url && post.file_url.endsWith('.pdf') && (
-                    <div className="rounded-lg overflow-hidden mt-2">
-                      <iframe
-                        src={post.file_url}
-                        title="PDF Preview"
-                        className="w-full h-96 border"
-                      />
-                    </div>
-                  )}
-                  {post.file_url && !post.file_url.endsWith('.pdf') && (
+                  {/* Other file types */}
+                  {post.file_url && !getFileType(post.file_url) && (
                     <div className="rounded-lg overflow-hidden mt-2">
                       <a
                         href={post.file_url}

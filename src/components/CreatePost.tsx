@@ -20,8 +20,6 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const { toast } = useToast();
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,14 +27,6 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
     if (file) {
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFile(file);
-      setFileName(file.name);
     }
   };
 
@@ -48,11 +38,6 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const handleRemoveImage = () => {
     setImage(null);
     setImagePreview(null);
-  };
-
-  const handleRemoveFile = () => {
-    setFile(null);
-    setFileName(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,7 +63,6 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
     setIsSubmitting(true);
     let imageUrl = null;
-    let fileUrl = null;
     try {
       // Upload image if present
       if (image) {
@@ -87,20 +71,12 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         const { data: publicUrlData } = supabase.storage.from('post-media').getPublicUrl(data.path);
         imageUrl = publicUrlData.publicUrl;
       }
-      // Upload file if present
-      if (file) {
-        const { data, error } = await supabase.storage.from('post-media').upload(`files/${Date.now()}_${file.name}`, file, { upsert: true });
-        if (error) throw error;
-        const { data: publicUrlData } = supabase.storage.from('post-media').getPublicUrl(data.path);
-        fileUrl = publicUrlData.publicUrl;
-      }
       const { error } = await supabase
         .from('posts')
         .insert({
           user_id: user.id,
           content: content.trim(),
           image_url: imageUrl,
-          file_url: fileUrl,
         });
 
       if (error) {
@@ -115,8 +91,6 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       setContent("");
       setImage(null);
       setImagePreview(null);
-      setFile(null);
-      setFileName(null);
       
       // Notify parent component to refresh posts
       if (onPostCreated) {
@@ -159,24 +133,12 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                   <Button type="button" size="icon" variant="ghost" className="absolute top-0 right-0" onClick={handleRemoveImage}><X className="w-4 h-4" /></Button>
                 </div>
               )}
-              {fileName && (
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="truncate max-w-xs">{fileName}</span>
-                  <Button type="button" size="icon" variant="ghost" onClick={handleRemoveFile}><X className="w-4 h-4" /></Button>
-                </div>
-              )}
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
                   <input type="file" accept="image/*" className="hidden" id="image-upload" onChange={handleImageChange} disabled={isSubmitting} />
                   <label htmlFor="image-upload">
                     <Button type="button" variant="ghost" size="sm" asChild disabled={isSubmitting}>
                       <span><ImageIcon className="h-4 w-4 mr-2" />Photo</span>
-                    </Button>
-                  </label>
-                  <input type="file" className="hidden" id="file-upload" onChange={handleFileChange} disabled={isSubmitting} />
-                  <label htmlFor="file-upload">
-                    <Button type="button" variant="ghost" size="sm" asChild disabled={isSubmitting}>
-                      <span>📎 File</span>
                     </Button>
                   </label>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setShowEmojiPicker((v) => !v)} disabled={isSubmitting}>
