@@ -135,7 +135,7 @@ const Chat = () => {
 
         return {
           ...chat,
-          chat_members: members || [],
+          chat_members: (members || []) as any,
           last_message: lastMessage
         };
       });
@@ -295,15 +295,48 @@ const Chat = () => {
 
   const handleDeleteChat = async () => {
     if (!currentChat) return;
-    if (currentChat.is_group) {
-      // For group: remove self from chat_members
-      await supabase.from('chat_members').delete().eq('chat_id', currentChat.id).eq('user_id', user.id);
-    } else {
-      // For direct: remove self from chat_members
-      await supabase.from('chat_members').delete().eq('chat_id', currentChat.id).eq('user_id', user.id);
+    
+    try {
+      if (currentChat.is_group) {
+        // Remove the user from chat_members
+        const { error: deleteError } = await supabase
+          .from('chat_members')
+          .delete()
+          .eq('chat_id', currentChat.id)
+          .eq('user_id', user.id);
+        
+        if (deleteError) throw deleteError;
+
+        // Check if any members remain
+        const { data: remainingMembers } = await supabase
+          .from('chat_members')
+          .select('user_id')
+          .eq('chat_id', currentChat.id);
+
+        // If no members remain, delete the group and messages
+        if (!remainingMembers || remainingMembers.length === 0) {
+          await supabase
+            .from('chat_messages')
+            .delete()
+            .eq('chat_id', currentChat.id);
+          
+          await supabase
+            .from('chats')
+            .delete()
+            .eq('id', currentChat.id);
+        }
+      } else {
+        // For direct: remove self from chat_members
+        await supabase.from('chat_members').delete().eq('chat_id', currentChat.id).eq('user_id', user.id);
+      }
+
+      setSelectedChat(null);
+      fetchChats();
+      toast({ title: currentChat.is_group ? 'You left the group.' : 'Chat deleted.' });
+    } catch (error) {
+      console.error('Error:', error);
+      toast({ title: 'Error', description: 'Please try again.', variant: 'destructive' });
     }
-    setSelectedChat(null);
-    fetchChats();
   };
 
   const handleExportChat = () => {
