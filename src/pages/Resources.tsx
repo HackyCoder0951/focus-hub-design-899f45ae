@@ -38,6 +38,8 @@ const Resources = () => {
   const [editIsPublic, setEditIsPublic] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [fileTypeFilter, setFileTypeFilter] = useState("all");
+  const [visibilityFilter, setVisibilityFilter] = useState("all");
 
   const fetchFiles = async () => {
     setLoading(true);
@@ -187,10 +189,26 @@ const Resources = () => {
     setTextContent("");
   };
 
-  const filteredFiles = files.filter(file => 
-    file.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredFiles = files.filter(file => {
+    // Search filter
+    const matchesSearch = file.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    // File type filter
+    let matchesType = true;
+    const type = file.file_type?.toLowerCase() || "";
+    const name = file.file_name?.toLowerCase() || "";
+    if (fileTypeFilter === "image") matchesType = type.startsWith("image/");
+    else if (fileTypeFilter === "video") matchesType = type.startsWith("video/");
+    else if (fileTypeFilter === "pdf") matchesType = type === "application/pdf" || name.endsWith(".pdf");
+    else if (fileTypeFilter === "office") matchesType = [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"].some(ext => name.endsWith(ext));
+    else if (fileTypeFilter === "text") matchesType = type.startsWith("text/") || [".txt", ".md", ".json", ".js", ".ts", ".jsx", ".tsx", ".css", ".html"].some(ext => name.endsWith(ext));
+    else if (fileTypeFilter === "other") matchesType = !(type.startsWith("image/") || type.startsWith("video/") || type === "application/pdf" || [".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"].some(ext => name.endsWith(ext)) || type.startsWith("text/"));
+    // Visibility filter
+    let matchesVisibility = true;
+    if (visibilityFilter === "public") matchesVisibility = file.is_public === true;
+    else if (visibilityFilter === "private") matchesVisibility = file.is_public === false;
+    return matchesSearch && matchesType && matchesVisibility;
+  });
 
   const getFileIcon = (type: string) => {
     if (!type) return <File className="h-8 w-8 text-gray-500" />;
@@ -538,20 +556,36 @@ const Resources = () => {
       <Card>
         <CardContent className="p-6">
           <div className="space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search files..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-4">
+              <Input
+                type="text"
+                placeholder="Search files..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full md:w-64"
+              />
+              <select
+                className="border rounded px-2 py-1 bg-background text-foreground"
+                value={fileTypeFilter}
+                onChange={e => setFileTypeFilter(e.target.value)}
+              >
+                <option value="all">All Types</option>
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+                <option value="pdf">PDF</option>
+                <option value="office">Office</option>
+                <option value="text">Text</option>
+                <option value="other">Other</option>
+              </select>
+              <select
+                className="border rounded px-2 py-1 bg-background text-foreground"
+                value={visibilityFilter}
+                onChange={e => setVisibilityFilter(e.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
             </div>
           </div>
         </CardContent>
