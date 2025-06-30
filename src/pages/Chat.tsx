@@ -119,6 +119,7 @@ const Chat = () => {
             chat_id,
             user_id,
             joined_at,
+            is_admin,
             profiles: user_id (full_name, avatar_url)
           `)
           .eq('chat_id', chat.id);
@@ -377,9 +378,11 @@ const Chat = () => {
     }
   }, [groupInfoOpen, currentChat]);
 
-  const isCurrentUserAdmin = useMemo(() => {
-    return currentChat?.chat_members.find(m => m.user_id === user?.id)?.is_admin;
-  }, [currentChat, user]);
+  const isCurrentUserAdmin = currentChat?.chat_members.some(
+    (m) => m.user_id === user?.id && m.is_admin
+  );
+
+  console.log("isCurrentUserAdmin", isCurrentUserAdmin, user?.id, currentChat?.chat_members);
 
   const handleAddMember = async (userId: string) => {
     setAddMemberLoading(true);
@@ -516,9 +519,9 @@ const Chat = () => {
                   {currentChat.is_group ? (
                     <>
                       <Users className="h-10 w-10 text-muted-foreground" />
-                      <Badge variant="secondary" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
+                      {/* <Badge variant="secondary" className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs">
                         {currentChat.chat_members.length}
-                      </Badge>
+                      </Badge> */}
                     </>
                   ) : (
                     <Avatar>
@@ -671,15 +674,20 @@ const Chat = () => {
                       <span>{member.profiles?.full_name}</span>
                       {member.is_admin && <Badge variant="secondary">Admin</Badge>}
                       {isCurrentUserAdmin && user?.id !== member.user_id && (
-                        member.is_admin ? (
-                          <Button size="sm" variant="outline" onClick={() => handleToggleAdmin(member.user_id, false)}>
-                            Remove Admin
+                        <>
+                          {member.is_admin ? (
+                            <Button size="sm" variant="outline" onClick={() => handleToggleAdmin(member.user_id, false)}>
+                              Remove Admin
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="secondary" onClick={() => handleToggleAdmin(member.user_id, true)}>
+                              Make Admin
+                            </Button>
+                          )}
+                          <Button size="sm" variant="destructive" onClick={() => handleRemoveMember(member.user_id)}>
+                            Remove
                           </Button>
-                        ) : (
-                          <Button size="sm" variant="secondary" onClick={() => handleToggleAdmin(member.user_id, true)}>
-                            Make Admin
-                          </Button>
-                        )
+                        </>
                       )}
                     </li>
                   ))}
