@@ -40,6 +40,7 @@ const Resources = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [fileTypeFilter, setFileTypeFilter] = useState("all");
   const [visibilityFilter, setVisibilityFilter] = useState("all");
+  const [sortOption, setSortOption] = useState("newest");
 
   const fetchFiles = async () => {
     setLoading(true);
@@ -208,6 +209,16 @@ const Resources = () => {
     if (visibilityFilter === "public") matchesVisibility = file.is_public === true;
     else if (visibilityFilter === "private") matchesVisibility = file.is_public === false;
     return matchesSearch && matchesType && matchesVisibility;
+  })
+  // Sort logic
+  .sort((a, b) => {
+    if (sortOption === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (sortOption === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (sortOption === "name-asc") return a.file_name.localeCompare(b.file_name);
+    if (sortOption === "name-desc") return b.file_name.localeCompare(a.file_name);
+    if (sortOption === "size-desc") return (b.file_size || 0) - (a.file_size || 0);
+    if (sortOption === "size-asc") return (a.file_size || 0) - (b.file_size || 0);
+    return 0;
   });
 
   const getFileIcon = (type: string) => {
@@ -562,7 +573,7 @@ const Resources = () => {
                 placeholder="Search files..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full md:w-64"
+                className="w-full md:w-70"
               />
               <select
                 className="border rounded px-2 py-1 bg-background text-foreground"
@@ -585,6 +596,18 @@ const Resources = () => {
                 <option value="all">All</option>
                 <option value="public">Public</option>
                 <option value="private">Private</option>
+              </select>
+              <select
+                className="border rounded px-2 py-1 bg-background text-foreground"
+                value={sortOption}
+                onChange={e => setSortOption(e.target.value)}
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="size-desc">Size (Largest)</option>
+                <option value="size-asc">Size (Smallest)</option>
               </select>
             </div>
           </div>
