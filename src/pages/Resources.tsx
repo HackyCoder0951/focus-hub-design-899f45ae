@@ -75,14 +75,14 @@ const Resources = () => {
 
       // Upload file to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('files')
+        .from('uploads')
         .upload(fileName, selectedFile);
 
       if (uploadError) throw uploadError;
 
       // Get the public URL
       const { data: urlData } = supabase.storage
-        .from('files')
+        .from('uploads')
         .getPublicUrl(fileName);
 
       // Save file metadata to database
