@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send, Search, Plus, MoreVertical, Users, MessageCircle } from "lucide-react";
+import { Send, Search, Plus, MoreVertical, Users, MessageCircle, Paperclip, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +24,7 @@ interface ChatMessage {
     full_name: string;
     avatar_url: string;
   };
+  media_url?: string;
 }
 
 interface ChatMember {
@@ -78,6 +79,8 @@ const Chat = () => {
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<Profile[]>([]);
   const [showAdminLeaveWarning, setShowAdminLeaveWarning] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -244,6 +247,35 @@ const Chat = () => {
       console.error('Error sending message:', error);
     } finally {
       setIsTyping(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !selectedChat) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${ext}`;
+      const { data, error } = await supabase.storage
+        .from('chat_uploads')
+        .upload(fileName, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage
+        .from('chat_uploads')
+        .getPublicUrl(fileName);
+      // Send message with media_url
+      await supabase.from('chat_messages').insert({
+        chat_id: selectedChat,
+        user_id: user.id,
+        content: '',
+        media_url: urlData.publicUrl,
+      });
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (err) {
+      setUploading(false);
+      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -601,6 +633,16 @@ const Chat = () => {
                             {message.profiles?.full_name}
                           </p>
                         )}
+                        {/* If message has media_url, show preview */}
+                        {message.media_url ? (
+                          message.media_url.match(/\.(jpeg|jpg|png|gif|webp)$/i) ? (
+                            <img src={message.media_url} alt="attachment" className="rounded max-h-48 mb-2" />
+                          ) : (
+                            <a href={message.media_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline block mb-2">
+                              <Paperclip className="inline h-4 w-4 mr-1" /> Download File
+                            </a>
+                          )
+                        ) : null}
                         <p className="text-sm">{message.content}</p>
                         <p
                           className={cn(
@@ -621,15 +663,25 @@ const Chat = () => {
 
               {/* Message Input */}
               <div className="p-4 border-t">
-                <form onSubmit={handleSendMessage} className="flex gap-2">
+                <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                  <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                    <Paperclip className="h-5 w-5" />
+                  </Button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                    accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,.txt,.zip,.rar,.7z"
+                  />
                   <Input
                     placeholder="Type a message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     className="flex-1"
-                    disabled={isTyping}
+                    disabled={isTyping || uploading}
                   />
-                  <Button type="submit" disabled={!newMessage.trim() || isTyping}>
+                  <Button type="submit" disabled={!newMessage.trim() || isTyping || uploading}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </form>
