@@ -46,6 +46,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
   const [isLiking, setIsLiking] = useState(false);
+  const [isPostAnimating, setIsPostAnimating] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const [deleting, setDeleting] = useState(false);
@@ -119,6 +120,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     }
 
     setIsLiking(true);
+    setIsPostAnimating(true);
 
     try {
       if (isLiked) {
@@ -161,6 +163,11 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
       });
     } finally {
       setIsLiking(false);
+      
+      // Stop animation after a short delay
+      setTimeout(() => {
+        setIsPostAnimating(false);
+      }, 600);
     }
   };
 
@@ -225,7 +232,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   };
 
   // Helper: recursively render comments and replies
-  const CommentThread = ({ comments, parentId, user, onRefresh }: any) => {
+  const CommentThread = ({ comments, parentId, user, onRefresh, depth = 0 }: any) => {
     const filtered = comments.filter((c: any) => c.parent_id == parentId);
     return filtered.map((comment: any) => (
       <CommentItem
@@ -234,11 +241,12 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         comments={comments}
         user={user}
         onRefresh={onRefresh}
+        depth={depth}
       />
     ));
   };
 
-  const CommentItem = ({ comment, comments, user, onRefresh }: any) => {
+  const CommentItem = ({ comment, comments, user, onRefresh, depth = 0 }: any) => {
     const [editing, setEditing] = useState(false);
     const [editContent, setEditContent] = useState(comment.content);
     const [replying, setReplying] = useState(false);
@@ -246,6 +254,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     const [loading, setLoading] = useState(false);
     const [likeCount, setLikeCount] = useState(comment.comment_likes?.[0]?.count || 0);
     const [liked, setLiked] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false);
 
     // Check if user liked this comment
     useEffect(() => {
@@ -265,6 +274,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     const handleLike = async () => {
       if (!user) return;
       setLoading(true);
+      setIsAnimating(true);
       if (liked) {
         await supabase.from('comment_likes').delete().eq('comment_id', comment.id).eq('user_id', user.id);
         setLikeCount((c: number) => Math.max(c - 1, 0));
@@ -275,6 +285,9 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         setLiked(true);
       }
       setLoading(false);
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 600);
       if (onRefresh) onRefresh();
     };
 
@@ -342,9 +355,18 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             <div className="text-sm mt-1">{comment.content}</div>
           )}
           <div className="flex gap-2 mt-1 items-center">
-            <Button size="sm" variant="ghost" onClick={handleLike} disabled={loading} className={liked ? "text-red-500" : ""}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleLike}
+              disabled={loading}
+              className={cn(
+                liked ? "text-red-500" : "",
+                isAnimating && (depth === 0 ? "animate-bounce" : "animate-pulse")
+              )}
+            >
               <span className={cn("flex items-center gap-1", liked && "text-red-500")}> 
-                <Heart className={cn("h-3 w-3", liked && "fill-current text-red-500")} />
+                <Heart className={cn("h-3 w-3", liked && "fill-current text-red-500")}/>
                 <span>{likeCount}</span>
               </span>
             </Button>
@@ -373,7 +395,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
           )}
           {/* Render replies recursively */}
           <div className="pl-6">
-            <CommentThread comments={comments} parentId={comment.id} user={user} onRefresh={onRefresh} />
+            <CommentThread comments={comments} parentId={comment.id} user={user} onRefresh={onRefresh} depth={depth + 1} />
           </div>
         </div>
       </div>
@@ -466,7 +488,8 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 disabled={isLiking}
                 className={cn(
                   "flex items-center gap-2",
-                  isLiked && "text-red-500"
+                  isLiked && "text-red-500",
+                  isPostAnimating && "animate-bounce"
                 )}
               >
                 {isLiking ? (

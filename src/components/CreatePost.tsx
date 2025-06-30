@@ -3,10 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Image as ImageIcon, Smile, Loader2 } from "lucide-react";
+import { Image as ImageIcon, Smile, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import Picker from '@emoji-mart/react';
+import 'emoji-mart/css/emoji-mart.css';
 
 interface CreatePostProps {
   onPostCreated?: () => void;
@@ -17,6 +19,42 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const [image, setImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFile(file);
+      setFileName(file.name);
+    }
+  };
+
+  const handleEmojiSelect = (emoji: any) => {
+    setContent(content + emoji.native);
+    setShowEmojiPicker(false);
+  };
+
+  const handleRemoveImage = () => {
+    setImage(null);
+    setImagePreview(null);
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    setFileName(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,13 +78,30 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
     }
 
     setIsSubmitting(true);
-
+    let imageUrl = null;
+    let fileUrl = null;
     try {
+      // Upload image if present
+      if (image) {
+        const { data, error } = await supabase.storage.from('post-media').upload(`images/${Date.now()}_${image.name}`, image, { upsert: true });
+        if (error) throw error;
+        const { data: publicUrlData } = supabase.storage.from('post-media').getPublicUrl(data.path);
+        imageUrl = publicUrlData.publicUrl;
+      }
+      // Upload file if present
+      if (file) {
+        const { data, error } = await supabase.storage.from('post-media').upload(`files/${Date.now()}_${file.name}`, file, { upsert: true });
+        if (error) throw error;
+        const { data: publicUrlData } = supabase.storage.from('post-media').getPublicUrl(data.path);
+        fileUrl = publicUrlData.publicUrl;
+      }
       const { error } = await supabase
         .from('posts')
         .insert({
           user_id: user.id,
           content: content.trim(),
+          image_url: imageUrl,
+          file_url: fileUrl,
         });
 
       if (error) {
@@ -59,6 +114,10 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       });
 
       setContent("");
+      setImage(null);
+      setImagePreview(null);
+      setFile(null);
+      setFileName(null);
       
       // Notify parent component to refresh posts
       if (onPostCreated) {
@@ -95,15 +154,34 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                 className="min-h-[100px] resize-none border-0 p-0 text-lg placeholder:text-muted-foreground focus-visible:ring-0"
                 disabled={isSubmitting}
               />
+              {imagePreview && (
+                <div className="relative w-32 h-32 mb-2">
+                  <img src={imagePreview} alt="Preview" className="object-cover w-full h-full rounded" />
+                  <Button type="button" size="icon" variant="ghost" className="absolute top-0 right-0" onClick={handleRemoveImage}><X className="w-4 h-4" /></Button>
+                </div>
+              )}
+              {fileName && (
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="truncate max-w-xs">{fileName}</span>
+                  <Button type="button" size="icon" variant="ghost" onClick={handleRemoveFile}><X className="w-4 h-4" /></Button>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                  <Button type="button" variant="ghost" size="sm" disabled={isSubmitting}>
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    Photo
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" disabled={isSubmitting}>
-                    <Smile className="h-4 w-4 mr-2" />
-                    Emoji
+                  <input type="file" accept="image/*" className="hidden" id="image-upload" onChange={handleImageChange} disabled={isSubmitting} />
+                  <label htmlFor="image-upload">
+                    <Button type="button" variant="ghost" size="sm" asChild disabled={isSubmitting}>
+                      <span><ImageIcon className="h-4 w-4 mr-2" />Photo</span>
+                    </Button>
+                  </label>
+                  <input type="file" className="hidden" id="file-upload" onChange={handleFileChange} disabled={isSubmitting} />
+                  <label htmlFor="file-upload">
+                    <Button type="button" variant="ghost" size="sm" asChild disabled={isSubmitting}>
+                      <span>📎 File</span>
+                    </Button>
+                  </label>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowEmojiPicker((v) => !v)} disabled={isSubmitting}>
+                    <Smile className="h-4 w-4 mr-2" />Emoji
                   </Button>
                 </div>
                 <Button 
@@ -121,6 +199,11 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                   )}
                 </Button>
               </div>
+              {showEmojiPicker && (
+                <div className="absolute z-50 mt-2">
+                  <Picker onEmojiSelect={handleEmojiSelect} theme="light" />
+                </div>
+              )}
             </form>
           </div>
         </div>
