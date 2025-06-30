@@ -65,7 +65,7 @@ const Sidebar = () => {
                       }
                     >
                       <div className="relative">
-                        <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                      <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
                         {item.showNotification && (
                           <ChatNotification className="absolute -top-1 -right-1" />
                         )}

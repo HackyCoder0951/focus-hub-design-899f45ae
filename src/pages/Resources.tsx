@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Upload, Download, FileText, Image as ImageIcon, File, Filter, Loader2, X } from "lucide-react";
+import { Search, Upload, Download, FileText, Image as ImageIcon, File, Filter, Loader2, X, CheckCircle, Eye, Play, FileVideo, Trash2, Edit } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,21 @@ const Resources = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileDescription, setFileDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
+  const [showUploadSuccess, setShowUploadSuccess] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [previewFile, setPreviewFile] = useState<any>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [textContent, setTextContent] = useState("");
+  const [loadingText, setLoadingText] = useState(false);
+  const [deleteFile, setDeleteFile] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editFile, setEditFile] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editDescription, setEditDescription] = useState("");
+  const [editIsPublic, setEditIsPublic] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchFiles = async () => {
     setLoading(true);
@@ -100,15 +115,9 @@ const Resources = () => {
 
       if (dbError) throw dbError;
 
-      toast({
-        title: "File uploaded!",
-        description: "Your file has been uploaded successfully.",
-      });
-
-      // Reset form
-      setSelectedFile(null);
-      setFileDescription("");
-      setIsPublic(false);
+      // Show success state instead of immediately resetting
+      setUploadedFileName(selectedFile.name);
+      setShowUploadSuccess(true);
 
       // Refresh files list
       fetchFiles();
@@ -124,6 +133,60 @@ const Resources = () => {
     }
   };
 
+  const handleUploadMore = () => {
+    // Reset form for next upload
+    setSelectedFile(null);
+    setFileDescription("");
+    setIsPublic(false);
+    setShowUploadSuccess(false);
+    setUploadedFileName("");
+  };
+
+  const handleCloseUpload = () => {
+    // Reset form and close dialog
+    setSelectedFile(null);
+    setFileDescription("");
+    setIsPublic(false);
+    setShowUploadSuccess(false);
+    setUploadedFileName("");
+    setDialogOpen(false);
+  };
+
+  const handlePreview = async (file: any) => {
+    setPreviewFile(file);
+    setPreviewOpen(true);
+    
+    // If it's a text file, load its content
+    if (file.file_type?.startsWith('text/') || 
+        file.file_name?.endsWith('.txt') || 
+        file.file_name?.endsWith('.md') ||
+        file.file_name?.endsWith('.json') ||
+        file.file_name?.endsWith('.js') ||
+        file.file_name?.endsWith('.ts') ||
+        file.file_name?.endsWith('.jsx') ||
+        file.file_name?.endsWith('.tsx') ||
+        file.file_name?.endsWith('.css') ||
+        file.file_name?.endsWith('.html')) {
+      setLoadingText(true);
+      try {
+        const response = await fetch(file.file_url);
+        const text = await response.text();
+        setTextContent(text);
+      } catch (error) {
+        console.error('Error loading text content:', error);
+        setTextContent('Unable to load file content');
+      } finally {
+        setLoadingText(false);
+      }
+    }
+  };
+
+  const closePreview = () => {
+    setPreviewOpen(false);
+    setPreviewFile(null);
+    setTextContent("");
+  };
+
   const filteredFiles = files.filter(file => 
     file.file_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (file.description && file.description.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -132,7 +195,7 @@ const Resources = () => {
   const getFileIcon = (type: string) => {
     if (!type) return <File className="h-8 w-8 text-gray-500" />;
     if (type.startsWith("image")) return <ImageIcon className="h-8 w-8 text-green-500" />;
-    if (type.startsWith("video")) return <File className="h-8 w-8 text-purple-500" />;
+    if (type.startsWith("video")) return <FileVideo className="h-8 w-8 text-purple-500" />;
     if (type.includes("pdf") || type.includes("doc")) return <FileText className="h-8 w-8 text-blue-500" />;
     return <File className="h-8 w-8 text-gray-500" />;
   };
@@ -145,6 +208,209 @@ const Resources = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  const canPreview = (file: any) => {
+    const type = file.file_type?.toLowerCase() || '';
+    const name = file.file_name?.toLowerCase() || '';
+    
+    return type.startsWith('image/') ||
+           type.startsWith('video/') ||
+           type.startsWith('text/') ||
+           type.includes('pdf') ||
+           name.endsWith('.txt') ||
+           name.endsWith('.md') ||
+           name.endsWith('.json') ||
+           name.endsWith('.js') ||
+           name.endsWith('.ts') ||
+           name.endsWith('.jsx') ||
+           name.endsWith('.tsx') ||
+           name.endsWith('.css') ||
+           name.endsWith('.html');
+  };
+
+  const renderPreview = () => {
+    if (!previewFile) return null;
+
+    const type = previewFile.file_type?.toLowerCase() || '';
+    const name = previewFile.file_name?.toLowerCase() || '';
+
+    // Image preview
+    if (type.startsWith('image/')) {
+      return (
+        <div className="flex justify-center">
+          <img 
+            src={previewFile.file_url} 
+            alt={previewFile.file_name}
+            className="max-w-full max-h-[70vh] object-contain rounded-lg"
+          />
+        </div>
+      );
+    }
+
+    // Video preview
+    if (type.startsWith('video/')) {
+      return (
+        <div className="flex justify-center">
+          <video 
+            controls 
+            className="max-w-full max-h-[70vh] rounded-lg"
+            src={previewFile.file_url}
+          >
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      );
+    }
+
+    // PDF preview
+    if (type.includes('pdf') || name.endsWith('.pdf')) {
+      return (
+        <div className="w-full h-[70vh]">
+          <iframe
+            src={`${previewFile.file_url}#toolbar=0`}
+            className="w-full h-full border rounded-lg"
+            title={previewFile.file_name}
+          />
+        </div>
+      );
+    }
+
+    // Text file preview
+    if (type.startsWith('text/') || 
+        name.endsWith('.txt') || 
+        name.endsWith('.md') ||
+        name.endsWith('.json') ||
+        name.endsWith('.js') ||
+        name.endsWith('.ts') ||
+        name.endsWith('.jsx') ||
+        name.endsWith('.tsx') ||
+        name.endsWith('.css') ||
+        name.endsWith('.html')) {
+      return (
+        <div className="w-full h-[70vh] overflow-auto">
+          {loadingText ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="ml-2">Loading content...</span>
+            </div>
+          ) : (
+            <pre className="bg-muted p-4 rounded-lg text-sm overflow-auto h-full whitespace-pre-wrap">
+              {textContent}
+            </pre>
+          )}
+        </div>
+      );
+    }
+
+    // Default: show file info
+    return (
+      <div className="text-center space-y-4">
+        <div className="flex justify-center">
+          {getFileIcon(previewFile.file_type)}
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold">{previewFile.file_name}</h3>
+          <p className="text-sm text-muted-foreground">
+            {formatFileSize(previewFile.file_size || 0)} • {previewFile.file_type}
+          </p>
+        </div>
+        <Button asChild>
+          <a href={previewFile.file_url} download target="_blank" rel="noopener noreferrer">
+            <Download className="h-4 w-4 mr-2" />
+            Download File
+          </a>
+        </Button>
+      </div>
+    );
+  };
+
+  const handleDeleteFile = async () => {
+    if (!deleteFile) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete from database (storage deletion is handled by trigger)
+      const { error } = await supabase
+        .from('filemodels')
+        .delete()
+        .eq('id', deleteFile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "File deleted",
+        description: "File has been deleted successfully.",
+      });
+
+      // Refresh files list
+      fetchFiles();
+      setDeleteDialogOpen(false);
+      setDeleteFile(null);
+    } catch (error: any) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Delete failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditFile = async () => {
+    if (!editFile) return;
+
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('filemodels')
+        .update({
+          description: editDescription.trim() || null,
+          is_public: editIsPublic,
+        })
+        .eq('id', editFile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "File updated",
+        description: "File has been updated successfully.",
+      });
+
+      // Refresh files list
+      fetchFiles();
+      setEditDialogOpen(false);
+      setEditFile(null);
+      setEditDescription("");
+      setEditIsPublic(false);
+    } catch (error: any) {
+      console.error('Error updating file:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const openEditDialog = (file: any) => {
+    setEditFile(file);
+    setEditDescription(file.description || "");
+    setEditIsPublic(file.is_public || false);
+    setEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (file: any) => {
+    setDeleteFile(file);
+    setDeleteDialogOpen(true);
+  };
+
+  const canManageFile = (file: any) => {
+    return user && file.user_id === user.id;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -153,7 +419,7 @@ const Resources = () => {
           <h1 className="text-3xl font-bold">Resources</h1>
           <p className="text-muted-foreground">Share and discover useful files and documents</p>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
@@ -162,71 +428,108 @@ const Resources = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>Upload File</DialogTitle>
+              <DialogTitle>
+                {showUploadSuccess ? "Upload Successful!" : "Upload File"}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="file">Select File</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  onChange={handleFileSelect}
-                  disabled={isUploading}
-                />
-                {selectedFile && (
-                  <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{selectedFile.name}</span>
-                    <span>({formatFileSize(selectedFile.size)})</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedFile(null)}
-                      disabled={isUploading}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+            
+            {showUploadSuccess ? (
+              // Success state
+              <div className="space-y-6">
+                <div className="text-center space-y-4">
+                  <div className="flex justify-center">
+                    <CheckCircle className="h-16 w-16 text-green-500" />
                   </div>
-                )}
+                  <div>
+                    <h3 className="text-lg font-semibold text-green-600">File uploaded successfully!</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      "{uploadedFileName}" has been uploaded to your resources.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleUploadMore}
+                    className="flex-1"
+                    variant="outline"
+                  >
+                    Upload Another File
+                  </Button>
+                  <Button 
+                    onClick={handleCloseUpload}
+                    className="flex-1"
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
-              
-              <div>
-                <Label htmlFor="description">Description (optional)</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe your file..."
-                  value={fileDescription}
-                  onChange={(e) => setFileDescription(e.target.value)}
-                  disabled={isUploading}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isPublic"
-                  checked={isPublic}
-                  onChange={(e) => setIsPublic(e.target.checked)}
-                  disabled={isUploading}
-                />
-                <Label htmlFor="isPublic">Make file public</Label>
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <Button
-                  onClick={handleUpload}
-                  disabled={!selectedFile || isUploading}
-                >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    'Upload File'
+            ) : (
+              // Upload form
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="file">Select File</Label>
+                  <Input
+                    id="file"
+                    type="file"
+                    onChange={handleFileSelect}
+                    disabled={isUploading}
+                  />
+                  {selectedFile && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>{selectedFile.name}</span>
+                      <span>({formatFileSize(selectedFile.size)})</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedFile(null)}
+                        disabled={isUploading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
-                </Button>
+                </div>
+                
+                <div>
+                  <Label htmlFor="description">Description (optional)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe your file..."
+                    value={fileDescription}
+                    onChange={(e) => setFileDescription(e.target.value)}
+                    disabled={isUploading}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isPublic"
+                    checked={isPublic}
+                    onChange={(e) => setIsPublic(e.target.checked)}
+                    disabled={isUploading}
+                  />
+                  <Label htmlFor="isPublic">Make file public</Label>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <Button
+                    onClick={handleUpload}
+                    disabled={!selectedFile || isUploading}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      'Upload File'
+                    )}
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
@@ -272,20 +575,12 @@ const Resources = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredFiles.map((file) => (
-                <Card key={file.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <Card key={file.id} className="group hover:shadow-lg transition-all duration-300 cursor-pointer min-w-[320px] w-fit mx-auto">
                   <CardContent className="p-4">
                     <div className="space-y-3">
                       {/* File Preview */}
                       <div className="aspect-video bg-muted rounded-lg flex items-center justify-center relative overflow-hidden">
                         {getFileIcon(file.file_type)}
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Button size="sm" variant="secondary" asChild>
-                            <a href={file.file_url} download target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </a>
-                          </Button>
-                        </div>
                       </div>
                       {/* File Info */}
                       <div className="space-y-2">
@@ -308,6 +603,57 @@ const Resources = () => {
                         )}
                         {file.is_public && (
                           <Badge variant="secondary" className="text-xs">Public</Badge>
+                        )}
+                      </div>
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap justify-center gap-2 mt-4">
+                        {canPreview(file) && (
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handlePreview(file);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Preview
+                          </Button>
+                        )}
+                        <Button size="sm" variant="secondary" asChild>
+                          <a href={file.file_url} download target="_blank" rel="noopener noreferrer">
+                            <Download className="h-4 w-4 mr-1" />
+                            Download
+                          </a>
+                        </Button>
+                        {canManageFile(file) && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="secondary"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                openEditDialog(file);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                openDeleteDialog(file);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -361,11 +707,52 @@ const Resources = () => {
                             <AvatarImage src={file.profiles?.avatar_url} />
                             <AvatarFallback>{file.profiles?.full_name?.charAt(0)}</AvatarFallback>
                           </Avatar>
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={file.file_url} download target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4" />
-                            </a>
-                          </Button>
+                          <div className="flex gap-1">
+                            {canPreview(file) && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handlePreview(file);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" asChild>
+                              <a href={file.file_url} download target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4" />
+                              </a>
+                            </Button>
+                            {canManageFile(file) && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openEditDialog(file);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    openDeleteDialog(file);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -376,6 +763,132 @@ const Resources = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* File Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Preview: {previewFile?.file_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {renderPreview()}
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={closePreview}>
+              Close
+            </Button>
+            {previewFile && (
+              <Button asChild>
+                <a href={previewFile.file_url} download target="_blank" rel="noopener noreferrer">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </a>
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete File</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deleteFile?.file_name}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteFile}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit File Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit File</DialogTitle>
+            <DialogDescription>
+              Update the description and visibility of "{editFile?.file_name}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-description">Description (optional)</Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Describe your file..."
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                disabled={isUpdating}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="edit-isPublic"
+                checked={editIsPublic}
+                onChange={(e) => setEditIsPublic(e.target.checked)}
+                disabled={isUpdating}
+              />
+              <Label htmlFor="edit-isPublic">Make file public</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setEditDialogOpen(false)}
+              disabled={isUpdating}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleEditFile}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Update
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

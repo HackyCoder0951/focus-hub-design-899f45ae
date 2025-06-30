@@ -88,8 +88,8 @@ const Chat = () => {
   }, [messages]);
 
   // Fetch chats with last message
-  const fetchChats = async () => {
-    setLoadingChats(true);
+    const fetchChats = async () => {
+      setLoadingChats(true);
     try {
       // First get all chats where user is a member
       const { data: userChats, error: chatsError } = await supabase
@@ -150,11 +150,11 @@ const Chat = () => {
     } finally {
       setLoadingChats(false);
     }
-  };
+    };
 
   useEffect(() => {
     if (user) {
-      fetchChats();
+    fetchChats();
     }
   }, [user]);
 
@@ -197,8 +197,8 @@ const Chat = () => {
     const fetchMessages = async () => {
       setLoadingMessages(true);
       try {
-        const { data, error } = await supabase
-          .from('chat_messages')
+      const { data, error } = await supabase
+        .from('chat_messages')
           .select(`
             id,
             chat_id,
@@ -207,15 +207,15 @@ const Chat = () => {
             created_at,
             profiles: user_id (full_name, avatar_url)
           `)
-          .eq('chat_id', selectedChat)
-          .order('created_at', { ascending: true });
+        .eq('chat_id', selectedChat)
+        .order('created_at', { ascending: true });
         
         if (error) throw error;
         setMessages(data || []);
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
-        setLoadingMessages(false);
+      setLoadingMessages(false);
       }
     };
     
@@ -228,13 +228,13 @@ const Chat = () => {
 
     setIsTyping(true);
     try {
-      const { error } = await supabase
-        .from('chat_messages')
-        .insert({
-          chat_id: selectedChat,
-          user_id: user.id,
+    const { error } = await supabase
+      .from('chat_messages')
+      .insert({
+        chat_id: selectedChat,
+        user_id: user.id,
           content: newMessage.trim()
-        });
+      });
 
       if (error) throw error;
       setNewMessage("");
@@ -474,12 +474,12 @@ const Chat = () => {
                             </Badge>
                           </>
                         ) : (
-                          <Avatar>
+                        <Avatar>
                             <AvatarImage src={chat.chat_members.find(m => m.user_id !== user?.id)?.profiles?.avatar_url} />
                             <AvatarFallback className="text-xs">
                               {chat.chat_members.find(m => m.user_id !== user?.id)?.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                             </AvatarFallback>
-                          </Avatar>
+                        </Avatar>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -528,8 +528,8 @@ const Chat = () => {
                       </AvatarFallback>
                     </Avatar>
                   )}
-                </div>
-                <div>
+                  </div>
+                  <div>
                   <h3 className="font-semibold">{getChatDisplayName(currentChat)}</h3>
                   {currentChat.is_group && (
                     <p className="text-sm text-muted-foreground">
@@ -540,9 +540,9 @@ const Chat = () => {
                 <div className="ml-auto flex items-center gap-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                  <Button size="icon" variant="ghost">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={handleExportChat}>Export Chat to Text</DropdownMenuItem>
