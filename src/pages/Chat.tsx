@@ -662,36 +662,38 @@ const Chat = () => {
               {/* Member List */}
               <div>
                 <h3 className="font-semibold mb-2">Members ({currentChat.chat_members.length})</h3>
-                <ul className="space-y-1">
-                  {currentChat.chat_members.map(member => (
-                    <li key={member.user_id} className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={member.profiles?.avatar_url} />
-                        <AvatarFallback className="text-xs">
-                          {member.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>{member.profiles?.full_name}</span>
-                      {member.is_admin && <Badge variant="secondary">Admin</Badge>}
-                      {isCurrentUserAdmin && user?.id !== member.user_id && (
-                        <>
-                          {member.is_admin ? (
-                            <Button size="sm" variant="outline" onClick={() => handleToggleAdmin(member.user_id, false)}>
-                              Remove Admin
+                <div className="max-h-64 overflow-y-auto">
+                  <ul className="space-y-1">
+                    {currentChat.chat_members.map(member => (
+                      <li key={member.user_id} className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={member.profiles?.avatar_url} />
+                          <AvatarFallback className="text-xs">
+                            {member.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{member.profiles?.full_name}</span>
+                        {member.is_admin && <Badge variant="secondary">Admin</Badge>}
+                        {isCurrentUserAdmin && user?.id !== member.user_id && (
+                          <>
+                            {member.is_admin ? (
+                              <Button size="sm" variant="outline" onClick={() => handleToggleAdmin(member.user_id, false)}>
+                                Remove Admin
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="secondary" onClick={() => handleToggleAdmin(member.user_id, true)}>
+                                Make Admin
+                              </Button>
+                            )}
+                            <Button size="sm" variant="destructive" onClick={() => handleRemoveMember(member.user_id)}>
+                              Remove
                             </Button>
-                          ) : (
-                            <Button size="sm" variant="secondary" onClick={() => handleToggleAdmin(member.user_id, true)}>
-                              Make Admin
-                            </Button>
-                          )}
-                          <Button size="sm" variant="destructive" onClick={() => handleRemoveMember(member.user_id)}>
-                            Remove
-                          </Button>
-                        </>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
               {isCurrentUserAdmin && (
                 <div className="mt-4">
