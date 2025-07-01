@@ -116,7 +116,7 @@ const Profile = () => {
                     )}
                   </div>
                   <div className="flex gap-4 mt-2">
-                    <FollowersStats profileUserId={profileData.id} />
+                    {profileRole !== 'admin' && <FollowersStats profileUserId={profileData.id} />}
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -151,59 +151,80 @@ const Profile = () => {
       </Card>
 
       {/* Profile Content */}
-      <Tabs defaultValue="posts" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="files">Files</TabsTrigger>
-          <TabsTrigger value="about">About</TabsTrigger>          
-        </TabsList>
-        <TabsContent value="posts" className="space-y-6">
-          {/* TODO: Fetch and map real posts for this user */}
-          {userPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-          <div className="text-muted-foreground">User posts will appear here.</div>
-        </TabsContent>
-        <TabsContent value="about">
-          <Card>
-            <CardHeader>
-              <CardTitle>About</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-semibold mb-2">Bio</h4>
-                <p className="text-sm text-muted-foreground">{profileData.bio}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Website</h4>
-                <p className="text-sm text-muted-foreground">{profileData.website}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Location</h4>
-                <p className="text-sm text-muted-foreground">{profileData.location}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="files">
-          <Card>
-            <CardHeader>
-              <CardTitle>Uploaded Files</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {userFiles.length === 0 ? (
-                <div className="text-muted-foreground">User files will appear here.</div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {userFiles.map(file => (
-                    <FileCard key={file.id} file={file} />
-                  ))}
+      {profileRole === 'admin' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>About</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-2">Bio</h4>
+              <p className="text-sm text-muted-foreground">{profileData.bio}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Website</h4>
+              <p className="text-sm text-muted-foreground">{profileData.website}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Location</h4>
+              <p className="text-sm text-muted-foreground">{profileData.location}</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Tabs defaultValue="posts" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="posts">Posts</TabsTrigger>
+            <TabsTrigger value="files">Files</TabsTrigger>
+            <TabsTrigger value="about">About</TabsTrigger>
+          </TabsList>
+          <TabsContent value="posts" className="space-y-6">
+            {userPosts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+            <div className="text-muted-foreground">User posts will appear here.</div>
+          </TabsContent>
+          <TabsContent value="files">
+            <Card>
+              <CardHeader>
+                <CardTitle>Uploaded Files</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {userFiles.length === 0 ? (
+                  <div className="text-muted-foreground">User files will appear here.</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {userFiles.map(file => (
+                      <FileCard key={file.id} file={file} />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="about">
+            <Card>
+              <CardHeader>
+                <CardTitle>About</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Bio</h4>
+                  <p className="text-sm text-muted-foreground">{profileData.bio}</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                <div>
+                  <h4 className="font-semibold mb-2">Website</h4>
+                  <p className="text-sm text-muted-foreground">{profileData.website}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Location</h4>
+                  <p className="text-sm text-muted-foreground">{profileData.location}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 };
