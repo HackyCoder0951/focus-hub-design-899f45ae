@@ -21,6 +21,8 @@ import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
 import AdminWelcome from "./pages/AdminWelcome";
 import AppRedirect from "./pages/AppRedirect";
+import FollowersList from "./pages/FollowersList";
+import FollowingList from "./pages/FollowingList";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ const App = () => (
                     <AdminDashboard />
                   </ProtectedRoute>
                 } />
+                <Route path="followers" element={<FollowersList />} />
+                <Route path="following" element={<FollowingList />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

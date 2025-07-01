@@ -512,7 +512,14 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold">{post.profiles?.full_name || "Unknown User"}</h4>
+                <h4 className="font-semibold">
+                  <a
+                    href={`/app/profile?user_id=${post.user_id}`}
+                    className="hover:underline text-primary"
+                  >
+                    {post.profiles?.full_name || "Unknown User"}
+                  </a>
+                </h4>
                 <p className="text-sm text-muted-foreground">
                   {formatTimestamp(post.created_at)}
                 </p>
