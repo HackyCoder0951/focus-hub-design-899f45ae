@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,24 +16,30 @@ import FileCard from "@/components/FileCard";
 
 const Profile = () => {
   const { user, profile } = useAuth();
+  const location = useLocation();
   const [profileData, setProfileData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userFiles, setUserFiles] = useState<any[]>([]);
 
+  // Get user_id from query string if present
+  const searchParams = new URLSearchParams(location.search);
+  const queryUserId = searchParams.get("user_id");
+  const profileUserId = queryUserId || user?.id;
+
   useEffect(() => {
     const fetchProfile = async () => {
-      if (!user) return;
+      if (!profileUserId) return;
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', profileUserId)
         .single();
       if (!error) setProfileData(data);
       setLoading(false);
     };
     fetchProfile();
-  }, [user]);
+  }, [profileUserId]);
 
   useEffect(() => {
     const fetchUserPosts = async () => {

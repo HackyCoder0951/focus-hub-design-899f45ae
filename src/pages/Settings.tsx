@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,12 +24,25 @@ const Settings = () => {
   const fileInputRef = useRef(null);
 
   const [profileData, setProfileData] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    bio: "Full-stack developer passionate about creating amazing user experiences.",
-    website: "https://johndoe.dev",
-    location: "San Francisco, CA"
+    name: "",
+    email: "",
+    bio: "",
+    website: "",
+    location: ""
   });
+
+  // When profile loads, update the form fields
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        name: profile.full_name || "",
+        email: profile.email || user?.email || "",
+        bio: profile.bio || "",
+        website: profile.website || "",
+        location: profile.location || ""
+      });
+    }
+  }, [profile, user]);
 
   const [notifications, setNotifications] = useState({
     email: true,
@@ -183,6 +196,7 @@ const Settings = () => {
                     id="name"
                     value={profileData.name}
                     onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                    placeholder="Enter your full name"
                   />
                 </div>
                 <div className="space-y-2">
@@ -192,6 +206,7 @@ const Settings = () => {
                     type="email"
                     value={profileData.email}
                     onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                    placeholder="Enter your email"
                   />
                 </div>
               </div>
@@ -203,6 +218,7 @@ const Settings = () => {
                   value={profileData.bio}
                   onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
                   rows={3}
+                  placeholder="Enter your bio"
                 />
               </div>
 
@@ -213,6 +229,7 @@ const Settings = () => {
                     id="website"
                     value={profileData.website}
                     onChange={(e) => setProfileData({...profileData, website: e.target.value})}
+                    placeholder="Enter your website"
                   />
                 </div>
                 <div className="space-y-2">
@@ -221,6 +238,7 @@ const Settings = () => {
                     id="location"
                     value={profileData.location}
                     onChange={(e) => setProfileData({...profileData, location: e.target.value})}
+                    placeholder="Enter your location"
                   />
                 </div>
               </div>
