@@ -400,6 +400,7 @@ export type Database = {
           settings: Json | null
           updated_at: string
           website: string | null
+          status: string | null // <-- Add this line
         }
         Insert: {
           avatar_url?: string | null
@@ -412,6 +413,7 @@ export type Database = {
           settings?: Json | null
           updated_at?: string
           website?: string | null
+          status?: string | null // <-- Add this line
         }
         Update: {
           avatar_url?: string | null
@@ -424,6 +426,7 @@ export type Database = {
           settings?: Json | null
           updated_at?: string
           website?: string | null
+          status?: string | null // <-- Add this line
         }
         Relationships: []
       }
@@ -527,6 +530,33 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      content_flags: {
+        Row: {
+          id: string;
+          flagged_by_user_id: string;
+          post_id: string | null;
+          comment_id: string | null;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          flagged_by_user_id: string;
+          post_id?: string | null;
+          comment_id?: string | null;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          flagged_by_user_id?: string;
+          post_id?: string | null;
+          comment_id?: string | null;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
       }
     }
     Views: {
