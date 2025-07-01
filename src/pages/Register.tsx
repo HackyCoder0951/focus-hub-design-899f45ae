@@ -16,7 +16,8 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    agreeToTerms: false
+    agreeToTerms: false,
+    memberType: "student"
   });
   const [isLoading, setIsLoading] = useState(false);
   
@@ -38,7 +39,7 @@ const Register = () => {
     
     setIsLoading(true);
     
-    const { error } = await signUp(formData.email, formData.password, formData.name);
+    const { error } = await signUp(formData.email, formData.password, formData.name, formData.memberType);
     
     if (!error) {
       // Stay on register page to show success message
@@ -122,6 +123,33 @@ const Register = () => {
                 {formData.password !== formData.confirmPassword && formData.confirmPassword && (
                   <p className="text-sm text-destructive">Passwords do not match</p>
                 )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="memberType">Registering as</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="memberType"
+                      value="student"
+                      checked={formData.memberType === "student"}
+                      onChange={() => setFormData({ ...formData, memberType: "student" })}
+                      disabled={isLoading}
+                    />
+                    Student
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="memberType"
+                      value="alumni"
+                      checked={formData.memberType === "alumni"}
+                      onChange={() => setFormData({ ...formData, memberType: "alumni" })}
+                      disabled={isLoading}
+                    />
+                    Alumni
+                  </label>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox

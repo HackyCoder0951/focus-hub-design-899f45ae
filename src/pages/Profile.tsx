@@ -21,6 +21,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [userFiles, setUserFiles] = useState<any[]>([]);
+  const [profileRole, setProfileRole] = useState<string | null>(null);
 
   // Get user_id from query string if present
   const searchParams = new URLSearchParams(location.search);
@@ -38,7 +39,17 @@ const Profile = () => {
       if (!error) setProfileData(data);
       setLoading(false);
     };
+    const fetchProfileRole = async () => {
+      if (!profileUserId) return;
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', profileUserId)
+        .single();
+      if (!error) setProfileRole(data?.role || null);
+    };
     fetchProfile();
+    fetchProfileRole();
   }, [profileUserId]);
 
   useEffect(() => {
@@ -94,7 +105,16 @@ const Profile = () => {
                 <div>
                   <h1 className="text-3xl font-bold">{profileData.full_name}</h1>
                   <p className="text-muted-foreground">{profileData.email}</p>
-                  <Badge variant="secondary" className="mt-1">Pro Member</Badge>
+                  <div className="flex gap-2 mt-1">
+                    {profileRole === 'admin' && (
+                      <Badge variant="destructive">Admin</Badge>
+                    )}
+                    {profileData.member_type && (
+                      <Badge variant="secondary">
+                        {profileData.member_type === 'student' ? 'Student' : profileData.member_type === 'alumni' ? 'Alumni' : ''}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex gap-4 mt-2">
                     <FollowersStats profileUserId={profileData.id} />
                   </div>
