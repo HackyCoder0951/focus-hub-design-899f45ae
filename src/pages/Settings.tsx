@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import { Bell, Shield, User, Palette, Globe, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,8 @@ const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [profileData, setProfileData] = useState({
     name: "John Doe",
@@ -68,6 +70,48 @@ const Settings = () => {
     }
   };
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setAvatarUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('id', user.id);
+      if (updateError) throw updateError;
+      toast({ title: "Avatar updated!" });
+      // Optionally update local profile state here
+    } catch (err) {
+      toast({ title: "Avatar upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: null })
+      .eq('id', user.id);
+    if (error) {
+      toast({ title: "Failed to remove avatar", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Avatar removed" });
+      // Optionally update local profile state here
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
@@ -109,14 +153,25 @@ const Settings = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face" />
-                  <AvatarFallback className="text-lg">JD</AvatarFallback>
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="text-lg">{profile?.full_name ? profile.full_name[0] : 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
                   <h3 className="font-semibold">Profile Picture</h3>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Change Avatar</Button>
-                    <Button variant="ghost" size="sm">Remove</Button>
+                  <div className="flex gap-2 items-center">
+                    <Button variant="outline" size="sm" asChild disabled={avatarUploading}>
+                      <label>
+                        {avatarUploading ? "Uploading..." : "Change Avatar"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarChange}
+                          style={{ display: "none" }}
+                          ref={fileInputRef}
+                        />
+                      </label>
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleRemoveAvatar} disabled={avatarUploading}>Remove</Button>
                   </div>
                 </div>
               </div>
