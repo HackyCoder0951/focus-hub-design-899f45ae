@@ -100,18 +100,24 @@ const Header = ({ search, setSearch }) => {
                   {searchResults.map((user) => (
                     <li
                       key={user.id}
-                      className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-muted"
-                      onClick={() => {
-                        navigate(`/app/profile?user_id=${user.id}`);
-                        setShowDropdown(false);
-                        setSearch("");
-                      }}
+                      className="flex items-center gap-3 px-4 py-2 hover:bg-muted"
                     >
                       <Avatar className="h-7 w-7">
                         <AvatarImage src={user.avatar_url} />
                         <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
                       </Avatar>
-                      <span className="truncate font-medium">{user.full_name}</span>
+                      <a
+                        href={`/app/profile?user_id=${user.id}`}
+                        className="hover:underline text-primary font-medium truncate"
+                        onClick={e => {
+                          e.preventDefault();
+                          navigate(`/app/profile?user_id=${user.id}`);
+                          setShowDropdown(false);
+                          setSearch("");
+                        }}
+                      >
+                        {user.full_name}
+                      </a>
                     </li>
                   ))}
                 </ul>
