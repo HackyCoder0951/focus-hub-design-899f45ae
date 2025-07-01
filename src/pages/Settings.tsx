@@ -18,7 +18,7 @@ const Settings = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const { toast } = useToast();
   const [avatarUploading, setAvatarUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -133,24 +133,28 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="profile" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="profile" className="flex items-center gap-2 justify-center w-full">
             <User className="h-4 w-4" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
+          <TabsTrigger value="security" className="flex items-center gap-2 justify-center w-full">
             <Shield className="h-4 w-4" />
             Security
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="privacy" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
-            Privacy
-          </TabsTrigger>
-          <TabsTrigger value="appearance" className="flex items-center gap-2">
+          {!isAdmin && (
+            <TabsTrigger value="notifications" className="flex items-center gap-2 justify-center w-full">
+              <Bell className="h-4 w-4" />
+              Notifications
+            </TabsTrigger>
+          )}
+          {!isAdmin && (
+            <TabsTrigger value="privacy" className="flex items-center gap-2 justify-center w-full">
+              <Eye className="h-4 w-4" />
+              Privacy
+            </TabsTrigger>
+          )}
+          <TabsTrigger value="appearance" className="flex items-center gap-2 justify-center w-full">
             <Palette className="h-4 w-4" />
             Appearance
           </TabsTrigger>
@@ -314,132 +318,136 @@ const Settings = () => {
         </TabsContent>
 
         {/* Notifications Settings */}
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>Choose what notifications you want to receive</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Email Notifications</h4>
-                    <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+        {!isAdmin && (
+          <TabsContent value="notifications">
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Preferences</CardTitle>
+                <CardDescription>Choose what notifications you want to receive</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Email Notifications</h4>
+                      <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                    </div>
+                    <Switch
+                      checked={notifications.email}
+                      onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={notifications.email}
-                    onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Push Notifications</h4>
-                    <p className="text-sm text-muted-foreground">Receive push notifications in your browser</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Push Notifications</h4>
+                      <p className="text-sm text-muted-foreground">Receive push notifications in your browser</p>
+                    </div>
+                    <Switch
+                      checked={notifications.push}
+                      onCheckedChange={(checked) => setNotifications({...notifications, push: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={notifications.push}
-                    onCheckedChange={(checked) => setNotifications({...notifications, push: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Mentions</h4>
-                    <p className="text-sm text-muted-foreground">When someone mentions you in a post</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Mentions</h4>
+                      <p className="text-sm text-muted-foreground">When someone mentions you in a post</p>
+                    </div>
+                    <Switch
+                      checked={notifications.mentions}
+                      onCheckedChange={(checked) => setNotifications({...notifications, mentions: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={notifications.mentions}
-                    onCheckedChange={(checked) => setNotifications({...notifications, mentions: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Comments</h4>
-                    <p className="text-sm text-muted-foreground">When someone comments on your posts</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Comments</h4>
+                      <p className="text-sm text-muted-foreground">When someone comments on your posts</p>
+                    </div>
+                    <Switch
+                      checked={notifications.comments}
+                      onCheckedChange={(checked) => setNotifications({...notifications, comments: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={notifications.comments}
-                    onCheckedChange={(checked) => setNotifications({...notifications, comments: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">New Followers</h4>
-                    <p className="text-sm text-muted-foreground">When someone starts following you</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">New Followers</h4>
+                      <p className="text-sm text-muted-foreground">When someone starts following you</p>
+                    </div>
+                    <Switch
+                      checked={notifications.follows}
+                      onCheckedChange={(checked) => setNotifications({...notifications, follows: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={notifications.follows}
-                    onCheckedChange={(checked) => setNotifications({...notifications, follows: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Messages</h4>
-                    <p className="text-sm text-muted-foreground">When you receive a new message</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Messages</h4>
+                      <p className="text-sm text-muted-foreground">When you receive a new message</p>
+                    </div>
+                    <Switch
+                      checked={notifications.messages}
+                      onCheckedChange={(checked) => setNotifications({...notifications, messages: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={notifications.messages}
-                    onCheckedChange={(checked) => setNotifications({...notifications, messages: checked})}
-                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Privacy Settings */}
-        <TabsContent value="privacy">
-          <Card>
-            <CardHeader>
-              <CardTitle>Privacy Settings</CardTitle>
-              <CardDescription>Control who can see your information and interact with you</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Public Profile</h4>
-                    <p className="text-sm text-muted-foreground">Make your profile visible to everyone</p>
+        {!isAdmin && (
+          <TabsContent value="privacy">
+            <Card>
+              <CardHeader>
+                <CardTitle>Privacy Settings</CardTitle>
+                <CardDescription>Control who can see your information and interact with you</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Public Profile</h4>
+                      <p className="text-sm text-muted-foreground">Make your profile visible to everyone</p>
+                    </div>
+                    <Switch
+                      checked={privacy.profilePublic}
+                      onCheckedChange={(checked) => setPrivacy({...privacy, profilePublic: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={privacy.profilePublic}
-                    onCheckedChange={(checked) => setPrivacy({...privacy, profilePublic: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Show Email</h4>
-                    <p className="text-sm text-muted-foreground">Display your email address on your profile</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Show Email</h4>
+                      <p className="text-sm text-muted-foreground">Display your email address on your profile</p>
+                    </div>
+                    <Switch
+                      checked={privacy.showEmail}
+                      onCheckedChange={(checked) => setPrivacy({...privacy, showEmail: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={privacy.showEmail}
-                    onCheckedChange={(checked) => setPrivacy({...privacy, showEmail: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Show Location</h4>
-                    <p className="text-sm text-muted-foreground">Display your location on your profile</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Show Location</h4>
+                      <p className="text-sm text-muted-foreground">Display your location on your profile</p>
+                    </div>
+                    <Switch
+                      checked={privacy.showLocation}
+                      onCheckedChange={(checked) => setPrivacy({...privacy, showLocation: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={privacy.showLocation}
-                    onCheckedChange={(checked) => setPrivacy({...privacy, showLocation: checked})}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Allow Messages</h4>
-                    <p className="text-sm text-muted-foreground">Let other users send you messages</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Allow Messages</h4>
+                      <p className="text-sm text-muted-foreground">Let other users send you messages</p>
+                    </div>
+                    <Switch
+                      checked={privacy.allowMessages}
+                      onCheckedChange={(checked) => setPrivacy({...privacy, allowMessages: checked})}
+                    />
                   </div>
-                  <Switch
-                    checked={privacy.allowMessages}
-                    onCheckedChange={(checked) => setPrivacy({...privacy, allowMessages: checked})}
-                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         {/* Appearance Settings */}
         <TabsContent value="appearance">
