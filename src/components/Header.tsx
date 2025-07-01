@@ -109,11 +109,11 @@ const Header = ({ search, setSearch }) => {
                       <a
                         href={`/app/profile?user_id=${user.id}`}
                         className="hover:underline text-primary font-medium truncate"
-                        onClick={e => {
+                        onMouseDown={e => {
                           e.preventDefault();
-                          navigate(`/app/profile?user_id=${user.id}`);
                           setShowDropdown(false);
                           setSearch("");
+                          navigate(`/app/profile?user_id=${user.id}`);
                         }}
                       >
                         {user.full_name}
