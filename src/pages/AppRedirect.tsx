@@ -3,17 +3,22 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const AppRedirect = () => {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, loading, userRole } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || userRole === null) return;
+    console.log('AppRedirect:', { isAdmin, loading, userRole });
     if (isAdmin) {
-      navigate("/app/admin", { replace: true });
+      navigate("/app/AdminDashboard", { replace: true });
     } else {
       navigate("/app/feed", { replace: true }); // Change to /app/feed if that's your feed route
     }
-  }, [isAdmin, loading, navigate]);
+  }, [isAdmin, loading, userRole, navigate]);
+
+  if (loading || userRole === null) {
+    return <div>Loading...</div>;
+  }
 
   return null;
 };

@@ -16,7 +16,7 @@ const Index = () => {
     if (loading) return;
     if (!user) return; // Only redirect if logged in
     if (isAdmin) {
-      navigate("/app/admin", { replace: true });
+      navigate("/app/AdminDashboard", { replace: true });
     } else {
       navigate("/app", { replace: true });
     }

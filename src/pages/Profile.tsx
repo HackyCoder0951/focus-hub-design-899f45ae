@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Edit, MapPin, Calendar, Link as LinkIcon } from "lucide-react";
@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfileFollowButton from "@/components/ProfileFollowButton";
 import FollowersStats from "@/components/FollowersStats";
-import ProfileEditForm from "@/components/ProfileEditForm";
+// import ProfileEditForm from "@/components/ProfileEditForm";
 import FileCard from "@/components/FileCard";
 
 const Profile = () => {
