@@ -19,7 +19,7 @@ const FollowingList = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('followers')
-        .select('following_id')
+        .select('following_id, following_profile:profiles!following_id(full_name, avatar_url)')
         .eq('follower_id', userId)
         .order('created_at', { ascending: false });
       setFollowing(data || []);
