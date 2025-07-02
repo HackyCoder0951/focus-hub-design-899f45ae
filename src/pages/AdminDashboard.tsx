@@ -165,7 +165,10 @@ const AdminDashboard = () => {
   // User status actions
   const handleUserStatus = async (id: string, status: string) => {
     setUserActionLoading(id + status);
-    await supabase.from("profiles").update({ status }).eq("id", id);
+    const { error } = await supabase.from("profiles").update({ status }).eq("id", id);
+    if (error) {
+      console.error("Status update error:", error);
+    }
     setAllUsers((users) =>
       users.map((u) => (u.id === id ? { ...u, status } : u))
     );
