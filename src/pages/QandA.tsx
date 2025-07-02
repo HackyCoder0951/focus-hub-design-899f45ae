@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog as AnswerDialog, DialogContent as AnswerDialogContent, DialogHeader as AnswerDialogHeader, DialogTitle as AnswerDialogTitle } from "@/components/ui/dialog";
 
 const QandA = () => {
   const { user } = useAuth();
@@ -23,7 +22,7 @@ const QandA = () => {
   const [newQuestion, setNewQuestion] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
-  const [answers, setAnswers] = useState<any[]>([]);
+  const [allAnswers, setAllAnswers] = useState<any[]>([]);
   const [answerLoading, setAnswerLoading] = useState(false);
   const [newAnswer, setNewAnswer] = useState("");
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
@@ -34,41 +33,56 @@ const QandA = () => {
   const [editMode, setEditMode] = useState(false);
   const [editContent, setEditContent] = useState("");
   const commentInputRef = useRef<HTMLInputElement>(null);
-  const [answerVotes, setAnswerVotes] = useState(0);
-  const [userVote, setUserVote] = useState(0);
+  const [answerVotes, setAnswerVotes] = useState<{ [answerId: string]: number }>({});
+  const [userVotes, setUserVotes] = useState<{ [answerId: string]: number }>({});
+  const [expandedAnswerId, setExpandedAnswerId] = useState<string | null>(null);
 
   const categories = ["All", "React", "JavaScript", "Python", "Design", "Career"];
 
-    const fetchQuestions = async () => {
+  const fetchQuestionsAndAnswers = async () => {
     setLoading(true);
     try {
-      let query = supabase
+      // Fetch questions (is_answered: false)
+      let qQuery = supabase
         .from('questionanswers')
         .select('*, profiles: user_id (full_name, avatar_url)')
+        .eq('is_answered', false)
         .order('created_at', { ascending: false });
 
-      // Apply search filter
-      if (searchQuery.trim()) {
-        query = query.ilike('question', `%${searchQuery}%`);
-      }
+      // Fetch answers (is_answered: true)
+      let aQuery = supabase
+        .from('questionanswers')
+        .select('*, profiles: user_id (full_name, avatar_url)')
+        .eq('is_answered', true)
+        .order('created_at', { ascending: true });
 
-      const { data, error } = await query;
-      
-      if (error) {
-        console.error('Error fetching questions:', error);
-        return;
-      }
+      // Fetch all votes for answers
+      let vQuery = (supabase.from as any)('answer_votes')
+        .select('*');
 
-      setQuestions(data || []);
+      const [{ data: questions }, { data: answers }, { data: votes }] = await Promise.all([qQuery, aQuery, vQuery]);
+      setQuestions(questions || []);
+      setAllAnswers(answers || []);
+      // Group votes by answerId
+      const voteCount: { [answerId: string]: number } = {};
+      const userVoteMap: { [answerId: string]: number } = {};
+      (votes || []).forEach((v: any) => {
+        voteCount[v.answer_id] = (voteCount[v.answer_id] || 0) + v.vote_type;
+        if (user && v.user_id === user.id) {
+          userVoteMap[v.answer_id] = v.vote_type;
+        }
+      });
+      setAnswerVotes(voteCount);
+      setUserVotes(userVoteMap);
     } catch (error) {
-      console.error('Error fetching questions:', error);
+      // handle error
     } finally {
       setLoading(false);
     }
     };
 
   useEffect(() => {
-    fetchQuestions();
+    fetchQuestionsAndAnswers();
   }, [searchQuery]);
 
   const handleCreateQuestion = async () => {
@@ -108,7 +122,7 @@ const QandA = () => {
       });
 
       setNewQuestion("");
-      fetchQuestions(); // Refresh the questions list
+      fetchQuestionsAndAnswers(); // Refresh the questions list
     } catch (error: any) {
       console.error('Error creating question:', error);
       toast({
@@ -141,9 +155,9 @@ const QandA = () => {
         .eq('is_answered', true)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      setAnswers(data || []);
+      setAllAnswers(data || []);
     } catch (error) {
-      setAnswers([]);
+      setAllAnswers([]);
     } finally {
       setAnswerLoading(false);
     }
@@ -156,7 +170,7 @@ const QandA = () => {
 
   const handleCloseDialog = () => {
     setSelectedQuestion(null);
-    setAnswers([]);
+    setAllAnswers([]);
     setNewAnswer("");
   };
 
@@ -205,35 +219,23 @@ const QandA = () => {
     }
   };
 
-  const handleOpenAnswer = async (answer: any) => {
-    setSelectedAnswer(answer);
-    setEditMode(false);
-    setEditContent(answer.answer);
-    fetchAnswerComments(answer.id);
-    fetchAnswerVotes(answer.id);
-  };
+  const handleVote = async (answerId: string, type: 1 | -1) => {
+    if (!user) return;
+    const currentUserVote = userVotes[answerId] || 0;
+    if (currentUserVote !== 0) return; // Prevent multiple votes
 
-  const handleCloseAnswer = () => {
-    setSelectedAnswer(null);
-  };
-
-  const handleVote = async (type: 1 | -1) => {
-    if (!user || !selectedAnswer) return;
-    // Remove vote if clicking same vote again
-    if (userVote === type) {
-      await (supabase.from as any)('answer_votes').delete().eq('answer_id', selectedAnswer.id).eq('user_id', user.id);
-      setUserVote(0);
-      setAnswerVotes(answerVotes - type);
-      return;
-    }
-    // Upsert vote
     await (supabase.from as any)('answer_votes').upsert({
-      answer_id: selectedAnswer.id,
+      answer_id: answerId,
       user_id: user.id,
       vote_type: type,
     });
-    setUserVote(type);
-    setAnswerVotes(answerVotes + type - userVote);
+
+    // Update local state instantly
+    setUserVotes(prev => ({ ...prev, [answerId]: type }));
+    setAnswerVotes(prev => ({
+      ...prev,
+      [answerId]: (prev[answerId] || 0) + type
+    }));
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -291,7 +293,7 @@ const QandA = () => {
       setAnswerVotes(votes.reduce((sum: number, v: any) => sum + v.vote_type, 0));
       if (user) {
         const myVote = votes.find((v: any) => v.user_id === user.id);
-        setUserVote(myVote ? myVote.vote_type : 0);
+        setUserVotes(myVote ? { [answerId]: myVote.vote_type } : {});
       }
     }
   };
@@ -392,126 +394,102 @@ const QandA = () => {
           ) : filteredQuestions.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">No questions found.</div>
           ) : (
-            filteredQuestions.map((question) => (
-              <Dialog key={question.id} open={selectedQuestion?.id === question.id} onOpenChange={(open) => open ? handleOpenQuestion(question) : handleCloseDialog()}>
-                <DialogTrigger asChild>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-6">
-                      <div className="flex gap-4">
-                        {/* Vote Section */}
-                        <div className="flex flex-col items-center space-y-1 min-w-[60px]">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <ChevronUp className="h-4 w-4" />
-                          </Button>
-                          <span className="font-semibold text-lg">{question.votes ?? 0}</span>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        {/* Question Content */}
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg hover:text-primary">
-                              {question.question}
-                            </h3>
-                            {!question.is_answered && (
-                              <Badge variant="secondary" className="text-xs">Unanswered</Badge>
-                            )}
-                          </div>
-                          <p className="text-muted-foreground text-sm line-clamp-2">
-                            {question.answer || "No answer yet."}
-                          </p>
-                          <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-6 w-6">
-                                  <AvatarImage src={question.profiles?.avatar_url} />
-                                  <AvatarFallback>{question.profiles?.full_name?.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <span>{question.profiles?.full_name}</span>
-                              </div>
-                              <span>{question.created_at ? new Date(question.created_at).toLocaleDateString() : ''}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MessageCircle className="h-4 w-4" />
-                              <span>{question.answers_count ?? 0} answers</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </DialogTrigger>
-                <DialogContent className="max-w-xl">
-                  <DialogHeader>
-                    <DialogTitle>{question.question}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="text-muted-foreground text-sm">
-                      Asked by {question.profiles?.full_name} on {question.created_at ? new Date(question.created_at).toLocaleDateString() : ''}
+            filteredQuestions.map((question) => {
+              const answersForThisQuestion = allAnswers.filter(ans => ans.question === question.question);
+              return (
+                <Card key={question.id} className="hover:shadow-md transition-shadow cursor-pointer mb-6">
+                <CardContent className="p-6">
+                  <div className="flex gap-4">
+                    {/* Vote Section */}
+                    <div className="flex flex-col items-center space-y-1 min-w-[60px]">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <span className="font-semibold text-lg">{question.votes ?? 0}</span>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <div className="font-semibold">Answers</div>
-                    {answerLoading ? (
-                      <div className="text-center py-4"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
-                    ) : answers.length === 0 ? (
-                      <div className="text-muted-foreground">No answers yet. Be the first to answer!</div>
-                    ) : (
-                      <div className="space-y-3 max-h-60 overflow-y-auto">
-                        {answers.map((ans) => (
-                          <div key={ans.id} className="border rounded p-3 flex gap-3 items-start cursor-pointer hover:bg-accent" onClick={() => handleOpenAnswer(ans)}>
-                            <Avatar className="h-7 w-7">
-                              <AvatarImage src={ans.profiles?.avatar_url} />
-                              <AvatarFallback>{ans.profiles?.full_name?.charAt(0)}</AvatarFallback>
+                    {/* Question Content */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg hover:text-primary">
+                          {question.question}
+                        </h3>
+                        {!question.is_answered && (
+                          <Badge variant="secondary" className="text-xs">Unanswered</Badge>
+                        )}
+                      </div>
+                      <p className="text-muted-foreground text-sm line-clamp-2">
+                        {question.answer || "No answer yet."}
+                      </p>
+                      <div className="flex items-center justify-between text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={question.profiles?.avatar_url} />
+                              <AvatarFallback>{question.profiles?.full_name?.charAt(0)}</AvatarFallback>
                             </Avatar>
-                            <div>
-                              <div className="font-medium">{ans.profiles?.full_name}</div>
-                              <div className="text-sm">{ans.answer}</div>
-                              <div className="text-xs text-muted-foreground">{ans.created_at ? new Date(ans.created_at).toLocaleString() : ''}</div>
-                            </div>
-                            {/* Answer Detail Dialog Triggered by State */}
-                            {selectedAnswer?.id === ans.id && (
-                              <AnswerDialog open={true} onOpenChange={handleCloseAnswer}>
-                                <AnswerDialogContent className="max-w-md">
-                                  <AnswerDialogHeader>
-                                    <AnswerDialogTitle>Answer Details</AnswerDialogTitle>
-                                  </AnswerDialogHeader>
-                                  <div className="space-y-3">
-                                    <div className="flex items-center gap-2">
-                                      <Avatar className="h-7 w-7">
-                                        <AvatarImage src={ans.profiles?.avatar_url} />
-                                        <AvatarFallback>{ans.profiles?.full_name?.charAt(0)}</AvatarFallback>
-                                      </Avatar>
-                                      <span className="font-medium">{ans.profiles?.full_name}</span>
-                                      <span className="text-xs text-muted-foreground">{ans.created_at ? new Date(ans.created_at).toLocaleString() : ''}</span>
-                                    </div>
-                                    {editMode ? (
-                                      <form onSubmit={handleEditAnswer} className="flex flex-col gap-2">
-                                        <Textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={3} />
-                                        <div className="flex gap-2 justify-end">
-                                          <Button size="sm" type="submit">Save</Button>
-                                          <Button size="sm" variant="outline" type="button" onClick={() => setEditMode(false)}>Cancel</Button>
-                                        </div>
-                                      </form>
-                                    ) : (
-                                      <div className="text-base">{selectedAnswer.answer}</div>
+                            <span>{question.profiles?.full_name}</span>
+                          </div>
+                          <span>{question.created_at ? new Date(question.created_at).toLocaleDateString() : ''}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="h-4 w-4" />
+                            <span>{answersForThisQuestion.length} answers</span>
+                          </div>
+                        </div>
+                        {/* Answers Section (in-page, not in dialog) */}
+                        <div className="font-semibold mt-4">Answers</div>
+                        {answerLoading ? (
+                          <div className="text-center py-4"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
+                        ) : answersForThisQuestion.length === 0 ? (
+                          <div className="text-muted-foreground">No answers yet. Be the first to answer!</div>
+                        ) : (
+                          <div className="space-y-3 max-h-60 overflow-y-auto">
+                            {answersForThisQuestion.map((ans) => (
+                              <div key={ans.id} className="border rounded p-3 flex gap-3 items-start">
+                                <Avatar className="h-7 w-7">
+                                  <AvatarImage src={ans.profiles?.avatar_url} />
+                                  <AvatarFallback>{ans.profiles?.full_name?.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <div className="font-medium">{ans.profiles?.full_name}</div>
+                                    <span className="text-xs text-muted-foreground">{ans.created_at ? new Date(ans.created_at).toLocaleString() : ''}</span>
+                                  </div>
+                                  <div className="text-base">{ans.answer}</div>
+                                  <div className="flex items-center gap-2 pt-2">
+                                    <Button
+                                      variant={userVotes[ans.id] === 1 ? "default" : "ghost"}
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => handleVote(ans.id, 1)}
+                                      disabled={userVotes[ans.id] !== undefined && userVotes[ans.id] !== 0}
+                                    >
+                                      <ChevronUp className="h-4 w-4" />
+                                    </Button>
+                                    <span className="font-semibold text-lg">{answerVotes[ans.id] || 0}</span>
+                                    <Button
+                                      variant={userVotes[ans.id] === -1 ? "default" : "ghost"}
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => handleVote(ans.id, -1)}
+                                      disabled={userVotes[ans.id] !== undefined && userVotes[ans.id] !== 0}
+                                    >
+                                      <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                    {user && ans.user_id === user.id && (
+                                      <>
+                                        <Button size="sm" variant="outline" onClick={() => { setEditMode(true); setEditContent(ans.answer); setExpandedAnswerId(ans.id); }}>Edit</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => { setExpandedAnswerId(ans.id); handleDeleteAnswer(); }}>Delete</Button>
+                                      </>
                                     )}
-                                    <div className="flex items-center gap-2 pt-2">
-                                      <Button variant={userVote === 1 ? "default" : "ghost"} size="icon" className="h-8 w-8" onClick={() => handleVote(1)}>
-                                        <ChevronUp className="h-4 w-4" />
-                                      </Button>
-                                      <span className="font-semibold text-lg">{answerVotes}</span>
-                                      <Button variant={userVote === -1 ? "default" : "ghost"} size="icon" className="h-8 w-8" onClick={() => handleVote(-1)}>
-                                        <ChevronDown className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                    {/* Edit/Delete for owner */}
-                                    {user && selectedAnswer.user_id === user.id && !editMode && (
-                                      <div className="flex gap-2 pt-2">
-                                        <Button size="sm" variant="outline" onClick={() => setEditMode(true)}>Edit</Button>
-                                        <Button size="sm" variant="destructive" onClick={handleDeleteAnswer}>Delete</Button>
-                                      </div>
-                                    )}
-                                    {/* Comments Section */}
+                                    <Button size="sm" variant="ghost" onClick={() => setExpandedAnswerId(expandedAnswerId === ans.id ? null : ans.id)}>
+                                      {expandedAnswerId === ans.id ? "Hide Comments" : "Show Comments"}
+                                    </Button>
+                                  </div>
+                                  {expandedAnswerId === ans.id && (
                                     <div className="pt-4">
                                       <div className="font-semibold mb-2">Comments</div>
                                       {commentLoading ? (
@@ -559,33 +537,33 @@ const QandA = () => {
                                         </form>
                                       )}
                                     </div>
-                                  </div>
-                                </AnswerDialogContent>
-                              </AnswerDialog>
-                            )}
+                                  )}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="pt-2">
-                      <Textarea
-                        placeholder="Write your answer..."
-                        value={newAnswer}
-                        onChange={e => setNewAnswer(e.target.value)}
-                        disabled={isSubmittingAnswer}
-                        className="min-h-[80px]"
-                      />
-                      <div className="flex justify-end pt-2">
-                        <Button onClick={handleSubmitAnswer} disabled={!newAnswer.trim() || isSubmittingAnswer}>
-                          {isSubmittingAnswer ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                          {isSubmittingAnswer ? "Posting..." : "Post Answer"}
-                        </Button>
+                        )}
+                        <div className="pt-2">
+                          <Textarea
+                            placeholder="Write your answer..."
+                            value={newAnswer}
+                            onChange={e => setNewAnswer(e.target.value)}
+                            disabled={isSubmittingAnswer}
+                            className="min-h-[80px]"
+                          />
+                          <div className="flex justify-end pt-2">
+                            <Button onClick={handleSubmitAnswer} disabled={!newAnswer.trim() || isSubmittingAnswer}>
+                              {isSubmittingAnswer ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                              {isSubmittingAnswer ? "Posting..." : "Post Answer"}
+                            </Button>
+                          </div>
                       </div>
                     </div>
                   </div>
-                </DialogContent>
-              </Dialog>
-            ))
+                </CardContent>
+              </Card>
+              );
+            })
           )}
         </TabsContent>
         
@@ -637,7 +615,7 @@ const QandA = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
+          </div>
                 </CardContent>
               </Card>
             ))
