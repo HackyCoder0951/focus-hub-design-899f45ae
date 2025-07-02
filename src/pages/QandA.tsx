@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, TrendingUp, ChevronUp, ChevronDown, MessageCircle, Loader2 } from "lucide-react";
+import { Search, Plus, TrendingUp, ChevronUp, ChevronDown, MessageCircle, Loader2, MoreVertical } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 const QandA = () => {
   const { user } = useAuth();
@@ -36,6 +37,10 @@ const QandA = () => {
   const [answerVotes, setAnswerVotes] = useState<{ [answerId: string]: number }>({});
   const [userVotes, setUserVotes] = useState<{ [answerId: string]: number }>({});
   const [expandedAnswerId, setExpandedAnswerId] = useState<string | null>(null);
+  const [questionVotes, setQuestionVotes] = useState<{ [questionId: string]: number }>({});
+  const [userQuestionVotes, setUserQuestionVotes] = useState<{ [questionId: string]: number }>({});
+  const [editQuestionMode, setEditQuestionMode] = useState<string | null>(null);
+  const [editQuestionContent, setEditQuestionContent] = useState("");
 
   const categories = ["All", "React", "JavaScript", "Python", "Design", "Career"];
 
@@ -60,7 +65,16 @@ const QandA = () => {
       let vQuery = (supabase.from as any)('answer_votes')
         .select('*');
 
-      const [{ data: questions }, { data: answers }, { data: votes }] = await Promise.all([qQuery, aQuery, vQuery]);
+      // Fetch all votes for questions
+      let qvQuery = (supabase.from as any)('question_votes')
+        .select('*');
+
+      const [
+        { data: questions },
+        { data: answers },
+        { data: votes },
+        { data: qVotes }
+      ] = await Promise.all([qQuery, aQuery, vQuery, qvQuery]);
       setQuestions(questions || []);
       setAllAnswers(answers || []);
       // Group votes by answerId
@@ -74,12 +88,23 @@ const QandA = () => {
       });
       setAnswerVotes(voteCount);
       setUserVotes(userVoteMap);
+      // Group question votes by questionId
+      const qVoteCount: { [questionId: string]: number } = {};
+      const userQVoteMap: { [questionId: string]: number } = {};
+      (qVotes || []).forEach((v: any) => {
+        qVoteCount[v.question_id] = (qVoteCount[v.question_id] || 0) + v.vote_type;
+        if (user && v.user_id === user.id) {
+          userQVoteMap[v.question_id] = v.vote_type;
+        }
+      });
+      setQuestionVotes(qVoteCount);
+      setUserQuestionVotes(userQVoteMap);
     } catch (error) {
       // handle error
     } finally {
       setLoading(false);
     }
-    };
+  };
 
   useEffect(() => {
     fetchQuestionsAndAnswers();
@@ -298,6 +323,38 @@ const QandA = () => {
     }
   };
 
+  const handleQuestionVote = async (questionId: string, type: 1 | -1) => {
+    if (!user) return;
+    const currentUserVote = userQuestionVotes[questionId] || 0;
+    if (currentUserVote !== 0) return;
+
+    await (supabase.from as any)('question_votes').upsert({
+      question_id: questionId,
+      user_id: user.id,
+      vote_type: type,
+    });
+
+    setUserQuestionVotes(prev => ({ ...prev, [questionId]: type }));
+    setQuestionVotes(prev => ({
+      ...prev,
+      [questionId]: (prev[questionId] || 0) + type
+    }));
+  };
+
+  const handleEditQuestion = async (questionId: string) => {
+    if (!user || !editQuestionContent.trim()) return;
+    await supabase.from('questionanswers').update({ question: editQuestionContent.trim() }).eq('id', questionId);
+    setEditQuestionMode(null);
+    setEditQuestionContent("");
+    fetchQuestionsAndAnswers();
+  };
+
+  const handleDeleteQuestion = async (questionId: string) => {
+    if (!user) return;
+    await supabase.from('questionanswers').delete().eq('id', questionId);
+    fetchQuestionsAndAnswers();
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -402,11 +459,23 @@ const QandA = () => {
                   <div className="flex gap-4">
                     {/* Vote Section */}
                     <div className="flex flex-col items-center space-y-1 min-w-[60px]">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button
+                        variant={userQuestionVotes[question.id] === 1 ? "default" : "ghost"}
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleQuestionVote(question.id, 1)}
+                        disabled={userQuestionVotes[question.id] !== undefined && userQuestionVotes[question.id] !== 0}
+                      >
                         <ChevronUp className="h-4 w-4" />
                       </Button>
-                      <span className="font-semibold text-lg">{question.votes ?? 0}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <span className="font-semibold text-lg">{questionVotes[question.id] || 0}</span>
+                      <Button
+                        variant={userQuestionVotes[question.id] === -1 ? "default" : "ghost"}
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleQuestionVote(question.id, -1)}
+                        disabled={userQuestionVotes[question.id] !== undefined && userQuestionVotes[question.id] !== 0}
+                      >
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </div>
@@ -418,6 +487,35 @@ const QandA = () => {
                         </h3>
                         {!question.is_answered && (
                           <Badge variant="secondary" className="text-xs">Unanswered</Badge>
+                        )}
+                        {user && question.user_id === user.id && editQuestionMode !== question.id && (
+                          <div className="ml-auto">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreVertical className="h-5 w-5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setEditQuestionMode(question.id);
+                                    setEditQuestionContent(question.question);
+                                  }}
+                                >
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    if (window.confirm('Are you sure you want to delete this question?')) handleDeleteQuestion(question.id);
+                                  }}
+                                  className="text-red-600"
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         )}
                       </div>
                       <p className="text-muted-foreground text-sm line-clamp-2">
@@ -587,11 +685,23 @@ const QandA = () => {
                 <CardContent className="p-6">
                   <div className="flex gap-4">
                     <div className="flex flex-col items-center space-y-1 min-w-[60px]">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button
+                        variant={userQuestionVotes[question.id] === 1 ? "default" : "ghost"}
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleQuestionVote(question.id, 1)}
+                        disabled={userQuestionVotes[question.id] !== undefined && userQuestionVotes[question.id] !== 0}
+                      >
                         <ChevronUp className="h-4 w-4" />
                       </Button>
-                      <span className="font-semibold text-lg">{question.votes ?? 0}</span>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <span className="font-semibold text-lg">{questionVotes[question.id] || 0}</span>
+                      <Button
+                        variant={userQuestionVotes[question.id] === -1 ? "default" : "ghost"}
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleQuestionVote(question.id, -1)}
+                        disabled={userQuestionVotes[question.id] !== undefined && userQuestionVotes[question.id] !== 0}
+                      >
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </div>
@@ -615,7 +725,7 @@ const QandA = () => {
                         </div>
                       </div>
                     </div>
-          </div>
+                  </div>
                 </CardContent>
               </Card>
             ))
