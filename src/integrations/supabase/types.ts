@@ -539,6 +539,7 @@ export type Database = {
           comment_id: string | null;
           reason: string | null;
           created_at: string;
+          status: string | null;
         };
         Insert: {
           id?: string;
@@ -547,6 +548,7 @@ export type Database = {
           comment_id?: string | null;
           reason?: string | null;
           created_at?: string;
+          status?: string | null;
         };
         Update: {
           id?: string;
@@ -555,6 +557,7 @@ export type Database = {
           comment_id?: string | null;
           reason?: string | null;
           created_at?: string;
+          status?: string | null;
         };
         Relationships: [];
       }

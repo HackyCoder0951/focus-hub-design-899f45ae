@@ -121,7 +121,7 @@ const AdminDashboard = () => {
       // Flagged content
       const { data: flagsData } = await supabase
         .from("content_flags")
-        .select("id, flagged_by_user_id, post_id, comment_id, reason, created_at")
+        .select("id, flagged_by_user_id, post_id, comment_id, reason, created_at, status")
         .order("created_at", { ascending: false })
         .limit(5);
       const flagged = await Promise.all(
@@ -169,7 +169,9 @@ const AdminDashboard = () => {
             author,
             reports: 1,
             date: new Date(flag.created_at).toLocaleString(),
-            reason: flag.reason
+            reason: flag.reason,
+            status: flag.status || 'pending',
+            postId: flag.post_id
           };
         })
       );
@@ -234,6 +236,73 @@ const AdminDashboard = () => {
     await supabase.from("profiles").delete().eq("id", id);
     setAllUsers((users) => users.filter((u) => u.id !== id));
     setUserActionLoading(null);
+  };
+
+  // Admin actions for flagged content
+  const handleFlagAction = async (flagId, action, postId) => {
+    if (action === 'delete') {
+      await supabase.from('posts').update({ is_deleted: true }).eq('id', postId);
+    } else {
+      await supabase.from('content_flags').update({ status: action }).eq('id', flagId);
+    }
+    // Refresh flagged content
+    const { data: flagsData } = await supabase
+      .from("content_flags")
+      .select("id, flagged_by_user_id, post_id, comment_id, reason, created_at, status")
+      .order("created_at", { ascending: false })
+      .limit(5);
+    const flagged = await Promise.all(
+      (flagsData || []).map(async (flag) => {
+        let content = null;
+        let type = "";
+        let author = "";
+        if (flag.post_id) {
+          const { data: postData } = await supabase
+            .from("posts")
+            .select("content, user_id")
+            .eq("id", flag.post_id)
+            .single();
+          content = postData?.content;
+          type = "post";
+          if (postData?.user_id) {
+            const { data: userData } = await supabase
+              .from("profiles")
+              .select("full_name, email")
+              .eq("id", postData.user_id)
+              .single();
+            author = userData?.full_name || userData?.email || "Unknown";
+          }
+        } else if (flag.comment_id) {
+          const { data: commentData } = await supabase
+            .from("comments")
+            .select("content, user_id")
+            .eq("id", flag.comment_id)
+            .single();
+          content = commentData?.content;
+          type = "comment";
+          if (commentData?.user_id) {
+            const { data: userData } = await supabase
+              .from("profiles")
+              .select("full_name, email")
+              .eq("id", commentData.user_id)
+              .single();
+            author = userData?.full_name || userData?.email || "Unknown";
+          }
+        }
+        return {
+          id: flag.id,
+          type,
+          content,
+          author,
+          reports: 1,
+          date: new Date(flag.created_at).toLocaleString(),
+          reason: flag.reason,
+          status: flag.status || 'pending',
+          postId: flag.post_id
+        };
+      })
+    );
+    setFlaggedContent(flagged);
   };
 
   if (loading || !stats) {
@@ -376,9 +445,19 @@ const AdminDashboard = () => {
                         <span className="text-xs text-muted-foreground">{item.date}</span>
                       </div>
                       <div className="mb-2 text-sm">{item.content}</div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                         <span>By: {item.author}</span>
                         {item.reason && <span>• Reason: {item.reason}</span>}
+                        <Badge variant={item.status === 'pending' ? 'secondary' : item.status === 'resolved' ? 'default' : 'outline'}>{item.status}</Badge>
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        {item.status === 'pending' && (
+                          <>
+                            <Button size="sm" variant="default" onClick={() => handleFlagAction(item.id, 'resolved', item.postId)}>Resolve</Button>
+                            <Button size="sm" variant="secondary" onClick={() => handleFlagAction(item.id, 'dismissed', item.postId)}>Dismiss</Button>
+                            {item.type === 'post' && <Button size="sm" variant="destructive" onClick={() => handleFlagAction(item.id, 'delete', item.postId)}>Delete Post</Button>}
+                          </>
+                        )}
                       </div>
                     </div>
                   ))

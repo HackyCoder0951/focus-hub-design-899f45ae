@@ -21,6 +21,7 @@ import {
   DialogContent,
   DialogTitle
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 // import { Document, Page } from 'react-pdf';
 // import 'react-pdf/dist/Page/AnnotationLayer.css';
 // import 'react-pdf/dist/Page/TextLayer.css';
@@ -154,6 +155,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
   const [flagReason, setFlagReason] = useState("");
   const [flagLoading, setFlagLoading] = useState(false);
+  const [hasFlagged, setHasFlagged] = useState(false);
 
   // Check if user has liked this post
   useEffect(() => {
@@ -172,6 +174,21 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     };
 
     checkLikeStatus();
+  }, [user, post.id]);
+
+  // Check if user has flagged this post
+  useEffect(() => {
+    const checkFlagged = async () => {
+      if (!user) return setHasFlagged(false);
+      const { data } = await supabase
+        .from('content_flags')
+        .select('id')
+        .eq('post_id', post.id)
+        .eq('flagged_by_user_id', user.id)
+        .single();
+      setHasFlagged(!!data);
+    };
+    checkFlagged();
   }, [user, post.id]);
 
   useEffect(() => {
@@ -529,13 +546,47 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
       });
       setFlagLoading(false);
       setFlagDialogOpen(false);
+      setHasFlagged(true);
       return;
     }
+    // Insert flag
     const { error } = await supabase.from("content_flags").insert({
       post_id: post.id,
       flagged_by_user_id: user.id,
       reason: flagReason,
     });
+    // Notify all admins and post owner (except flagger)
+    const { data: admins, error: adminError } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "admin");
+    console.log('Admins:', admins, adminError);
+    const { data: postData } = await supabase
+      .from("posts")
+      .select("user_id")
+      .eq("id", post.id)
+      .single();
+    const recipients = [
+      ...(admins?.map(a => a.user_id) || []),
+      postData?.user_id
+    ].filter(uid => uid && uid !== user.id);
+    const notifications = recipients.map((uid) => ({
+      user_id: uid,
+      type: "flagged_post",
+      data: {
+        post_id: post.id,
+        flagged_by: user.id,
+        reason: flagReason,
+        text: `A post you own or moderate was flagged by a user.`
+      },
+      is_read: false
+    }));
+    console.log('Admins:', admins);
+    console.log('Notifications to insert:', notifications);
+    const { error: notifError } = await supabase.from("notifications").insert(notifications);
+    if (notifError) {
+      console.error("Notification insert error:", notifError);
+    }
     setFlagLoading(false);
     setFlagDialogOpen(false);
     setFlagReason("");
@@ -550,6 +601,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
         title: "Post flagged",
         description: "Thank you for reporting. Our team will review this post.",
       });
+      setHasFlagged(true);
     }
   };
 
@@ -701,7 +753,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
               {!isOwner && (
                 <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center gap-2 text-yellow-600" onClick={() => setFlagDialogOpen(true)}>
+                    <Button variant="ghost" size="sm" className="flex items-center gap-2 text-yellow-600" onClick={() => setFlagDialogOpen(true)} disabled={hasFlagged}>
                       <Flag className="h-4 w-4" />
                       Flag
                     </Button>
@@ -724,6 +776,9 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                     </div>
                   </DialogContent>
                 </Dialog>
+              )}
+              {hasFlagged && (
+                <Badge variant="secondary" className="ml-2">Flagged</Badge>
               )}
             </div>
             {/* Comments Section */}

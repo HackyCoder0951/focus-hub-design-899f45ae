@@ -32,6 +32,15 @@ const NotificationDropdown = () => {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
+  // Mark notification as read and remove from list
+  const handleNotificationClick = async (notificationId) => {
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+    setNotifications((prev) => prev.filter(n => n.id !== notificationId));
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -51,11 +60,11 @@ const NotificationDropdown = () => {
         <div className="max-h-96 overflow-auto">
           {loading ? (
             <div className="p-4 text-center text-muted-foreground">Loading...</div>
-          ) : notifications.length === 0 ? (
+          ) : notifications.filter(n => !n.is_read).length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">No notifications.</div>
           ) : (
-            notifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="p-4 border-b last:border-b-0">
+            notifications.filter(n => !n.is_read).map((notification) => (
+              <DropdownMenuItem key={notification.id} className="p-4 border-b last:border-b-0" onClick={() => handleNotificationClick(notification.id)}>
                 <div className="flex items-start gap-3">
                   {!notification.is_read && (
                     <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
