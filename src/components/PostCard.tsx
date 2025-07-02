@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share, MoreHorizontal, Loader2, Flag } from "lucide-react";
+import { Heart, MessageCircle, Share, MoreHorizontal, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,7 +44,6 @@ interface Post {
   };
   likes_count?: number;
   comments_count?: number;
-  flag_status?: string;
 }
 
 interface PostCardProps {
@@ -153,10 +152,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [mediaType, setMediaType] = useState<'image' | 'pdf' | 'video' | null>(null);
-  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
-  const [flagReason, setFlagReason] = useState("");
-  const [flagLoading, setFlagLoading] = useState(false);
-  const [hasFlagged, setHasFlagged] = useState(false);
 
   // Check if user has liked this post
   useEffect(() => {
@@ -175,21 +170,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     };
 
     checkLikeStatus();
-  }, [user, post.id]);
-
-  // Check if user has flagged this post
-  useEffect(() => {
-    const checkFlagged = async () => {
-      if (!user) return setHasFlagged(false);
-      const { data } = await supabase
-        .from('content_flags')
-        .select('id')
-        .eq('post_id', post.id)
-        .eq('flagged_by_user_id', user.id)
-        .single();
-      setHasFlagged(!!data);
-    };
-    checkFlagged();
   }, [user, post.id]);
 
   useEffect(() => {
@@ -522,90 +502,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
     return null;
   };
 
-  const handleFlagPost = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to flag posts.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setFlagLoading(true);
-    // Prevent duplicate flags
-    const { data: existing } = await supabase
-      .from("content_flags")
-      .select("id")
-      .eq("post_id", post.id)
-      .eq("flagged_by_user_id", user.id)
-      .single();
-    if (existing) {
-      toast({
-        title: "Already flagged",
-        description: "You have already flagged this post.",
-        variant: "default",
-      });
-      setFlagLoading(false);
-      setFlagDialogOpen(false);
-      setHasFlagged(true);
-      return;
-    }
-    // Insert flag
-    const { error } = await supabase.from("content_flags").insert({
-      post_id: post.id,
-      flagged_by_user_id: user.id,
-      reason: flagReason,
-    });
-    // Notify all admins and post owner (except flagger)
-    const { data: admins, error: adminError } = await supabase
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "admin");
-    console.log('Admins:', admins, adminError);
-    const { data: postData } = await supabase
-      .from("posts")
-      .select("user_id")
-      .eq("id", post.id)
-      .single();
-    const recipients = [
-      ...(admins?.map(a => a.user_id) || []),
-      postData?.user_id
-    ].filter(uid => uid && uid !== user.id);
-    const notifications = recipients.map((uid) => ({
-      user_id: uid,
-      type: "flagged_post",
-      data: {
-        post_id: post.id,
-        flagged_by: user.id,
-        reason: flagReason,
-        text: `A post you own or moderate was flagged by a user.`
-      },
-      is_read: false
-    }));
-    console.log('Admins:', admins);
-    console.log('Notifications to insert:', notifications);
-    const { error: notifError } = await supabase.from("notifications").insert(notifications);
-    if (notifError) {
-      console.error("Notification insert error:", notifError);
-    }
-    setFlagLoading(false);
-    setFlagDialogOpen(false);
-    setFlagReason("");
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to flag post. Please try again.",
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Post flagged",
-        description: "Thank you for reporting. Our team will review this post.",
-      });
-      setHasFlagged(true);
-    }
-  };
-
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
@@ -628,23 +524,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 <p className="text-sm text-muted-foreground">
                   {formatTimestamp(post.created_at)}
                 </p>
-                {post.flag_status && post.flag_status !== 'normal' && (
-                  <Badge variant={
-                    post.flag_status === 'flagged'
-                      ? 'destructive'
-                      : post.flag_status === 'reviewed' || post.flag_status === 'resolved'
-                        ? 'secondary'
-                        : 'default'
-                  }>
-                    {post.flag_status === 'flagged'
-                      ? 'Flagged'
-                      : post.flag_status === 'reviewed'
-                        ? 'Reviewed'
-                        : post.flag_status === 'resolved'
-                          ? 'Resolved'
-                          : post.flag_status}
-                  </Badge>
-                )}
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -654,10 +533,10 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {isOwner && (
-                    <DropdownMenuItem onClick={() => { setEditing(true); setEditContent(post.content); }} disabled={post.flag_status && post.flag_status !== 'normal'}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setEditing(true); setEditContent(post.content); }}>Edit</DropdownMenuItem>
                   )}
                   {isOwner && (
-                    <DropdownMenuItem onClick={() => setConfirmingDelete(true)} disabled={deleting || (post.flag_status && post.flag_status !== 'normal')}>Delete</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setConfirmingDelete(true)}>Delete</DropdownMenuItem>
                   )}
                   {(isOwner || !isOwner) && (
                     <>
@@ -768,36 +647,6 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 <Share className="h-4 w-4" />
                 Share
               </Button>
-              {!isOwner && (
-                <Dialog open={flagDialogOpen} onOpenChange={setFlagDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center gap-2 text-yellow-600" onClick={() => setFlagDialogOpen(true)} disabled={hasFlagged}>
-                      <Flag className="h-4 w-4" />
-                      Flag
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogTitle>Report this post</DialogTitle>
-                    <p className="text-sm text-muted-foreground mb-2">Please let us know why you are flagging this post (optional):</p>
-                    <Textarea
-                      value={flagReason}
-                      onChange={e => setFlagReason(e.target.value)}
-                      placeholder="Reason (optional)"
-                      rows={3}
-                    />
-                    <div className="flex gap-2 mt-4">
-                      <Button onClick={handleFlagPost} disabled={flagLoading}>
-                        {flagLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        Submit
-                      </Button>
-                      <Button variant="outline" onClick={() => setFlagDialogOpen(false)} disabled={flagLoading}>Cancel</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-              {hasFlagged && (
-                <Badge variant="secondary" className="ml-2">Flagged</Badge>
-              )}
             </div>
             {/* Comments Section */}
             <div className="mt-3">
@@ -843,9 +692,9 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
           </div>
         </div>
         <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
-          <DialogContent>
+          <DialogContent aria-describedby="delete-dialog-desc">
             <DialogTitle>Delete post?</DialogTitle>
-            <p>Are you sure you want to permanently remove this post?</p>
+            <p id="delete-dialog-desc">Are you sure you want to permanently remove this post?</p>
             <div className="flex justify-end gap-2 mt-4">
               <Button variant="outline" onClick={() => setConfirmingDelete(false)} disabled={deleting}>Cancel</Button>
               <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
