@@ -16,6 +16,7 @@ export type Database = {
           is_admin: boolean | null
           joined_at: string
           user_id: string | null
+          typing?: boolean
         }
         Insert: {
           chat_id?: string | null
@@ -23,6 +24,7 @@ export type Database = {
           is_admin?: boolean | null
           joined_at?: string
           user_id?: string | null
+          typing?: boolean
         }
         Update: {
           chat_id?: string | null
@@ -30,6 +32,7 @@ export type Database = {
           is_admin?: boolean | null
           joined_at?: string
           user_id?: string | null
+          typing?: boolean
         }
         Relationships: [
           {
@@ -403,7 +406,8 @@ export type Database = {
           settings: Json | null
           updated_at: string
           website: string | null
-          status: string | null // <-- Add this line
+          status: string | null
+          last_seen: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -416,7 +420,8 @@ export type Database = {
           settings?: Json | null
           updated_at?: string
           website?: string | null
-          status?: string | null // <-- Add this line
+          status?: string | null
+          last_seen?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -429,7 +434,8 @@ export type Database = {
           settings?: Json | null
           updated_at?: string
           website?: string | null
-          status?: string | null // <-- Add this line
+          status?: string | null
+          last_seen?: string | null
         }
         Relationships: []
       }

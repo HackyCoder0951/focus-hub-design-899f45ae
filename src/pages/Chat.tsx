@@ -13,6 +13,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { saveAs } from "file-saver";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { differenceInMinutes } from 'date-fns';
 
 interface ChatMessage {
   id: string;
@@ -23,6 +24,7 @@ interface ChatMessage {
   profiles: {
     full_name: string;
     avatar_url: string;
+    last_seen?: string;
   };
   media_url?: string;
 }
@@ -36,7 +38,9 @@ interface ChatMember {
   profiles: {
     full_name: string;
     avatar_url: string;
+    last_seen?: string;
   };
+  typing?: boolean;
 }
 
 interface Chat {
@@ -81,6 +85,8 @@ const Chat = () => {
   const [showAdminLeaveWarning, setShowAdminLeaveWarning] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -124,7 +130,7 @@ const Chat = () => {
             user_id,
             joined_at,
             is_admin,
-            profiles: user_id (full_name, avatar_url)
+            profiles: user_id (full_name, avatar_url, last_seen)
           `)
           .eq('chat_id', chat.id);
         console.log('Fetched members:', members);
@@ -227,6 +233,28 @@ const Chat = () => {
     
     fetchMessages();
   }, [selectedChat]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    if (!user || !selectedChat) return;
+    // Set typing = true in DB
+    supabase
+      .from('chat_members')
+      .update({ typing: true })
+      .eq('chat_id', selectedChat)
+      .eq('user_id', user.id);
+    // Reset typing to false after 2 seconds of inactivity
+    if (typingTimeout) clearTimeout(typingTimeout);
+    setTypingTimeout(
+      setTimeout(() => {
+        supabase
+          .from('chat_members')
+          .update({ typing: false })
+          .eq('chat_id', selectedChat)
+          .eq('user_id', user.id);
+      }, 2000)
+    );
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -488,6 +516,51 @@ const Chat = () => {
     return <FileIcon className="h-6 w-6 text-gray-500" />;
   };
 
+  // Update last_seen every minute for the current user
+  useEffect(() => {
+    if (!user) return;
+    const updateLastSeen = async () => {
+      console.log("Updating last_seen");
+      const { error } = await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', user.id);
+      if (error) {
+        console.error("Error updating last_seen:", error);
+      }
+    };
+    updateLastSeen();
+    const interval = setInterval(updateLastSeen, 60000); // every 1 min
+    return () => clearInterval(interval);
+  }, [user]);
+
+  useEffect(() => {
+    if (currentChat?.is_group || !otherMembers[0]?.user_id) return;
+    const channel = supabase
+      .channel('chat_members_typing')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_members',
+          filter: `chat_id=eq.${currentChat.id},user_id=eq.${otherMembers[0].user_id}`,
+        },
+        (payload) => {
+          setOtherUserTyping(payload.new.typing);
+        }
+      )
+      .subscribe();
+    // Fetch initial typing status
+    supabase
+      .from('chat_members')
+      .select('typing')
+      .eq('chat_id', currentChat.id)
+      .eq('user_id', otherMembers[0].user_id)
+      .single()
+      .then(({ data }) => setOtherUserTyping(data?.typing ?? false));
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentChat?.id, otherMembers[0]?.user_id]);
+
   return (
     <>
       <div className="max-w-7xl mx-auto h-[calc(100vh-12rem)]">
@@ -591,9 +664,26 @@ const Chat = () => {
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    </div>
-                    <div>
+                    {!currentChat.is_group && (
+                      <span className={`inline-block w-2 h-2 rounded-full mr-1 ${
+                        otherMembers[0]?.profiles?.last_seen && (Date.now() - new Date(otherMembers[0].profiles.last_seen).getTime()) < 2 * 60 * 1000
+                          ? 'bg-green-500'
+                          : 'bg-red-500'
+                      }`}></span>
+                    )}
+                  </div>
+                  <div>
                     <h3 className="font-semibold">{getChatDisplayName(currentChat)}</h3>
+                    {!currentChat.is_group && otherMembers[0]?.profiles?.last_seen && (
+                      <p className="text-xs text-muted-foreground">
+                        {otherUserTyping
+                          ? "typing..."
+                          : (Date.now() - new Date(otherMembers[0]?.profiles?.last_seen).getTime() < 2 * 60 * 1000
+                            ? "online"
+                            : `last seen ${new Date(otherMembers[0]?.profiles?.last_seen).toLocaleString()}`)
+                        }
+                      </p>
+                    )}
                     {currentChat.is_group && (
                       <p className="text-sm text-muted-foreground">
                         {currentChat.chat_members.length} members
@@ -717,7 +807,7 @@ const Chat = () => {
                     <Input
                       placeholder="Type a message..."
                       value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      onChange={handleInputChange}
                       className="flex-1"
                       disabled={isTyping || uploading}
                     />
@@ -765,34 +855,39 @@ const Chat = () => {
                   <h3 className="font-semibold mb-2">Members ({currentChat.chat_members.length})</h3>
                   <div className="max-h-64 overflow-y-auto">
                     <ul className="space-y-1">
-                      {currentChat.chat_members.map(member => (
-                        <li key={member.user_id} className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={member.profiles?.avatar_url} />
-                            <AvatarFallback className="text-xs">
-                              {member.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span>{member.profiles?.full_name}</span>
-                          {member.is_admin && <Badge variant="secondary">Admin</Badge>}
-                          {isCurrentUserAdmin && user?.id !== member.user_id && (
-                            <>
-                              {member.is_admin ? (
-                                <Button size="sm" variant="outline" onClick={() => handleToggleAdmin(member.user_id, false)}>
-                                  Remove Admin
+                      {currentChat.chat_members.map(member => {
+                        const lastSeen = member.profiles?.last_seen;
+                        const isOnline = lastSeen && (Date.now() - new Date(lastSeen).getTime()) < 2 * 60 * 1000;
+                        return (
+                          <li key={member.user_id} className="flex items-center gap-2">
+                            <span className={`inline-block w-2 h-2 rounded-full mr-1 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={member.profiles?.avatar_url} />
+                              <AvatarFallback className="text-xs">
+                                {member.profiles?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span>{member.profiles?.full_name}</span>
+                            {member.is_admin && <Badge variant="secondary">Admin</Badge>}
+                            {isCurrentUserAdmin && user?.id !== member.user_id && (
+                              <>
+                                {member.is_admin ? (
+                                  <Button size="sm" variant="outline" onClick={() => handleToggleAdmin(member.user_id, false)}>
+                                    Remove Admin
+                                  </Button>
+                                ) : (
+                                  <Button size="sm" variant="secondary" onClick={() => handleToggleAdmin(member.user_id, true)}>
+                                    Make Admin
+                                  </Button>
+                                )}
+                                <Button size="sm" variant="destructive" onClick={() => handleRemoveMember(member.user_id)}>
+                                  Remove
                                 </Button>
-                              ) : (
-                                <Button size="sm" variant="secondary" onClick={() => handleToggleAdmin(member.user_id, true)}>
-                                  Make Admin
-                                </Button>
-                              )}
-                              <Button size="sm" variant="destructive" onClick={() => handleRemoveMember(member.user_id)}>
-                                Remove
-                              </Button>
-                            </>
-                          )}
-                        </li>
-                      ))}
+                              </>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </div>
