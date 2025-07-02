@@ -359,6 +359,7 @@ export type Database = {
           media_url: string | null
           updated_at: string
           user_id: string | null
+          flag_status: string | null
         }
         Insert: {
           content: string
@@ -368,6 +369,7 @@ export type Database = {
           media_url?: string | null
           updated_at?: string
           user_id?: string | null
+          flag_status?: string | null
         }
         Update: {
           content?: string
@@ -377,6 +379,7 @@ export type Database = {
           media_url?: string | null
           updated_at?: string
           user_id?: string | null
+          flag_status?: string | null
         }
         Relationships: [
           {

@@ -44,6 +44,7 @@ interface Post {
   };
   likes_count?: number;
   comments_count?: number;
+  flag_status?: string;
 }
 
 interface PostCardProps {
@@ -293,7 +294,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
 
   const handleDelete = async () => {
     setDeleting(true);
-    await supabase.from('posts').update({ is_deleted: true }).eq('id', post.id);
+    await supabase.from('posts').delete().eq('id', post.id);
     setDeleting(false);
     setConfirmingDelete(false);
     if (onPostUpdated) onPostUpdated();
@@ -627,6 +628,23 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 <p className="text-sm text-muted-foreground">
                   {formatTimestamp(post.created_at)}
                 </p>
+                {post.flag_status && post.flag_status !== 'normal' && (
+                  <Badge variant={
+                    post.flag_status === 'flagged'
+                      ? 'destructive'
+                      : post.flag_status === 'reviewed' || post.flag_status === 'resolved'
+                        ? 'secondary'
+                        : 'default'
+                  }>
+                    {post.flag_status === 'flagged'
+                      ? 'Flagged'
+                      : post.flag_status === 'reviewed'
+                        ? 'Reviewed'
+                        : post.flag_status === 'resolved'
+                          ? 'Resolved'
+                          : post.flag_status}
+                  </Badge>
+                )}
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -636,10 +654,10 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {isOwner && (
-                    <DropdownMenuItem onClick={() => { setEditing(true); setEditContent(post.content); }}>Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { setEditing(true); setEditContent(post.content); }} disabled={post.flag_status && post.flag_status !== 'normal'}>Edit</DropdownMenuItem>
                   )}
                   {isOwner && (
-                    <DropdownMenuItem onClick={() => setConfirmingDelete(true)} disabled={deleting}>Delete</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setConfirmingDelete(true)} disabled={deleting || (post.flag_status && post.flag_status !== 'normal')}>Delete</DropdownMenuItem>
                   )}
                   {(isOwner || !isOwner) && (
                     <>
@@ -824,17 +842,18 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             </div>
           </div>
         </div>
-        {confirmingDelete && (
-          <div className="mt-2 flex gap-2 items-center bg-muted p-3 rounded shadow">
-            <span>Are you sure you want to delete this post?</span>
-            <Button size="sm" variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setConfirmingDelete(false)} disabled={deleting}>
-              Cancel
-            </Button>
-          </div>
-        )}
+        <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
+          <DialogContent>
+            <DialogTitle>Delete post?</DialogTitle>
+            <p>Are you sure you want to permanently remove this post?</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setConfirmingDelete(false)} disabled={deleting}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

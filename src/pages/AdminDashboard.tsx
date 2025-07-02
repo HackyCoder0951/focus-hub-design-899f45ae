@@ -244,6 +244,9 @@ const AdminDashboard = () => {
       await supabase.from('posts').update({ is_deleted: true }).eq('id', postId);
     } else {
       await supabase.from('content_flags').update({ status: action }).eq('id', flagId);
+      if (action === 'resolved' || action === 'dismissed') {
+        await supabase.from('posts').update({ flag_status: 'reviewed' }).eq('id', postId);
+      }
     }
     // Refresh flagged content
     const { data: flagsData } = await supabase
