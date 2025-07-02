@@ -81,6 +81,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error fetching profile:', profileError);
       } else {
+        // Check for banned or inactive status
+        if (profileData?.status === 'banned' || profileData?.status === 'inactive') {
+          toast({
+            title: 'Account Disabled',
+            description: 'Your account has been banned or deactivated. Please contact the administrator at admin@focus.com.',
+            variant: 'destructive',
+          });
+          await supabase.auth.signOut();
+          setProfile(null);
+          setUserRole(null);
+          setUser(null);
+          setSession(null);
+          navigate('/login');
+          return;
+        }
         setProfile(profileData);
       }
 
