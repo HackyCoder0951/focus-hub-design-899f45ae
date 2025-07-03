@@ -201,7 +201,7 @@ const QandA = () => {
     setNewAnswer("");
   };
 
-  const handleSubmitAnswer = async () => {
+  const handleSubmitAnswer = async (questionObj) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -224,7 +224,7 @@ const QandA = () => {
         .from('questionanswers')
         .insert({
           user_id: user.id,
-          question: selectedQuestion.question,
+          question: questionObj.question,
           answer: newAnswer.trim(),
           is_answered: true,
         });
@@ -234,7 +234,7 @@ const QandA = () => {
         description: "Your answer has been published.",
       });
       setNewAnswer("");
-      fetchAnswers(selectedQuestion.question);
+      fetchAnswers(questionObj.question);
     } catch (error: any) {
       toast({
         title: "Error posting answer",
@@ -749,7 +749,7 @@ const QandA = () => {
                             className="min-h-[80px]"
                           />
                           <div className="flex justify-end pt-2">
-                            <Button onClick={handleSubmitAnswer} disabled={!newAnswer.trim() || isSubmittingAnswer}>
+                            <Button onClick={() => handleSubmitAnswer(question)} disabled={!newAnswer.trim() || isSubmittingAnswer}>
                               {isSubmittingAnswer ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                               {isSubmittingAnswer ? "Posting..." : "Post Answer"}
                             </Button>
