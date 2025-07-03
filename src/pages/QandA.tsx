@@ -41,6 +41,8 @@ const QandA = () => {
   const [userQuestionVotes, setUserQuestionVotes] = useState<{ [questionId: string]: number }>({});
   const [editQuestionMode, setEditQuestionMode] = useState<string | null>(null);
   const [editQuestionContent, setEditQuestionContent] = useState("");
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyInput, setReplyInput] = useState("");
 
   const categories = ["All", "React", "JavaScript", "Python", "Design", "Career"];
 
@@ -267,10 +269,11 @@ const QandA = () => {
     e.preventDefault();
     if (!user || !commentInput.trim() || !selectedAnswer) return;
     setCommentLoading(true);
-    await (supabase.from as any)('answer_comments').insert({
+    await (supabase.from as any)("answer_comments").insert({
       answer_id: selectedAnswer.id,
       user_id: user.id,
       comment: commentInput.trim(),
+      parent_comment_id: null,
     });
     setCommentInput("");
     await fetchAnswerComments(selectedAnswer.id);
@@ -297,10 +300,10 @@ const QandA = () => {
   const fetchAnswerComments = async (answerId: string) => {
     setCommentLoading(true);
     try {
-      const { data, error } = await (supabase.from as any)('answer_comments')
-        .select('*, profiles: user_id (full_name, avatar_url)')
-        .eq('answer_id', answerId)
-        .order('created_at', { ascending: true });
+      const { data, error } = await (supabase.from as any)("answer_comments")
+        .select("*, profiles: user_id (full_name, avatar_url)")
+        .eq("answer_id", answerId)
+        .order("created_at", { ascending: true });
       if (error) throw error;
       setAnswerComments(data || []);
     } catch {
@@ -353,6 +356,116 @@ const QandA = () => {
     if (!user) return;
     await supabase.from('questionanswers').delete().eq('id', questionId);
     fetchQuestionsAndAnswers();
+  };
+
+  const handleDeleteComment = async (commentId: string, answerId: string) => {
+    if (!user) return;
+    setCommentLoading(true);
+    try {
+      await (supabase.from as any)("answer_comments").delete().eq("id", commentId);
+      await fetchAnswerComments(answerId);
+    } catch (error) {
+      toast({
+        title: "Error deleting comment",
+        description: (error as any)?.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  function buildCommentTree(comments) {
+    const map = {};
+    const roots = [];
+    comments.forEach(c => { map[c.id] = { ...c, replies: [] }; });
+    comments.forEach(c => {
+      if (c.parent_comment_id) {
+        map[c.parent_comment_id]?.replies.push(map[c.id]);
+      } else {
+        roots.push(map[c.id]);
+      }
+    });
+    return roots;
+  }
+
+  function CommentThread({ comments }) {
+    return comments.map((c) => (
+      <div key={c.id} className="flex gap-2 items-start mt-2 ml-0" style={{ marginLeft: c.parent_comment_id ? 24 : 0 }}>
+        <Avatar className="h-6 w-6">
+          <AvatarImage src={c.profiles?.avatar_url} />
+          <AvatarFallback>{c.profiles?.full_name?.charAt(0)}</AvatarFallback>
+        </Avatar>
+        <div className="bg-muted rounded-lg px-3 py-2 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-xs">{c.profiles?.full_name || "Unknown User"}</span>
+            <span className="text-xs text-muted-foreground">{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</span>
+            {user && c.user_id === user.id && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-red-500 ml-2 px-2 py-0 h-6"
+                onClick={() => handleDeleteComment(c.id, selectedAnswer?.id)}
+                disabled={commentLoading}
+              >
+                Delete
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-2 px-2 py-0 h-6"
+              onClick={() => setReplyTo(c.id)}
+              disabled={commentLoading}
+            >
+              Reply
+            </Button>
+          </div>
+          <div className="text-sm mt-1">{c.comment}</div>
+          {replyTo === c.id && (
+            <form onSubmit={e => handleAddReply(e, c.id)} className="flex gap-2 items-center mt-2">
+              <input
+                type="text"
+                className="flex-1 rounded-full border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Write a reply..."
+                value={replyInput}
+                onChange={e => setReplyInput(e.target.value)}
+                disabled={commentLoading}
+                maxLength={500}
+                autoFocus
+              />
+              <Button type="submit" size="sm" disabled={commentLoading || !replyInput.trim()}>
+                Post
+              </Button>
+              <Button type="button" size="sm" variant="outline" onClick={() => setReplyTo(null)}>
+                Cancel
+              </Button>
+            </form>
+          )}
+          {c.replies && c.replies.length > 0 && (
+            <div className="ml-6 border-l border-muted-foreground/20 pl-4 mt-2">
+              <CommentThread comments={c.replies} />
+            </div>
+          )}
+        </div>
+      </div>
+    ));
+  }
+
+  const handleAddReply = async (e: React.FormEvent, parentId: string) => {
+    e.preventDefault();
+    if (!user || !replyInput.trim() || !selectedAnswer) return;
+    setCommentLoading(true);
+    await (supabase.from as any)("answer_comments").insert({
+      answer_id: selectedAnswer.id,
+      user_id: user.id,
+      comment: replyInput.trim(),
+      parent_comment_id: parentId,
+    });
+    setReplyInput("");
+    setReplyTo(null);
+    await fetchAnswerComments(selectedAnswer.id);
+    setCommentLoading(false);
   };
 
   return (
@@ -596,21 +709,7 @@ const QandA = () => {
                                         <div className="text-muted-foreground">No comments yet.</div>
                                       ) : (
                                         <div className="space-y-2 max-h-40 overflow-y-auto">
-                                          {answerComments.map((c) => (
-                                            <div key={c.id} className="flex gap-2 items-start">
-                                              <Avatar className="h-6 w-6">
-                                                <AvatarImage src={c.profiles?.avatar_url} />
-                                                <AvatarFallback>{c.profiles?.full_name?.charAt(0)}</AvatarFallback>
-                                              </Avatar>
-                                              <div className="bg-muted rounded-lg px-3 py-2 flex-1">
-                                                <div className="flex items-center gap-2">
-                                                  <span className="font-medium text-xs">{c.profiles?.full_name || "Unknown User"}</span>
-                                                  <span className="text-xs text-muted-foreground">{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</span>
-                                                </div>
-                                                <div className="text-sm mt-1">{c.comment}</div>
-                                              </div>
-                                            </div>
-                                          ))}
+                                          {CommentThread({ comments: buildCommentTree(answerComments) })}
                                         </div>
                                       )}
                                       {user && (
