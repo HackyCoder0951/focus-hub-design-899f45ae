@@ -1,6 +1,41 @@
-# API Modules Documentation
+# API Layer
 
-This document provides an overview of all API modules in the project, including data flow and use case diagrams, and database design where relevant.
+## Introduction
+The API Layer acts as the bridge between the frontend application and the backend database, handling all data operations such as creating, reading, updating, and deleting resources. It abstracts the complexity of direct database access and enforces business logic and security.
+
+## What Problem Does It Solve?
+- Centralizes data access and manipulation logic.
+- Ensures consistent validation and error handling.
+- Provides a single point for integrating with external services or APIs if needed.
+
+## Key Concepts
+- **Endpoints:** Define how the frontend communicates with the backend for different resources (e.g., posts, comments, votes).
+- **Request Handling:** Validates and processes incoming requests, interacts with the database, and returns structured responses.
+- **Security:** Enforces authentication and authorization, ensuring only permitted actions are allowed.
+
+## Data Flow Diagram Context
+```mermaid
+sequenceDiagram
+    participant Frontend
+    participant API
+    participant Database
+    Frontend->>API: Send request (e.g., create post)
+    API->>Database: Perform operation (insert/update/delete)
+    Database-->>API: Return result
+    API-->>Frontend: Send response
+```
+
+## Use Cases Diagram Context
+- User creates a new post or comment.
+- User votes on a post or answer.
+- User fetches a list of resources (posts, comments, answers).
+
+## Database Design
+- Interacts with tables such as `posts`, `comments`, `votes`, `answers`.
+- Enforces Row Level Security (RLS) for all operations.
+
+---
+The API Layer ensures all data operations are secure, validated, and consistent across the application.
 
 ## Index
 - [index.js](#indexjs)

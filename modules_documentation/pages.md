@@ -1,3 +1,41 @@
+# Main Application Pages
+
+## Introduction
+The Main Application Pages represent the core user-facing screens of the platform, such as the feed, chat, profile, settings, and authentication flows. Each page is designed to provide a seamless and interactive experience, leveraging modular components and real-time data.
+
+## What Problem Does It Solve?
+- Organizes the application into clear, navigable sections.
+- Provides dedicated interfaces for different user tasks (e.g., posting, chatting, managing profile).
+- Ensures a consistent user experience across the platform.
+
+## Key Concepts
+- **Page Components:** Each page encapsulates a specific feature or workflow (e.g., Feed, Chat, Profile).
+- **Routing:** Navigation between pages is managed by a router, enabling smooth transitions and deep linking.
+- **Layout:** Shared layout components (header, sidebar) provide consistency and context.
+
+## Data Flow Diagram Context
+```mermaid
+sequenceDiagram
+    participant User
+    participant Router
+    participant Page
+    User->>Router: Navigate (e.g., /feed, /chat)
+    Router->>Page: Render corresponding page component
+    Page-->>User: Display content and UI
+```
+
+## Use Cases Diagram Context
+- User browses the social feed.
+- User participates in chat conversations.
+- User updates their profile or settings.
+- User logs in, registers, or resets password.
+
+## Database Design
+- Pages interact with various tables such as `users`, `posts`, `chats`, `profiles`, depending on their function.
+
+---
+Main Application Pages are the entry points for all user interactions and workflows in the platform.
+
 # Pages Documentation
 
 This document provides an overview of all pages in the project, including data flow and use case diagrams, and database design where relevant.
