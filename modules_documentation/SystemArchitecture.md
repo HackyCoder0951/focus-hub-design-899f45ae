@@ -58,19 +58,19 @@ graph TD
   Repo[Git Repository]
   CI[CI/CD Pipeline]
   Build[Build Server]
-  Host[Hosting , CDN (e.g., Vercel, Netlify)]
+  Host[Hosting / CDN (e.g., Vercel, Netlify)]
   User[End User]
-  Supabase[Supabase Backend]
+  Supabase[Supabase Backend<br/>(Database / Auth / Storage)]
 
-  Dev -- "Push Code" --> Repo
-  Repo -- "Trigger Build" --> CI
-  CI -- "Run Tests & Build" --> Build
-  Build -- "Deploy Artifacts" --> Host
-  Host -- "Serve Frontend" --> User
-  User -- "API Requests" --> Supabase
-  Host -- "API Proxy" --> Supabase
-  Supabase -- "Database/Auth/Storage" --> Supabase
+  Dev -->|Push Code| Repo
+  Repo -->|Trigger Build| CI
+  CI -->|Run Tests & Build| Build
+  Build -->|Deploy Artifacts| Host
+  Host -->|Serve Frontend| User
+  User -->|API Requests| Supabase
+  Host -->|API Proxy| Supabase
 ```
+
 
 ### Deployment Flow Summary
 - Developers push code to the Git repository.
