@@ -6,20 +6,26 @@ The UI Component Library provides a set of reusable, accessible, and customizabl
 ## Data Flow Diagram Context
 ```mermaid
 flowchart TD
-    A[Page/Feature] -->|Uses| B[UI Component]
-    B -->|Renders UI| A
+    Page[Page / Feature Module] -->|Uses| Component[UI Component]
+    Component -->|Renders Markup & Styles| DOM[UI Output]
+    Page -->|User Input| Component
+    Component -->|Emits Events| Page
 ```
+
 
 ## Use Cases Diagram Context
 ```mermaid
 usecaseDiagram
   actor Developer
+
   Developer --> (Build Form)
-  Developer --> (Display List)
-  Developer --> (Show Dialog)
-  Developer --> (Render Navigation)
-  Developer --> (Provide Feedback)
+  Developer --> (Display List/Grid)
+  Developer --> (Show Modal/Dialog)
+  Developer --> (Render Navigation Bar)
+  Developer --> (Display Validation Feedback)
+  Developer --> (Reuse Button, Input, etc.)
 ```
+
 
 ## Database Design
 _Not applicable: UI components do not directly interact with the database._

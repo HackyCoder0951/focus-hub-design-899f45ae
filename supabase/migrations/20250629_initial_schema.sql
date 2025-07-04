@@ -1488,158 +1488,6 @@ GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 GRANT ALL ON FUNCTION "public"."handle_file_deletion"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_file_deletion"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_file_deletion"() TO "service_role";
@@ -1667,23 +1515,6 @@ GRANT ALL ON FUNCTION "public"."has_role"("_user_id" "uuid", "_role" "public"."a
 GRANT ALL ON FUNCTION "public"."leave_group"("p_chat_id" "uuid", "p_user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."leave_group"("p_chat_id" "uuid", "p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."leave_group"("p_chat_id" "uuid", "p_user_id" "uuid") TO "service_role";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 GRANT ALL ON TABLE "public"."answer_comments" TO "anon";
 GRANT ALL ON TABLE "public"."answer_comments" TO "authenticated";
@@ -1851,35 +1682,18 @@ GRANT ALL ON TABLE "public"."user_roles" TO "anon";
 GRANT ALL ON TABLE "public"."user_roles" TO "authenticated";
 GRANT ALL ON TABLE "public"."user_roles" TO "service_role";
 
-
-
 GRANT ALL ON TABLE "public"."votes" TO "anon";
 GRANT ALL ON TABLE "public"."votes" TO "authenticated";
 GRANT ALL ON TABLE "public"."votes" TO "service_role";
-
-
 
 GRANT ALL ON SEQUENCE "public"."votes_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."votes_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."votes_id_seq" TO "service_role";
 
-
-
-
-
-
-
-
-
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
-
-
-
-
-
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
@@ -1887,42 +1701,10 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUN
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
 
 
-
-
-
-
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 RESET ALL;

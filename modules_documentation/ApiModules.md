@@ -10,10 +10,11 @@ sequenceDiagram
     participant API
     participant Database
     Frontend->>API: Send request (e.g., create post)
-    API->>Database: Perform operation (insert/update/delete)
+    API->>Database: Execute operation (insert/update/delete)
     Database-->>API: Return result
-    API-->>Frontend: Send response
+    API-->>Frontend: Respond with data or status
 ```
+
 
 ## Use Cases Diagram Context
 ```mermaid
@@ -24,16 +25,65 @@ usecaseDiagram
   Frontend --> (Update Resource)
   Frontend --> (Delete Resource)
   Frontend --> (Integrate with External Service)
+
+  actor ExternalService
+  ExternalService --> (Send Webhook)
+  ExternalService --> (Receive Callback)
 ```
+
 
 ## Database Design
 ```mermaid
 erDiagram
-  api_layer ||--o{ posts : ""
-  api_layer ||--o{ comments : ""
-  api_layer ||--o{ votes : ""
-  api_layer ||--o{ answers : ""
+  chats {
+    uuid id PK "Primary Key"
+    boolean is_group "Is Group Chat"
+    text name "Chat name"
+    timestamptz created_at "Created Timestamp"
+    uuid created_by FK "Creator (user_id)"
+  }
+
+  chat_members {
+    uuid id PK
+    uuid chat_id FK
+    uuid user_id FK
+    timestamptz joined_at
+    boolean is_admin
+    boolean typing
+  }
+
+  chat_messages {
+    uuid id PK
+    uuid chat_id FK
+    uuid user_id FK
+    text content
+    text media_url
+    timestamptz created_at
+  }
+
+  profiles {
+    uuid id PK
+    text email
+    text full_name
+    text avatar_url
+    text bio
+    text location
+    text website
+    jsonb settings
+    member_type_enum member_type
+    text status
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz last_seen
+  }
+
+  chats ||--o{ chat_members : "has"
+  chats ||--o{ chat_messages : "includes"
+  chat_members }o--|| profiles : "has user"
+  chat_messages }o--|| profiles : "sent by"
+  chats }o--|| profiles : "created by"
 ```
+
 
 ---
 The API Layer ensures all data operations are secure, validated, and consistent across the application. 
