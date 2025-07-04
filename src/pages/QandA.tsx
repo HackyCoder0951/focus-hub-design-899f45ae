@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import AIAnswer from "@/components/AIAnswer";
 
 const QandA = () => {
   const { user } = useAuth();
@@ -648,12 +649,22 @@ const QandA = () => {
                             <span>{answersForThisQuestion.length} answers</span>
                           </div>
                         </div>
-                        {/* Answers Section (in-page, not in dialog) */}
-                        <div className="font-semibold mt-4">Answers</div>
+                        {/* AI Answer Section */}
+                        <AIAnswer 
+                          questionId={question.id}
+                          question={question.question}
+                          onAnswerGenerated={(answer) => {
+                            // Refresh the questions list to show the AI answer
+                            fetchQuestionsAndAnswers();
+                          }}
+                        />
+                        
+                        {/* User Answers Section */}
+                        <div className="font-semibold mt-4">User Answers</div>
                         {answerLoading ? (
                           <div className="text-center py-4"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
                         ) : answersForThisQuestion.length === 0 ? (
-                          <div className="text-muted-foreground">No answers yet. Be the first to answer!</div>
+                          <div className="text-muted-foreground">No user answers yet. Be the first to answer!</div>
                         ) : (
                           <div className="space-y-3 max-h-60 overflow-y-auto">
                             {answersForThisQuestion.map((ans) => (
