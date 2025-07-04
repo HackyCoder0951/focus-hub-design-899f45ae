@@ -92,4 +92,62 @@
 
 ---
 
+## 4. Project Structure
+
+focus_hub/
+├── public/                       # Static assets (favicon, index.html, etc.)
+├── src/                          # Main application source code
+│   ├── api/                      # API route handlers or API utilities
+│   ├── components/               # Reusable React components
+│   │   └── ui/                   # UI library components (shadcn/ui, etc.)
+│   ├── contexts/                 # React context providers (e.g., AuthContext)
+│   ├── hooks/                    # Custom React hooks
+│   ├── integrations/             # Third-party integrations (e.g., Supabase)
+│   │   └── supabase/             # Supabase client and types
+│   ├── lib/                      # Utility libraries and helper functions
+│   ├── pages/                    # Top-level route/page components
+│   ├── index.css                 # Global styles (Tailwind, design tokens)
+│   ├── App.tsx                   # Main React app component (routing, layout)
+│   ├── main.tsx                  # React entry point
+│   └── vite-env.d.ts             # Vite environment types
+├── supabase/                     # Supabase backend configuration
+│   ├── migrations/               # SQL migration files (schema, RLS, triggers)
+│   ├── config.toml               # Supabase project config
+│   └── .temp/                    # Temporary Supabase files
+├── modules_documentation/        # Modular documentation (PascalCase .md files)
+│   ├── Index.md                  # Documentation index
+│   ├── ApiModules.md
+│   ├── LibModules.md
+│   ├── ContextProviders.md
+│   ├── CustomHooks.md
+│   ├── Integrations.md
+│   ├── Pages.md
+│   ├── Components.md
+│   ├── DatabaseDesign.md
+│   ├── QandA.md
+│   ├── Feed.md
+│   ├── Chat.md
+│   ├── Profile.md
+│   ├── Resources.md
+│   ├── Settings.md
+│   ├── Login.md
+│   ├── Register.md
+│   └── AdminDashboard.md
+├── docs/                         # Tutorial and high-level documentation (chapters)
+│   ├── 01_supabase_integration_.md
+│   ├── 02_authentication___user_management_.md
+│   ├── ... (other chapters)
+│   └── index.md
+├── package.json                  # Project dependencies and scripts
+├── package-lock.json             # Dependency lock file
+├── vite.config.ts                # Vite build configuration
+├── tailwind.config.ts            # Tailwind CSS configuration
+├── postcss.config.js             # PostCSS configuration
+├── tsconfig.json                 # TypeScript configuration
+├── tsconfig.app.json             # App-specific TypeScript config
+├── tsconfig.node.json            # Node-specific TypeScript config
+├── README.md                     # Project overview and instructions
+├── .gitignore                    # Git ignore rules
+└── ... (other config and meta files)
+
 *Document generated for Focus Hub project. Last updated: July 2024.* 

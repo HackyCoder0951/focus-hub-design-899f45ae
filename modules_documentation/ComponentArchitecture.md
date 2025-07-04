@@ -63,16 +63,3 @@ src/
 | Docs            | Document props/types in JSDoc or use Storybook/Ladle for live preview         |
 | Testing         | Test shared components with `@testing-library/react` or `jest`                |
 ```
-
-```tsx
-import { Button } from "@/components/ui/button"
-
-export default function DeleteDialog() {
-  return (
-    <>
-      <Button variant="destructive">Delete</Button>
-      <Button variant="ghost">Cancel</Button>
-    </>
-  )
-}
-```
