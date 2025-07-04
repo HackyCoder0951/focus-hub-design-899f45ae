@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,4 +122,3 @@ const FollowersList = () => {
 };
 
 export default FollowersList; 
->>>>>>> origin/main
