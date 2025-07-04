@@ -3,14 +3,23 @@
 ## Introduction
 The database design defines the structure, relationships, and security policies for all data stored in the application. A well-designed schema ensures data integrity, efficient queries, and robust access control.
 
-## Data Flow Diagram Context
+## Data Flow Diagram – Context Level
+
 ```mermaid
-sequenceDiagram
-    participant App
-    participant Database
-    App->>Database: Query/Mutation
-    Database-->>App: Result
+graph TD
+  User[User / App]
+  DB[Database]
+
+  subgraph System [Application System]
+    Process[Process / Logic Layer]
+  end
+
+  User -->|Query / Mutation| Process
+  Process -->|Result| User
+  Process -->|SQL Query| DB
+  DB -->|Query Result| Process
 ```
+
 
 ## Use Cases Diagram Context
 ```mermaid
