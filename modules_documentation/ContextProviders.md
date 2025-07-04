@@ -17,14 +17,14 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Login)
-  User --> (Register)
-  User --> (Logout)
-  User --> (Session Persistence)
-  User --> (Role-based Access)
+flowchart TD
+  User([User]) --> Login((Login))
+  User --> Register((Register))
+  User --> Logout((Logout))
+  User --> Session((Session Persistence))
+  User --> RBAC((Role-based Access))
 ```
+
 
 ## Database Design
 ```mermaid
