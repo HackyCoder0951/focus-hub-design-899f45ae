@@ -56,7 +56,6 @@ flowchart TD
     Moderation --> ViewEvent
 
 ```mermaid
-
 flowchart TD
     %% Actor
     Admin["ADMIN"]
