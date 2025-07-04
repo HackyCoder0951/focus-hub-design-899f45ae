@@ -15,16 +15,15 @@ flowchart TD
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor Developer
-
-  Developer --> (Build Form)
-  Developer --> (Display List/Grid)
-  Developer --> (Show Modal/Dialog)
-  Developer --> (Render Navigation Bar)
-  Developer --> (Display Validation Feedback)
-  Developer --> (Reuse Button, Input, etc.)
+flowchart TD
+  Developer([Developer]) --> Form((Build Form))
+  Developer --> List((Display List/Grid))
+  Developer --> Modal((Show Modal/Dialog))
+  Developer --> Nav((Render Navigation Bar))
+  Developer --> Feedback((Display Validation Feedback))
+  Developer --> Reuse((Reuse Button, Input, etc.))
 ```
+
 
 
 ## Database Design
