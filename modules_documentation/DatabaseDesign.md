@@ -3,15 +3,25 @@
 ## Introduction
 The database design defines the structure, relationships, and security policies for all data stored in the application. A well-designed schema ensures data integrity, efficient queries, and robust access control.
 
-## What Problem Does It Solve?
-- Organizes data into logical tables and relationships.
-- Enforces data consistency and referential integrity.
-- Implements security through Row Level Security (RLS) policies.
+## Data Flow Diagram Context
+```mermaid
+sequenceDiagram
+    participant App
+    participant Database
+    App->>Database: Query/Mutation
+    Database-->>App: Result
+```
 
-## Key Concepts
-- **Entities:** Users, posts, comments, votes, questions, answers, resources, chats, messages, etc.
-- **Relationships:** Foreign keys link related data (e.g., posts to users, comments to posts).
-- **RLS Policies:** Database-level rules that control who can access or modify each row.
+## Use Cases Diagram Context
+```mermaid
+usecaseDiagram
+  actor App
+  App --> (Store User Data)
+  App --> (Fetch Posts)
+  App --> (Save Messages)
+  App --> (Manage Files)
+  App --> (Enforce Security)
+```
 
 ## Entity-Relationship Diagram (ERD)
 ```mermaid

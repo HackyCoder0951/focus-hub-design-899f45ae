@@ -3,16 +3,6 @@
 ## Introduction
 The Authentication Context manages user authentication state and provides user information and role-based access throughout the application. It ensures that only authenticated users can access protected resources and features.
 
-## What Problem Does It Solve?
-- Centralizes authentication logic and user state management.
-- Makes user and session data easily accessible to all components.
-- Simplifies role-based access control in the frontend.
-
-## Key Concepts
-- **User State:** Tracks the current user's authentication status, profile, and role.
-- **Session Management:** Handles login, logout, and session persistence.
-- **Role-Based Access:** Determines what features or pages a user can access based on their role (e.g., user, admin).
-
 ## Data Flow Diagram Context
 ```mermaid
 sequenceDiagram
@@ -26,12 +16,23 @@ sequenceDiagram
 ```
 
 ## Use Cases Diagram Context
-- User logs in or registers.
-- User session is persisted across page reloads.
-- Components check user role to show/hide features.
+```mermaid
+usecaseDiagram
+  actor User
+  User --> (Login)
+  User --> (Register)
+  User --> (Logout)
+  User --> (Session Persistence)
+  User --> (Role-based Access)
+```
 
 ## Database Design
-- Relies on `users`, `profiles`, and `user_roles` tables for authentication and user data.
+```mermaid
+erDiagram
+  users ||--o{ profiles : ""
+  users ||--o{ user_roles : ""
+  profiles }|..|{ user_roles : ""
+```
 
 ---
 The Authentication Context is the backbone of secure and personalized user experiences in the application. 

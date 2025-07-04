@@ -19,13 +19,23 @@ sequenceDiagram
 ```
 
 ## Use Cases Diagram Context
-- User posts a question.
-- User answers a question.
-- User votes on a question/answer.
-- User comments on an answer.
+```mermaid
+usecaseDiagram
+  actor User
+  User --> (Post a Question)
+  User --> (Answer a Question)
+  User --> (Vote on Question/Answer)
+  User --> (Comment on Answer)
+```
 
 ## Database Design
-- Tables: `questionanswers`, `answer_votes`, `question_votes`, `answer_comments`, `profiles`.
+```mermaid
+erDiagram
+  questionanswers ||--o{ answer_votes : ""
+  questionanswers ||--o{ question_votes : ""
+  questionanswers ||--o{ answer_comments : ""
+  questionanswers }|..|{ profiles : ""
+```
 
 ## Summary
 The QandA page is central to community-driven knowledge sharing and interaction. 

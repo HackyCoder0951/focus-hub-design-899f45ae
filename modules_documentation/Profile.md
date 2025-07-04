@@ -19,12 +19,23 @@ sequenceDiagram
 ```
 
 ## Use Cases Diagram Context
-- User views their profile and activity.
-- User edits personal information and privacy settings.
-- User uploads an avatar or customizes their profile.
+```mermaid
+usecaseDiagram
+  actor User
+  User --> (View Profile)
+  User --> (Edit Profile)
+  User --> (Change Privacy Settings)
+  User --> (Upload Avatar)
+```
 
 ## Database Design
-- Tables: `profiles`, `user_roles`, `followers`, `users`.
+```mermaid
+erDiagram
+  profiles ||--o{ user_roles : ""
+  profiles ||--o{ followers : ""
+  profiles }|..|{ users : ""
+  followers }|..|{ profiles : ""
+```
 
 ## Summary
 The Profile page is the user's personal hub for managing their identity and presence on the platform. 

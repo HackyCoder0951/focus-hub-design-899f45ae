@@ -19,12 +19,24 @@ sequenceDiagram
 ```
 
 ## Use Cases Diagram Context
-- User creates a post.
-- User likes or comments on a post.
-- User views the feed.
+```mermaid
+usecaseDiagram
+  actor User
+  User --> (Create a Post)
+  User --> (Like a Post)
+  User --> (Comment on a Post)
+  User --> (View Feed)
+```
 
 ## Database Design
-- Tables: `posts`, `comments`, `likes`, `profiles`.
+```mermaid
+erDiagram
+  posts ||--o{ comments : ""
+  posts ||--o{ likes : ""
+  posts }|..|{ profiles : ""
+  comments }|..|{ profiles : ""
+  likes }|..|{ profiles : ""
+```
 
 ## Summary
 The Feed page is the central hub for social interaction and content discovery. 

@@ -22,13 +22,24 @@ sequenceDiagram
 ```
 
 ## Use Cases Diagram Context
-- User uploads a file or document.
-- User previews or downloads a resource.
-- User edits metadata or deletes their own files.
-- User searches and filters resources.
+```mermaid
+usecaseDiagram
+  actor User
+  User --> (Upload File)
+  User --> (Preview Resource)
+  User --> (Download Resource)
+  User --> (Edit File Metadata)
+  User --> (Delete File)
+  User --> (Search/Filter Resources)
+```
 
 ## Database Design
-- Tables: `filemodels`, `profiles`, Supabase Storage buckets (e.g., `uploads`).
+```mermaid
+erDiagram
+  filemodels }|..|{ profiles : ""
+  filemodels ||--o{ storage_objects : ""
+  storage_objects }|..|{ filemodels : ""
+```
 
 ## Summary
 The Resources page is the platform's digital library, supporting secure and organized file sharing. 

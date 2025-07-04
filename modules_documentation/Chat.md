@@ -19,12 +19,23 @@ sequenceDiagram
 ```
 
 ## Use Cases Diagram Context
-- User sends and receives messages in real time.
-- User shares files in chat.
-- User participates in group conversations.
+```mermaid
+usecaseDiagram
+  actor User
+  User --> (Send Message)
+  User --> (Receive Message)
+  User --> (Share File)
+  User --> (Join Group Chat)
+```
 
 ## Database Design
-- Tables: `chats`, `chat_members`, `chat_messages`, `profiles`.
+```mermaid
+erDiagram
+  chats ||--o{ chat_members : ""
+  chats ||--o{ chat_messages : ""
+  chat_members }|..|{ profiles : ""
+  chat_messages }|..|{ profiles : ""
+```
 
 ## Summary
 The Chat page powers private and group communication with real-time updates and file sharing. 

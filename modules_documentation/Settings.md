@@ -19,12 +19,22 @@ sequenceDiagram
 ```
 
 ## Use Cases Diagram Context
-- User updates account information or password.
-- User customizes notification and privacy settings.
-- User manages security options (e.g., 2FA).
+```mermaid
+usecaseDiagram
+  actor User
+  User --> (Update Account Info)
+  User --> (Change Password)
+  User --> (Set Notification Preferences)
+  User --> (Manage Privacy Settings)
+  User --> (Enable 2FA)
+```
 
 ## Database Design
-- Tables: `users`, `profiles`, `user_roles`.
+```mermaid
+erDiagram
+  users ||--o{ profiles : ""
+  profiles ||--o{ user_roles : ""
+```
 
 ## Summary
 The Settings page empowers users to personalize and secure their account experience. 
