@@ -54,6 +54,7 @@ flowchart TD
     Moderation --> Feed
     Moderation --> QandA
     Moderation --> ViewEvent
+```
 
 ```mermaid
 flowchart TD
