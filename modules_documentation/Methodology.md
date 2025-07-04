@@ -57,9 +57,6 @@ flowchart TD
 
 ```
 
-
-```mermaid
-
 flowchart TD
     %% Actor
     User["USER<br/>(Student/Alumni)"]
