@@ -1,73 +1,155 @@
-# Welcome to your Lovable project
+# Focus Hub – Software and Hardware Requirements
 
-## Project info
+## 1. Software Requirements
 
-**URL**: https://lovable.dev/projects/bc940636-4d18-4b1c-af3d-aa350b81d28d
+### 1.1. Operating System
+| Environment           | Supported OS Versions                |
+|----------------------|--------------------------------------|
+| Development          | Ubuntu 20.04+, macOS Monterey+, Windows 10+ |
+| Production/Deployment| Any OS supporting Node.js & Docker (Linux recommended) |
 
-## How can I edit this code?
+### 1.2. Runtime & Languages
+| Component    | Version/Details         |
+|-------------|------------------------|
+| Node.js     | v18.x or higher        |
+| npm         | v9.x or higher         |
+| TypeScript  | v5.5.x                 |
+| PostgreSQL  | Managed by Supabase (local install only if self-hosting) |
 
-There are several ways of editing your application.
+### 1.3. Frameworks & Libraries
+| Layer     | Library/Tool                | Version/Details         |
+|-----------|----------------------------|------------------------|
+| Frontend  | React                      | 18.3.1                 |
+|           | Vite                       | 5.4.1                  |
+|           | React Router DOM           | 6.26.2                 |
+|           | shadcn/ui (Radix UI-based) | -                      |
+|           | Tailwind CSS               | 3.4.11                 |
+|           | Framer Motion              | -                      |
+|           | Lucide React               | -                      |
+|           | Next Themes                | -                      |
+|           | TanStack React Query       | 5.56.2                 |
+|           | React Hook Form + Zod      | 7.53.0 + latest        |
+| Backend   | Supabase                   | BaaS (auth, DB, storage, real-time) |
+|           | PostgreSQL                 | Managed by Supabase    |
+| Other     | ESLint                     | 9.9.0                  |
+|           | PostCSS, Autoprefixer      | -                      |
+|           | Lovable Tagger             | -                      |
+|           | Docker                     | Optional, for containers |
+|           | Git                        | Version control        |
 
-**Use Lovable**
+### 1.4. Browser Support
+| Browser         | Supported Versions         |
+|----------------|---------------------------|
+| Chrome         | Latest (desktop & mobile)  |
+| Firefox        | Latest (desktop & mobile)  |
+| Edge           | Latest                     |
+| Safari         | Latest (desktop & mobile)  |
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bc940636-4d18-4b1c-af3d-aa350b81d28d) and start prompting.
+### 1.5. Cloud Services
+| Service         | Purpose                                    |
+|----------------|--------------------------------------------|
+| Supabase       | Auth, database, file storage, real-time     |
+| Lovable        | Deployment and hosting (or compatible cloud)|
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 2. Hardware Requirements
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 2.1. Development Machine (Minimum)
+| Component   | Minimum Requirement         | Recommended         |
+|-------------|----------------------------|---------------------|
+| CPU         | Dual-core 2.0 GHz          | Quad-core 2.5 GHz   |
+| RAM         | 4 GB                       | 8 GB                |
+| Storage     | 2 GB free disk space        | 10 GB+              |
+| Display     | 1366x768 resolution         | 1920x1080+          |
+| Network     | Broadband internet          | Broadband           |
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 2.2. Production Server (if self-hosting)
+| Component   | Minimum Requirement         |
+|-------------|----------------------------|
+| CPU         | Quad-core 2.0 GHz           |
+| RAM         | 8 GB                        |
+| Storage     | 20 GB SSD                   |
+| Network     | Reliable broadband, low latency |
+| OS          | Ubuntu 20.04+ or equivalent |
+| Docker      | Optional, for containers    |
 
-Follow these steps:
+### 2.3. Client Devices (End Users)
+| Device Type     | Minimum Requirement                        |
+|-----------------|--------------------------------------------|
+| Desktop/Laptop  | Modern device, current web browser         |
+| Mobile          | Android 8.0+ or iOS 13+ with Chrome/Safari/Firefox |
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 3. Additional Recommendations
 
-# Step 3: Install the necessary dependencies.
-npm i
+| Area                | Recommendation                                             |
+|---------------------|-----------------------------------------------------------|
+| Developer Tools     | VS Code or WebStorm with TypeScript & ESLint plugins      |
+| Production          | Use CDN for static assets, enable HTTPS, monitor health   |
+| Scaling             | Use Supabase scaling or cloud VM/container with load balancing |
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+---
+
+## 4. Project Structure
+
+```bash
+focus_hub/
+├── public/                       # Static assets (favicon, index.html, etc.)
+├── src/                          # Main application source code
+│   ├── api/                      # API route handlers or API utilities
+│   ├── components/               # Reusable React components
+│   │   └── ui/                   # UI library components (shadcn/ui, etc.)
+│   ├── contexts/                 # React context providers (e.g., AuthContext)
+│   ├── hooks/                    # Custom React hooks
+│   ├── integrations/             # Third-party integrations (e.g., Supabase)
+│   │   └── supabase/             # Supabase client and types
+│   ├── lib/                      # Utility libraries and helper functions
+│   ├── pages/                    # Top-level route/page components
+│   ├── index.css                 # Global styles (Tailwind, design tokens)
+│   ├── App.tsx                   # Main React app component (routing, layout)
+│   ├── main.tsx                  # React entry point
+│   └── vite-env.d.ts             # Vite environment types
+├── supabase/                     # Supabase backend configuration
+│   ├── migrations/               # SQL migration files (schema, RLS, triggers)
+│   ├── config.toml               # Supabase project config
+│   └── .temp/                    # Temporary Supabase files
+├── modules_documentation/        # Modular documentation (PascalCase .md files)
+│   ├── Index.md                  # Documentation index
+│   ├── ApiModules.md
+│   ├── LibModules.md
+│   ├── ContextProviders.md
+│   ├── CustomHooks.md
+│   ├── Integrations.md
+│   ├── Pages.md
+│   ├── Components.md
+│   ├── DatabaseDesign.md
+│   ├── QandA.md
+│   ├── Feed.md
+│   ├── Chat.md
+│   ├── Profile.md
+│   ├── Resources.md
+│   ├── Settings.md
+│   ├── Login.md
+│   ├── Register.md
+│   └── AdminDashboard.md
+├── docs/                         # Tutorial and high-level documentation (chapters)
+│   ├── 01_supabase_integration_.md
+│   ├── 02_authentication___user_management_.md
+│   ├── ... (other chapters)
+│   └── index.md
+├── package.json                  # Project dependencies and scripts
+├── package-lock.json             # Dependency lock file
+├── vite.config.ts                # Vite build configuration
+├── tailwind.config.ts            # Tailwind CSS configuration
+├── postcss.config.js             # PostCSS configuration
+├── tsconfig.json                 # TypeScript configuration
+├── tsconfig.app.json             # App-specific TypeScript config
+├── tsconfig.node.json            # Node-specific TypeScript config
+├── README.md                     # Project overview and instructions
+├── .gitignore                    # Git ignore rules
+└── ... (other config and meta files)
 ```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/bc940636-4d18-4b1c-af3d-aa350b81d28d) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+*Document generated for Focus Hub project. Last updated: July 2024.* 
