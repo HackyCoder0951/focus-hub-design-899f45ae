@@ -21,6 +21,7 @@ import {
   DialogContent,
   DialogTitle
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 // import { Document, Page } from 'react-pdf';
 // import 'react-pdf/dist/Page/AnnotationLayer.css';
 // import 'react-pdf/dist/Page/TextLayer.css';
@@ -273,7 +274,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
 
   const handleDelete = async () => {
     setDeleting(true);
-    await supabase.from('posts').update({ is_deleted: true }).eq('id', post.id);
+    await supabase.from('posts').delete().eq('id', post.id);
     setDeleting(false);
     setConfirmingDelete(false);
     if (onPostUpdated) onPostUpdated();
@@ -535,7 +536,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
                     <DropdownMenuItem onClick={() => { setEditing(true); setEditContent(post.content); }}>Edit</DropdownMenuItem>
                   )}
                   {isOwner && (
-                    <DropdownMenuItem onClick={() => setConfirmingDelete(true)} disabled={deleting}>Delete</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setConfirmingDelete(true)}>Delete</DropdownMenuItem>
                   )}
                   {(isOwner || !isOwner) && (
                     <>
@@ -690,17 +691,18 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
             </div>
           </div>
         </div>
-        {confirmingDelete && (
-          <div className="mt-2 flex gap-2 items-center bg-muted p-3 rounded shadow">
-            <span>Are you sure you want to delete this post?</span>
-            <Button size="sm" variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setConfirmingDelete(false)} disabled={deleting}>
-              Cancel
-            </Button>
-          </div>
-        )}
+        <Dialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
+          <DialogContent aria-describedby="delete-dialog-desc">
+            <DialogTitle>Delete post?</DialogTitle>
+            <p id="delete-dialog-desc">Are you sure you want to permanently remove this post?</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => setConfirmingDelete(false)} disabled={deleting}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                {deleting ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

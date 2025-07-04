@@ -10,7 +10,7 @@ interface AuthContextType {
   profile: any | null;
   userRole: string | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, memberType: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
@@ -81,6 +81,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error fetching profile:', profileError);
       } else {
+        // Check for banned or inactive status
+        if (profileData?.status === 'banned' || profileData?.status === 'inactive') {
+          toast({
+            title: 'Account Disabled',
+            description: 'Your account has been banned or deactivated. Please contact the administrator at admin@focus.com.',
+            variant: 'destructive',
+          });
+          await supabase.auth.signOut();
+          setProfile(null);
+          setUserRole(null);
+          setUser(null);
+          setSession(null);
+          navigate('/login');
+          return;
+        }
         setProfile(profileData);
       }
 
@@ -101,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, memberType: string) => {
     try {
       const redirectUrl = `${window.location.origin}/app`;
       
@@ -111,7 +126,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName
+            full_name: fullName,
+            member_type: memberType
           }
         }
       });

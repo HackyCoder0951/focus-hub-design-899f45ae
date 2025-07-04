@@ -55,33 +55,40 @@
 - **Infinite Scroll**: Efficient pagination for large feeds
 - **Post Categories**: Organized content by topics and interests
 - **User Mentions**: Tag other users in posts and comments
+- **Content Flagging**: Users can flag posts for review; admins are notified and can review, resolve, dismiss, or delete flagged content
 
 ### 3. Real-time Chat System
 - **Instant Messaging**: Real-time message delivery
 - **Online Indicators**: User presence and status display
 - **Message History**: Persistent chat history and search
-- **File Sharing**: Media and document sharing in chats
+- **File Sharing**: Media and document sharing in chats, with file-type icons and download links
 - **Group Chats**: Multi-user conversation support
 - **Message Reactions**: Emoji reactions to messages
 - **Typing Indicators**: Real-time typing status
 
 ### 4. Q&A Community
-- **Question Posting**: Structured question format with categories
+- **Question Posting**: Structured question format with categories (UI-based, not DB-enforced)
 - **Answer System**: Community-driven answers with voting
-- **Voting System**: Upvote/downvote questions and answers
-- **Search & Filter**: Advanced search and filtering capabilities
+- **Voting System**: Upvote/downvote for both questions and answers, with per-user vote tracking
+- **Answer Comments**: Threaded comments on answers
+- **Search & Filter**: Advanced search and filtering capabilities, including trending and unanswered tabs
 - **Best Answer Selection**: Mark best answers for questions
 - **Question Tags**: Categorize questions with tags
 - **Reputation System**: User reputation based on contributions
+- **Editing/Deleting**: Users can edit or delete their own questions/answers
 
 ### 5. Resource Sharing
 - **File Upload**: Drag-and-drop file uploads with progress
 - **Document Management**: Organize and categorize resources
 - **Access Control**: Public and private resource sharing
-- **Preview System**: File previews for common formats
+- **Preview System**: File previews for images, videos, PDFs, and text files
 - **Version Control**: Track file versions and updates
 - **Download Tracking**: Monitor resource usage and popularity
 - **File Categories**: Organize resources by type and topic
+- **File Metadata**: Add/edit descriptions and visibility for files
+- **Filtering & Sorting**: Search, filter by type/visibility, and sort files
+- **Grid/List Views**: Toggle between grid and list views for resources
+- **Edit & Delete**: Users can edit metadata or delete their own files
 
 ### 6. User Profiles
 - **Profile Management**: Edit personal information and bio
@@ -96,7 +103,7 @@
 - **User Management**: View and manage all user accounts
 - **Role Management**: Assign and modify user roles and permissions
 - **System Statistics**: Platform usage analytics and metrics
-- **Content Moderation**: Moderate posts, comments, and resources
+- **Content Moderation**: Moderate posts, comments, and resources; review flagged content with action options
 - **System Health**: Monitor platform performance and errors
 - **Bulk Operations**: Manage multiple users and content items
 - **Audit Logs**: Track administrative actions and changes
@@ -109,6 +116,12 @@
 - **Language Settings**: Multi-language support
 - **Security Settings**: Two-factor authentication and security options
 - **Data Export**: Export user data and activity history
+
+### 9. UI/UX Enhancements (New)
+- **Role-based Navigation**: Sidebar and navigation adapt to user/admin roles
+- **Toast Notifications**: Consistent feedback for all user actions
+- **Modern UI**: Consistent use of shadcn/ui, Radix, and Tailwind for accessible, responsive design
+- **Advanced Filtering/Sorting**: Robust filtering and sorting in resources and Q&A
 
 ## Technical Architecture
 
@@ -137,6 +150,30 @@ The application follows a modular component architecture with clear separation o
 - **Protected Routes**: Main application with authentication required
 - **Admin Routes**: Administrative functions with role-based access
 - **Route Protection**: Automatic redirects and loading states
+
+### Content Moderation Workflow (New)
+- **Flagging:** Users can flag posts for review, specifying a reason. Duplicate flagging is prevented.
+- **Admin Review:** Admins have a dedicated interface to review flagged content, see reasons, and take actions (resolve, dismiss, or delete posts).
+- **Notifications:** When a post is flagged, all admins and the post owner (except the flagger) are notified.
+
+### Resource Sharing & File Management (Expanded)
+- **File Upload & Storage:** Files are uploaded to Supabase Storage, with metadata stored in the `filemodels` table.
+- **Preview & Download:** Users can preview images, videos, PDFs, and text files in-app, and download any file.
+- **Edit & Delete:** Users can edit file metadata or delete their own files.
+- **Filtering & Sorting:** Resource library supports search, type/visibility filters, and multiple sort options.
+- **Grid/List Views:** Users can toggle between grid and list views for resources.
+
+### Q&A System (Expanded)
+- **Single-table Model:** Both questions and answers are stored in a single `questionanswers` table, differentiated by an `is_answered` flag.
+- **Voting:** Both questions and answers support upvote/downvote, with per-user vote tracking.
+- **Answer Comments:** Answers can have threaded comments.
+- **Editing/Deleting:** Users can edit or delete their own questions/answers.
+- **Categories:** There is a category filter, but categories are currently hardcoded and not stored in the DB.
+- **Trending/Unanswered Tabs:** UI supports sorting/filtering for trending and unanswered questions.
+
+### Chat System (Expanded)
+- **File Sharing in Chat:** Users can share files in chat, with file-type icons and download links.
+- **Online Status:** User presence is tracked and updated.
 
 ## UI/UX Features
 

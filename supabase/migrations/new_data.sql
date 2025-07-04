@@ -67,3 +67,29 @@ INSERT INTO public.chat_messages (chat_id, user_id, content, created_at) VALUES
 ('550e8400-e29b-41d4-a716-446655440004', '67f2070a-0399-485a-a8e1-e73241df52c0', 'Do you have any resources you could share?', '2024-01-18 17:00:00+00');
 
 ALTER TABLE public.chat_members ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+
+-- Add member_type column to profiles table
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS member_type TEXT CHECK (member_type IN ('student', 'alumni'));
+
+-- Update handle_new_user function to insert member_type from metadata
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = ''
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, member_type)
+  VALUES (
+    new.id,
+    new.email,
+    new.raw_user_meta_data ->> 'full_name',
+    new.raw_user_meta_data ->> 'member_type'
+  );
+  
+  -- Assign default user role
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (new.id, 'user');
+  
+  RETURN new;
+END;
+$$;

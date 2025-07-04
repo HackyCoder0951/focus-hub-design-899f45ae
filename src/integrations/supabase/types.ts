@@ -16,6 +16,7 @@ export type Database = {
           is_admin: boolean | null
           joined_at: string
           user_id: string | null
+          typing?: boolean
         }
         Insert: {
           chat_id?: string | null
@@ -23,6 +24,7 @@ export type Database = {
           is_admin?: boolean | null
           joined_at?: string
           user_id?: string | null
+          typing?: boolean
         }
         Update: {
           chat_id?: string | null
@@ -30,6 +32,7 @@ export type Database = {
           is_admin?: boolean | null
           joined_at?: string
           user_id?: string | null
+          typing?: boolean
         }
         Relationships: [
           {
@@ -359,6 +362,7 @@ export type Database = {
           media_url: string | null
           updated_at: string
           user_id: string | null
+          flag_status: string | null
         }
         Insert: {
           content: string
@@ -368,6 +372,7 @@ export type Database = {
           media_url?: string | null
           updated_at?: string
           user_id?: string | null
+          flag_status?: string | null
         }
         Update: {
           content?: string
@@ -377,6 +382,7 @@ export type Database = {
           media_url?: string | null
           updated_at?: string
           user_id?: string | null
+          flag_status?: string | null
         }
         Relationships: [
           {
@@ -400,6 +406,8 @@ export type Database = {
           settings: Json | null
           updated_at: string
           website: string | null
+          status: string | null
+          last_seen: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -412,6 +420,8 @@ export type Database = {
           settings?: Json | null
           updated_at?: string
           website?: string | null
+          status?: string | null
+          last_seen?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -424,6 +434,8 @@ export type Database = {
           settings?: Json | null
           updated_at?: string
           website?: string | null
+          status?: string | null
+          last_seen?: string | null
         }
         Relationships: []
       }
@@ -527,6 +539,36 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      content_flags: {
+        Row: {
+          id: string;
+          flagged_by_user_id: string;
+          post_id: string | null;
+          comment_id: string | null;
+          reason: string | null;
+          created_at: string;
+          status: string | null;
+        };
+        Insert: {
+          id?: string;
+          flagged_by_user_id: string;
+          post_id?: string | null;
+          comment_id?: string | null;
+          reason?: string | null;
+          created_at?: string;
+          status?: string | null;
+        };
+        Update: {
+          id?: string;
+          flagged_by_user_id?: string;
+          post_id?: string | null;
+          comment_id?: string | null;
+          reason?: string | null;
+          created_at?: string;
+          status?: string | null;
+        };
+        Relationships: [];
       }
     }
     Views: {

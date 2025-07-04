@@ -139,7 +139,7 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                   <label htmlFor="image-upload">
                     <Button type="button" variant="ghost" size="sm" asChild disabled={isSubmitting}>
                       <span><ImageIcon className="h-4 w-4 mr-2" />Photo</span>
-                    </Button>
+                  </Button>
                   </label>
                   <Button type="button" variant="ghost" size="sm" onClick={() => setShowEmojiPicker((v) => !v)} disabled={isSubmitting}>
                     <Smile className="h-4 w-4 mr-2" />Emoji

@@ -16,7 +16,7 @@ const Index = () => {
     if (loading) return;
     if (!user) return; // Only redirect if logged in
     if (isAdmin) {
-      navigate("/app/admin", { replace: true });
+      navigate("/app/AdminDashboard", { replace: true });
     } else {
       navigate("/app", { replace: true });
     }
@@ -60,7 +60,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-16">
             <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              Focus Hub
+              Kulkarni's Focus Hub
             </h1>
             {/* <AnimatedAtom /> */}
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">

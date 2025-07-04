@@ -1,5 +1,5 @@
 # Welcome to your Lovable project
-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
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/bc940636-4d18-4b1c-af3d-aa350b81d28d
