@@ -281,20 +281,18 @@ const QandA = () => {
     if (commentInputRef.current) commentInputRef.current.focus();
   };
 
-  const handleEditAnswer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !selectedAnswer) return;
-    await supabase.from('questionanswers').update({ answer: editContent }).eq('id', selectedAnswer.id);
+  const handleEditAnswer = async (answerId: string, questionText: string, newContent: string) => {
+    if (!user || !newContent.trim()) return;
+    await supabase.from('questionanswers').update({ answer: newContent.trim() }).eq('id', answerId);
     setEditMode(false);
-    setSelectedAnswer({ ...selectedAnswer, answer: editContent });
-    fetchAnswers(selectedAnswer.question);
+    setEditContent("");
+    fetchAnswers(questionText);
   };
 
-  const handleDeleteAnswer = async () => {
-    if (!user || !selectedAnswer) return;
-    await supabase.from('questionanswers').delete().eq('id', selectedAnswer.id);
-    setSelectedAnswer(null);
-    fetchAnswers(selectedAnswer.question);
+  const handleDeleteAnswer = async (answerId: string, questionText: string) => {
+    if (!user) return;
+    await supabase.from('questionanswers').delete().eq('id', answerId);
+    fetchAnswers(questionText);
   };
 
   const fetchAnswerComments = async (answerId: string) => {
@@ -669,7 +667,17 @@ const QandA = () => {
                                     <div className="font-medium">{ans.profiles?.full_name}</div>
                                     <span className="text-xs text-muted-foreground">{ans.created_at ? new Date(ans.created_at).toLocaleString() : ''}</span>
                                   </div>
-                                  <div className="text-base">{ans.answer}</div>
+                                  {editMode && expandedAnswerId === ans.id ? (
+                                    <form onSubmit={e => { e.preventDefault(); handleEditAnswer(ans.id, ans.question, editContent); }} className="flex flex-col gap-2 mt-2">
+                                      <Textarea value={editContent} onChange={e => setEditContent(e.target.value)} className="min-h-[60px]" />
+                                      <div className="flex gap-2 justify-end">
+                                        <Button type="submit" size="sm" disabled={!editContent.trim()}>Save</Button>
+                                        <Button type="button" size="sm" variant="outline" onClick={() => setEditMode(false)}>Cancel</Button>
+                                      </div>
+                                    </form>
+                                  ) : (
+                                    <div className="text-base">{ans.answer}</div>
+                                  )}
                                   <div className="flex items-center gap-2 pt-2">
                                     <Button
                                       variant={userVotes[ans.id] === 1 ? "default" : "ghost"}
@@ -693,7 +701,7 @@ const QandA = () => {
                                     {user && ans.user_id === user.id && (
                                       <>
                                         <Button size="sm" variant="outline" onClick={() => { setEditMode(true); setEditContent(ans.answer); setExpandedAnswerId(ans.id); }}>Edit</Button>
-                                        <Button size="sm" variant="destructive" onClick={() => { setExpandedAnswerId(ans.id); handleDeleteAnswer(); }}>Delete</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleDeleteAnswer(ans.id, ans.question)}>Delete</Button>
                                       </>
                                     )}
                                     <Button size="sm" variant="ghost" onClick={() => setExpandedAnswerId(expandedAnswerId === ans.id ? null : ans.id)}>
