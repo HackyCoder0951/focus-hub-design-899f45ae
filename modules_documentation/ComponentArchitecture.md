@@ -1,4 +1,4 @@
-<details> <summary><strong>Component Relationship (Click to expand)</strong></summary>
+<summary><strong>Component Relationship (Click to expand)</strong></summary>
 
 
 ```mermaid
@@ -27,7 +27,6 @@ graph TD
   FeatureComponent --> Avatar
   FeatureComponent --> Toast
 ```
-</details>
 
 ```bash
 src/
