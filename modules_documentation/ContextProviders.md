@@ -29,10 +29,11 @@ flowchart TD
 ## Database Design
 ```mermaid
 erDiagram
-  users ||--o{ profiles : ""
-  users ||--o{ user_roles : ""
-  profiles }|..|{ user_roles : ""
+  users ||--o{ profiles : has
+  users ||--o{ user_roles : assigned
+  profiles }|..|{ user_roles : links
 ```
+
 
 ---
 The Authentication Context is the backbone of secure and personalized user experiences in the application. 
