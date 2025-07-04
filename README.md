@@ -20,21 +20,49 @@
 | Layer     | Library/Tool                | Version/Details         |
 |-----------|----------------------------|------------------------|
 | Frontend  | React                      | 18.3.1                 |
+|           | React DOM                  | 18.3.1                 |
 |           | Vite                       | 5.4.1                  |
 |           | React Router DOM           | 6.26.2                 |
-|           | shadcn/ui (Radix UI-based) | -                      |
+|           | Radix UI Components        | 1.1.0 - 2.2.1          |
 |           | Tailwind CSS               | 3.4.11                 |
-|           | Framer Motion              | -                      |
-|           | Lucide React               | -                      |
-|           | Next Themes                | -                      |
+|           | Tailwind Merge             | 2.5.2                  |
+|           | Tailwind CSS Animate       | 1.0.7                  |
+|           | Lucide React               | 0.462.0                |
+|           | Next Themes                | 0.3.0                  |
 |           | TanStack React Query       | 5.56.2                 |
-|           | React Hook Form + Zod      | 7.53.0 + latest        |
-| Backend   | Supabase                   | BaaS (auth, DB, storage, real-time) |
+|           | React Hook Form            | 7.53.0                 |
+|           | Zod                        | 3.23.8                 |
+|           | Hookform Resolvers         | 3.9.0                  |
+|           | Class Variance Authority   | 0.7.1                  |
+|           | CLSX                       | 2.1.1                  |
+|           | Date-fns                   | 3.6.0                  |
+|           | Emoji Mart React           | 1.1.1                  |
+|           | Emoji Mart                 | 5.6.0                  |
+|           | File Saver                 | 2.0.5                  |
+|           | Input OTP                  | 1.2.4                  |
+|           | React Day Picker           | 8.10.1                 |
+|           | React PDF                  | 10.0.1                 |
+|           | PDF.js Dist                | 5.3.31                 |
+|           | React Resizable Panels     | 2.1.3                  |
+|           | Recharts                   | 2.12.7                 |
+|           | Sonner                     | 1.5.0                  |
+|           | Vaul                       | 0.9.9                  |
+|           | CMDK                       | 1.0.0                  |
+|           | Embla Carousel React       | 8.3.0                  |
+|           | Solana Wallet Standard     | 1.3.0                  |
+| Backend   | Supabase JS                | 2.50.2                 |
 |           | PostgreSQL                 | Managed by Supabase    |
-| Other     | ESLint                     | 9.9.0                  |
-|           | PostCSS, Autoprefixer      | -                      |
-|           | Lovable Tagger             | -                      |
-|           | Docker                     | Optional, for containers |
+| Development| TypeScript                 | 5.5.3                  |
+|           | ESLint                     | 9.9.0                  |
+|           | PostCSS                    | 8.4.47                 |
+|           | Autoprefixer               | 10.4.20                |
+|           | Lovable Tagger             | 1.1.7                  |
+|           | Vite Plugin React SWC      | 3.5.0                  |
+|           | Vite Plugin Compression    | 0.5.1                  |
+|           | Tailwind Typography        | 0.5.15                 |
+|           | Source Map Explorer        | 2.5.3                  |
+|           | TypeScript ESLint          | 8.0.1                  |
+| Other     | Docker                     | Optional, for containers |
 |           | Git                        | Version control        |
 
 ### 1.4. Browser Support
@@ -49,7 +77,6 @@
 | Service         | Purpose                                    |
 |----------------|--------------------------------------------|
 | Supabase       | Auth, database, file storage, real-time     |
-| Lovable        | Deployment and hosting (or compatible cloud)|
 
 ---
 
