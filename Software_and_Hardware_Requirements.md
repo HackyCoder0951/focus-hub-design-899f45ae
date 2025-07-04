@@ -94,6 +94,7 @@
 
 ## 4. Project Structure
 
+```bash
 focus_hub/
 ├── public/                       # Static assets (favicon, index.html, etc.)
 ├── src/                          # Main application source code
@@ -149,5 +150,6 @@ focus_hub/
 ├── README.md                     # Project overview and instructions
 ├── .gitignore                    # Git ignore rules
 └── ... (other config and meta files)
+```
 
 *Document generated for Focus Hub project. Last updated: July 2024.* 
