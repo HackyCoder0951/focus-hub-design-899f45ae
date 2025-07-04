@@ -58,7 +58,7 @@ graph TD
   Repo[Git Repository]
   CI[CI/CD Pipeline]
   Build[Build Server]
-  Host[Hosting/CDN (e.g., Vercel, Netlify)]
+  Host[Hosting , CDN (e.g., Vercel, Netlify)]
   User[End User]
   Supabase[Supabase Backend]
 
