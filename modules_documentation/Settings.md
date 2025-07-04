@@ -20,14 +20,14 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Update Account Info)
-  User --> (Change Password)
-  User --> (Set Notification Preferences)
-  User --> (Manage Privacy Settings)
-  User --> (Enable 2FA)
+flowchart TD
+  User([User]) --> Update((Update Account Info))
+  User --> Password((Change Password))
+  User --> Notify((Set Notification Preferences))
+  User --> Privacy((Manage Privacy Settings))
+  User --> TwoFA((Enable 2FA))
 ```
+
 
 ## Database Design
 ```mermaid

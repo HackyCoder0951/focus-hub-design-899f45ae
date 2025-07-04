@@ -16,14 +16,14 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Browse Feed)
-  User --> (Chat)
-  User --> (Update Profile)
-  User --> (Change Settings)
-  User --> (Login/Register)
+flowchart TD
+  User([User]) --> Feed((Browse Feed))
+  User --> Chat((Chat))
+  User --> Profile((Update Profile))
+  User --> Settings((Change Settings))
+  User --> Auth((Login/Register))
 ```
+
 
 ## Database Design
 ```mermaid

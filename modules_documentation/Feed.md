@@ -20,13 +20,13 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Create a Post)
-  User --> (Like a Post)
-  User --> (Comment on a Post)
-  User --> (View Feed)
+flowchart TD
+  User([User]) --> Create((Create a Post))
+  User --> Like((Like a Post))
+  User --> Comment((Comment on a Post))
+  User --> View((View Feed))
 ```
+
 
 ## Database Design
 ```mermaid

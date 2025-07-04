@@ -12,12 +12,12 @@ flowchart TD
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor Component
-  Component --> (Format Data)
-  Component --> (Handle API Error)
-  Component --> (Transform Data)
+flowchart TD
+  Component([Component]) --> Format((Format Data))
+  Component --> Handle((Handle API Error))
+  Component --> Transform((Transform Data))
 ```
+
 
 ## Database Design
 _No direct database tables; utilities are used across modules._

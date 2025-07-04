@@ -20,12 +20,12 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Login with Email/Password)
-  User --> (Receive Feedback)
-  User --> (Redirect to App)
+flowchart TD
+  User([User]) --> Login((Login with Email/Password))
+  User --> Feedback((Receive Feedback))
+  User --> Redirect((Redirect to App))
 ```
+
 
 ## Database Design
 ```mermaid

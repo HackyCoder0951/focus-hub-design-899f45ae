@@ -23,15 +23,15 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Upload File)
-  User --> (Preview Resource)
-  User --> (Download Resource)
-  User --> (Edit File Metadata)
-  User --> (Delete File)
-  User --> (Search/Filter Resources)
+flowchart TD
+  User([User]) --> Upload((Upload File))
+  User --> Preview((Preview Resource))
+  User --> Download((Download Resource))
+  User --> Edit((Edit File Metadata))
+  User --> Delete((Delete File))
+  User --> Search((Search/Filter Resources))
 ```
+
 
 ## Database Design
 ```mermaid

@@ -12,11 +12,10 @@ flowchart TD
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor Component
-  Component --> (Detect Mobile Device)
-  Component --> (Show Toast Notification)
-  Component --> (Manage Form State)
+flowchart TD
+  Comp[Component] --> Mobile((Detect Mobile Device))
+  Comp --> Toast((Show Toast Notification))
+  Comp --> Form((Manage Form State))
 ```
 
 ## Database Design

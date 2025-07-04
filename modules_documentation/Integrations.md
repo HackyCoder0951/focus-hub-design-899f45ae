@@ -20,13 +20,13 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor Frontend
-  Frontend --> (Authenticate User)
-  Frontend --> (Subscribe to Real-time Updates)
-  Frontend --> (Store/Retrieve Files)
-  Frontend --> (Query Database)
+flowchart TD
+  Frontend([Frontend]) --> Auth((Authenticate User))
+  Frontend --> Subscribe((Subscribe to Real-time Updates))
+  Frontend --> Files((Store/Retrieve Files))
+  Frontend --> Query((Query Database))
 ```
+
 
 ## Database Design
 ```mermaid

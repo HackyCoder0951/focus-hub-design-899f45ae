@@ -20,11 +20,10 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Register with Email/Password)
-  User --> (Receive Confirmation Email)
-  User --> (Complete Profile Setup)
+flowchart TD
+  User([User]) --> Register((Register with Email/Password))
+  User --> Confirm((Receive Confirmation Email))
+  User --> Setup((
 ```
 
 ## Database Design

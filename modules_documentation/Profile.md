@@ -20,13 +20,13 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (View Profile)
-  User --> (Edit Profile)
-  User --> (Change Privacy Settings)
-  User --> (Upload Avatar)
+flowchart TD
+  User([User]) --> View((View Profile))
+  User --> Edit((Edit Profile))
+  User --> Privacy((Change Privacy Settings))
+  User --> Avatar((Upload Avatar))
 ```
+
 
 ## Database Design
 ```mermaid
