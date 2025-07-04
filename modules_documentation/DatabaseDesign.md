@@ -48,6 +48,7 @@ graph TB
 
 
 ## Entity-Relationship Diagram (ERD)
+
 ```mermaid
 erDiagram
   users ||--o{ posts : "has"
@@ -55,18 +56,30 @@ erDiagram
   users ||--o{ votes : "casts"
   users ||--o{ questions : "asks"
   users ||--o{ answers : "answers"
-  users ||--o{ followers : "is followed by"
   users ||--o{ resources : "uploads"
   users ||--o{ messages : "sends"
+
   posts ||--o{ comments : "receives"
   posts ||--o{ votes : "receives"
+
   questions ||--o{ answers : "receives"
   questions ||--o{ comments : "receives"
+
   answers ||--o{ votes : "receives"
-  followers ||--|| users : "follows"
+  answers ||--o{ comments : "receives"
+
+  followers {
+    INT follower_id
+    INT followed_id
+  }
+  users ||--o{ followers : "follows"
+  followers }o--|| users : "followed by"
+
   chats ||--o{ messages : "contains"
-  resources ||--o{ users : "belongs to"
+
+  resources ||--|| users : "belongs to"
 ```
+
 
 ## Table Descriptions
 - **users:** Stores user account information.
