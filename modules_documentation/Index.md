@@ -21,6 +21,8 @@ Welcome to the Focus Hub Modules Documentation. This index provides an overview 
 - [Resources](Resources.md)
 - [Settings](Settings.md)
 - [Login](Login.md)
+- [Register](Register.md)
+- [Admin Dashboard](AdminDashboard.md)
 
 ## UI Components
 - [UI Component Library](Components.md)

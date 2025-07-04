@@ -14,14 +14,38 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor App
-  App --> (Store User Data)
-  App --> (Fetch Posts)
-  App --> (Save Messages)
-  App --> (Manage Files)
-  App --> (Enforce Security)
+graph TB
+
+  %% Actors
+  designer([<<actor>> DB Designer])
+  developer([<<actor>> Developer])
+  admin([<<actor>> DBA])
+
+  %% Use Cases
+  designSchema((Design Schema))
+  createTables((Create Tables))
+  defineRelationships((Define Relationships))
+  writeQueries((Write SQL Queries))
+  optimizeQueries((Optimize Queries))
+  backupDatabase((Backup Database))
+  restoreDatabase((Restore Database))
+  manageUsers((Manage DB Users))
+
+  %% Relationships
+  designer --> designSchema
+  designer --> defineRelationships
+  designer --> createTables
+
+  developer --> writeQueries
+  developer --> optimizeQueries
+  developer --> defineRelationships
+
+  admin --> backupDatabase
+  admin --> restoreDatabase
+  admin --> manageUsers
+  admin --> optimizeQueries
 ```
+
 
 ## Entity-Relationship Diagram (ERD)
 ```mermaid
