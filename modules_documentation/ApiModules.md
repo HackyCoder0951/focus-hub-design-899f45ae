@@ -18,17 +18,15 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor Frontend
-  Frontend --> (Create Resource)
-  Frontend --> (Read Resource)
-  Frontend --> (Update Resource)
-  Frontend --> (Delete Resource)
-  Frontend --> (Integrate with External Service)
+flowchart TD
+  A[Frontend] --> B((Create Resource))
+  A --> C((Read Resource))
+  A --> D((Update Resource))
+  A --> E((Delete Resource))
+  A --> F((Integrate with External Service))
 
-  actor ExternalService
-  ExternalService --> (Send Webhook)
-  ExternalService --> (Receive Callback)
+  G[External Service] --> H((Send Webhook))
+  G --> I((Receive Callback))
 ```
 
 
