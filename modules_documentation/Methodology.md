@@ -1,24 +1,36 @@
 ```mermaid
-flowchart TD
-    %% Actor
+flowchart TB
     User["USER<br/>(Student/Alumni)"]
 
-    %% User Processes
-    Register["REGISTER"]
-    Login["LOGIN"]
-    Feed["FEED"]
-    QandA["Q&A"]
-    Chat["CHAT"]
-    Profile["PROFILE"]
-    Resources["RESOURCES"]
-    Settings["SETTINGS"]
-    Search["SEARCH"]
-    PostComment["POST / COMMENT"]
-    ViewEvent["VIEW EVENT"]
-    UpdateProfile["UPDATE PROFILE"]
-    Moderation["MODERATION<br/>STATUS"]
+    %% Authentication
+    subgraph Auth [Authentication]
+      Register["REGISTER"]
+      Login["LOGIN"]
+    end
 
-    %% Data Store
+    %% Social
+    subgraph Social [Social Features]
+      Feed["FEED"]
+      QandA["Q&A"]
+      Chat["CHAT"]
+      PostComment["POST / COMMENT"]
+      ViewEvent["VIEW EVENT"]
+    end
+
+    %% Profile & Resources
+    subgraph ProfileRes [Profile & Resources]
+      Profile["PROFILE"]
+      Resources["RESOURCES"]
+      UpdateProfile["UPDATE PROFILE"]
+    end
+
+    %% Utility
+    subgraph Utility [Utility]
+      Settings["SETTINGS"]
+      Search["SEARCH"]
+      Moderation["MODERATION<br/>STATUS"]
+    end
+
     Database["DATABASE"]
 
     %% Flows
@@ -27,13 +39,13 @@ flowchart TD
     User --> Feed
     User --> QandA
     User --> Chat
-    User --> Profile
-    User --> Resources
-    User --> Settings
-    User --> Search
     User --> PostComment
     User --> ViewEvent
+    User --> Profile
+    User --> Resources
     User --> UpdateProfile
+    User --> Settings
+    User --> Search
     User --> Moderation
 
     Register --> Database
@@ -41,13 +53,13 @@ flowchart TD
     Feed --> Database
     QandA --> Database
     Chat --> Database
-    Profile --> Database
-    Resources --> Database
-    Settings --> Database
-    Search --> Database
     PostComment --> Database
     ViewEvent --> Database
+    Profile --> Database
+    Resources --> Database
     UpdateProfile --> Database
+    Settings --> Database
+    Search --> Database
     Moderation --> Database
 
     Moderation --> PostComment
