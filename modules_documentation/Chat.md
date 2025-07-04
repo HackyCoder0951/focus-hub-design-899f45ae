@@ -22,15 +22,15 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor User
-  User --> (Send Message)
-  User --> (Receive Message)
-  User --> (Share File)
-  User --> (Join Group Chat)
-  User --> (Leave Group Chat)
-  User --> (See Online Status)
+flowchart TD
+  User([User]) --> UC1((Send Message))
+  User --> UC2((Receive Message))
+  User --> UC3((Share File))
+  User --> UC4((Join Group Chat))
+  User --> UC5((Leave Group Chat))
+  User --> UC6((See Online Status))
 ```
+
 
 
 ## Database Design
