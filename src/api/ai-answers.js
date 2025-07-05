@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
+import { supabase } from './supabaseClient.js';
+import Groq from 'groq-sdk';
 const router = express.Router();
-const supabase = require('./supabaseClient');
-const OpenAI = require('openai');
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Initialize Groq
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 // Middleware: require authentication
@@ -23,9 +23,9 @@ router.post('/generate', requireAuth, async (req, res) => {
   }
 
   try {
-    // Generate AI answer using OpenAI
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    // Generate AI answer using Groq
+    const completion = await groq.chat.completions.create({
+      model: "llama3-8b-8192", // Fast and cost-effective model
       messages: [
         {
           role: "system",
@@ -52,7 +52,7 @@ router.post('/generate', requireAuth, async (req, res) => {
         {
           question_id: questionId,
           answer: aiAnswer,
-          generated_by: 'openai',
+          generated_by: 'groq',
           user_id: req.user.id // The user who triggered the generation
         }
       ])
@@ -102,4 +102,9 @@ router.get('/question/:id', async (req, res) => {
   }
 });
 
-module.exports = router; 
+// Add a test route for GET /api/ai-answers
+router.get('/', (req, res) => {
+  res.json({ message: 'AI Answers API is working! Use POST /generate or GET /question/:id.' });
+});
+
+export default router; 

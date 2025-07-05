@@ -8,7 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:groq": "node test-groq.js"
   },
   "dependencies": {
     "@emoji-mart/react": "^1.1.1",
@@ -47,13 +48,15 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
+    "dotenv": "^17.0.1",
     "embla-carousel-react": "^8.3.0",
     "emoji-mart": "^5.6.0",
+    "express": "^5.1.0",
     "file-saver": "^2.0.5",
+    "groq-sdk": "^0.26.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
-    "openai": "^5.8.2",
     "pdfjs-dist": "^5.3.31",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",

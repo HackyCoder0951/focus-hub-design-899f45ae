@@ -1,6 +1,6 @@
-const express = require('express');
+import express from 'express';
+import { supabase } from './supabaseClient.js';
 const router = express.Router();
-const supabase = require('./supabaseClient');
 
 // Middleware: require authentication
 function requireAuth(req, res, next) {
@@ -62,4 +62,4 @@ router.delete('/:id', requireAuth, async (req, res) => {
   res.status(204).send();
 });
 
-module.exports = router; 
+export default router; 

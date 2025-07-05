@@ -47,11 +47,11 @@ const AITest: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error testing AI integration:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to test AI integration. Check your OpenAI API key.",
-        variant: "destructive",
-      });
+              toast({
+          title: "Error",
+          description: error.message || "Failed to test AI integration. Check your Groq API key.",
+          variant: "destructive",
+        });
     } finally {
       setLoading(false);
     }
@@ -104,9 +104,10 @@ const AITest: React.FC = () => {
         <div className="text-xs text-muted-foreground">
           <p>This test verifies that:</p>
           <ul className="list-disc list-inside mt-1 space-y-1">
-            <li>OpenAI API key is configured correctly</li>
+            <li>Groq API key is configured correctly</li>
             <li>API endpoints are accessible</li>
             <li>AI answer generation is working</li>
+            <li>Response times are optimized</li>
           </ul>
         </div>
       </CardContent>
