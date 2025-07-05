@@ -20,14 +20,13 @@ sequenceDiagram
 
 ## Use Cases Diagram Context
 ```mermaid
-usecaseDiagram
-  actor Admin
-  Admin --> (View User Accounts)
-  Admin --> (Assign/Modify Roles)
-  Admin --> (Moderate Content)
-  Admin --> (View Analytics)
-  Admin --> (Monitor System Health)
-  Admin --> (Review Audit Logs)
+graph TD
+  Admin[Admin] --> UC1(View User Accounts)
+  Admin --> UC2(Assign/Modify Roles)
+  Admin --> UC3(Moderate Content)
+  Admin --> UC4(View Analytics)
+  Admin --> UC5(Monitor System Health)
+  Admin --> UC6(Review Audit Logs)
 ```
 
 ## Database Design

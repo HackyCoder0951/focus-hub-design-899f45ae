@@ -25,7 +25,8 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
     const fetchAIAnswer = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        const supabaseAny = supabase as any;
+        const { data, error } = await supabaseAny
           .from('ai_answers')
           .select('*')
           .eq('question_id', questionId)
@@ -50,10 +51,15 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
   const generateAIAnswer = async () => {
     setGenerating(true);
     try {
+      // Get Supabase access token
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
       const response = await fetch('/api/ai-answers/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(accessToken && { 'Authorization': `Bearer ${accessToken}` })
         },
         body: JSON.stringify({
           question,

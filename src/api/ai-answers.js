@@ -1,18 +1,13 @@
 import express from 'express';
 import { supabase } from './supabaseClient.js';
 import Groq from 'groq-sdk';
+import { requireAuth } from './requireAuth.js';
 const router = express.Router();
 
 // Initialize Groq
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
-
-// Middleware: require authentication
-function requireAuth(req, res, next) {
-  if (!req.user || !req.user.id) return res.status(401).json({ error: 'Unauthorized' });
-  next();
-}
 
 // POST /api/ai-answers/generate - Generate AI answer for a question
 router.post('/generate', requireAuth, async (req, res) => {
