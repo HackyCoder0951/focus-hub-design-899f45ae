@@ -11,7 +11,7 @@ const groq = new Groq({
 // POST /api/ai-answers/generate - Generate AI answer for a question
 router.post('/generate', async (req, res) => {
   const { question, questionId } = req.body;
-  
+
   if (!question || !questionId) {
     return res.status(400).json({ error: 'Question and questionId are required' });
   }
@@ -38,6 +38,8 @@ router.post('/generate', async (req, res) => {
     });
 
     const aiAnswer = completion.choices[0].message.content;
+
+    return res.json(aiAnswer);
 
     // Store the AI answer in the database (no user_id required)
     const { data, error } = await supabase

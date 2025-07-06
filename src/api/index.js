@@ -6,6 +6,10 @@ import aiAnswersRouter from './ai-answers.js';
 
 const app = express();
 
+// Middleware - must be applied before routes
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use('/api/answers', answersRouter);
 app.use('/api/votes', votesRouter);
 app.use('/api/comments', commentsRouter);

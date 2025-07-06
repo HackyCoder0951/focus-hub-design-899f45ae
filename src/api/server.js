@@ -2,10 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import app from './index.js';
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

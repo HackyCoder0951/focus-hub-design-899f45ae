@@ -71,6 +71,10 @@ CREATE TABLE IF NOT EXISTS ai_answers (
     model_used TEXT,
     tokens_used INTEGER,
     processing_time_ms INTEGER,
+    relevance_score DECIMAL(3,2),
+    completeness_score DECIMAL(3,2),
+    user_feedback_rating INTEGER CHECK (user_feedback_rating BETWEEN 1 AND 5),
+    generation_attempts INTEGER DEFAULT 1,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -106,6 +110,15 @@ CREATE TABLE IF NOT EXISTS answer_notifications (
     is_read BOOLEAN DEFAULT FALSE,
     related_id INTEGER, -- ID of related comment, vote, etc.
     created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 10. Answer Tags Table
+CREATE TABLE IF NOT EXISTS answer_tags (
+    id SERIAL PRIMARY KEY,
+    answer_id INTEGER REFERENCES answers(id) ON DELETE CASCADE,
+    tag_name TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(answer_id, tag_name)
 );
 
 -- Create indexes for better performance
@@ -146,6 +159,9 @@ CREATE INDEX IF NOT EXISTS idx_answer_notifications_answer_id ON answer_notifica
 CREATE INDEX IF NOT EXISTS idx_answer_notifications_user_id ON answer_notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_answer_notifications_is_read ON answer_notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_answer_notifications_created_at ON answer_notifications(created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_answer_tags_answer_id ON answer_tags(answer_id);
+CREATE INDEX IF NOT EXISTS idx_answer_tags_tag_name ON answer_tags(tag_name);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -218,6 +234,7 @@ ALTER TABLE ai_answers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE answer_comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE answer_votes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE answer_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE answer_tags ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for questions
 CREATE POLICY "Authenticated users can select questions" ON questions
@@ -291,6 +308,19 @@ CREATE POLICY "AI can insert ai_answers" ON ai_answers
 CREATE POLICY "AI can update ai_answers" ON ai_answers
     FOR UPDATE USING (true);
 
+-- RLS Policies for answer_tags
+CREATE POLICY "AI can select answer_tags" ON answer_tags
+    FOR SELECT USING (true);
+
+CREATE POLICY "AI can insert answer_tags" ON answer_tags
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "AI can update answer_tags" ON answer_tags
+    FOR UPDATE USING (true);
+
+CREATE POLICY "AI can delete answer_tags" ON answer_tags
+    FOR DELETE USING (true);
+
 -- RLS Policies for answer_comments
 CREATE POLICY "Answer comments are viewable by everyone" ON answer_comments
     FOR SELECT USING (true);
@@ -355,4 +385,5 @@ COMMENT ON TABLE answers IS 'Answers to questions';
 COMMENT ON TABLE ai_answers IS 'AI-generated answers to questions';
 COMMENT ON TABLE answer_comments IS 'Comments on answers';
 COMMENT ON TABLE answer_votes IS 'Votes (upvotes/downvotes) on answers';
-COMMENT ON TABLE answer_notifications IS 'Notifications for answer-related activities'; 
+COMMENT ON TABLE answer_notifications IS 'Notifications for answer-related activities';
+COMMENT ON TABLE answer_tags IS 'Tags associated with answers for categorization'; 
