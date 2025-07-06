@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,15 +5,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import { supabase } from "@/api/supabaseClient";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // console.log("Password reset request for:", email);
-    setIsSubmitted(true);
+    setErrorMsg("");
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`, // Update this if you have a custom reset page
+    });
+    setLoading(false);
+    if (!error) {
+      setIsSubmitted(true);
+    } else {
+      setErrorMsg(error.message || "Failed to send reset email. Please try again.");
+    }
   };
 
   if (isSubmitted) {
@@ -68,10 +79,14 @@ const ForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Send reset link
+            {errorMsg && (
+              <div className="text-red-500 text-sm text-center">{errorMsg}</div>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Sending..." : "Send reset link"}
             </Button>
           </form>
           <div className="mt-6 text-center">
