@@ -90,9 +90,9 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
 
   // Copy answer to clipboard
   const copyToClipboard = async () => {
-    if (aiAnswer?.answer) {
+    if (aiAnswer?.answer_text) {
       try {
-        await navigator.clipboard.writeText(aiAnswer.answer);
+        await navigator.clipboard.writeText(aiAnswer.answer_text);
         setCopied(true);
         toast({
           title: "Copied!",
@@ -198,7 +198,7 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
 
           {/* Answer Content */}
           <div className="prose prose-sm max-w-none">
-            <p className="text-sm leading-relaxed">{aiAnswer.answer}</p>
+            <p className="text-sm leading-relaxed">{aiAnswer.answer_text}</p>
           </div>
 
           {/* Feedback */}

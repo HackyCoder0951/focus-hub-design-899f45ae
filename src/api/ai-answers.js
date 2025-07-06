@@ -12,6 +12,12 @@ const groq = new Groq({
 router.post('/generate', async (req, res) => {
   const { question, questionId } = req.body;
 
+  // Require authentication
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   if (!question || !questionId) {
     return res.status(400).json({ error: 'Question and questionId are required' });
   }
@@ -39,17 +45,15 @@ router.post('/generate', async (req, res) => {
 
     const aiAnswer = completion.choices[0].message.content;
 
-    return res.json(aiAnswer);
-
-    // Store the AI answer in the database (no user_id required)
+    // Store the AI answer in the database with user_id
     const { data, error } = await supabase
       .from('ai_answers')
       .insert([
         {
           question_id: questionId,
-          answer: aiAnswer,
+          answer_text: aiAnswer,
           generated_by: 'groq',
-          user_id: null // No user authentication required
+          user_id: userId
         }
       ])
       .select()
@@ -57,7 +61,7 @@ router.post('/generate', async (req, res) => {
 
     if (error) {
       console.error('Error storing AI answer:', error);
-      return res.status(500).json({ error: 'Failed to store AI answer' });
+      return res.status(500).json({ error: 'Failed to store AI answer', details: error.message, supabaseError: error });
     }
 
     res.json({
