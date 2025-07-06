@@ -13,6 +13,10 @@ interface CreatePostProps {
   onPostCreated?: () => void;
 }
 
+interface EmojiData {
+  native: string;
+}
+
 const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +34,7 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
     }
   };
 
-  const handleEmojiSelect = (emoji: any) => {
+  const handleEmojiSelect = (emoji: EmojiData) => {
     setContent(content + emoji.native);
     setShowEmojiPicker(false);
   };
@@ -96,11 +100,12 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       if (onPostCreated) {
         onPostCreated();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
       console.error('Error creating post:', error);
       toast({
         title: "Error creating post",
-        description: error.message || "Something went wrong. Please try again.",
+        description: errorMessage || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

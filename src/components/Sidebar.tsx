@@ -15,7 +15,7 @@ import {
 interface NavigationItem {
   name: string;
   href: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
   showNotification?: boolean;
 }
 

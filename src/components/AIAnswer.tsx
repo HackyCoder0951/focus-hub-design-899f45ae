@@ -5,15 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, ThumbsUp, ThumbsDown, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Tables } from '@/integrations/supabase/types';
 
 interface AIAnswerProps {
-  questionId: string;
+  questionId: number;
   question: string;
-  onAnswerGenerated?: (answer: any) => void;
+  onAnswerGenerated?: (answer: Tables<'ai_answers'>) => void;
 }
 
 const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGenerated }) => {
-  const [aiAnswer, setAiAnswer] = useState<any>(null);
+  const [aiAnswer, setAiAnswer] = useState<Tables<'ai_answers'> | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -25,8 +26,7 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
     const fetchAIAnswer = async () => {
       setLoading(true);
       try {
-        const supabaseAny = supabase as any;
-        const { data, error } = await supabaseAny
+        const { data, error } = await supabase
           .from('ai_answers')
           .select('*')
           .eq('question_id', questionId)
@@ -54,7 +54,6 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
-
       const response = await fetch('/api/ai-answers/generate', {
         method: 'POST',
         headers: {
@@ -81,11 +80,12 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
       } else {
         throw new Error(result.error || 'Failed to generate AI answer');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate AI answer';
       console.error('Error generating AI answer:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to generate AI answer. Please try again.",
+        description: errorMessage || "Failed to generate AI answer. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -141,10 +141,11 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
       } else {
         throw new Error(result.error || 'Failed to update AI answer');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update AI answer';
       toast({
         title: "Error",
-        description: error.message || "Failed to update AI answer. Please try again.",
+        description: errorMessage || "Failed to update AI answer. Please try again.",
         variant: "destructive",
       });
     }

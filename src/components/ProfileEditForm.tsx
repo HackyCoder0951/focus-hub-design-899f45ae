@@ -12,8 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-const ProfileEditForm = ({ profileData, onSave }: { profileData: any, onSave: () => void }) => {
+const ProfileEditForm = ({ profileData, onSave }: { profileData: Tables<'profiles'>, onSave: () => void }) => {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     full_name: profileData.full_name || "",

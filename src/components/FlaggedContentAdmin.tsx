@@ -4,8 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+interface FlaggedContentItem {
+  id: string;
+  type: string;
+  content: string | null;
+  author: string;
+  reports: number;
+  date: string;
+  reason: string | null;
+  status: string;
+  postId: string | null;
+}
+
 const FlaggedContentAdmin = () => {
-  const [flaggedContent, setFlaggedContent] = useState<any[]>([]);
+  const [flaggedContent, setFlaggedContent] = useState<FlaggedContentItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -73,12 +85,12 @@ const FlaggedContentAdmin = () => {
     fetchFlagged();
   }, []);
 
-  const handleFlagAction = async (flagId, action, postId) => {
-    if (action === 'delete') {
+  const handleFlagAction = async (flagId: string, action: string, postId: string | null) => {
+    if (action === 'delete' && postId) {
       await supabase.from('posts').update({ is_deleted: true }).eq('id', postId);
     } else {
       await supabase.from('content_flags').update({ status: action }).eq('id', flagId);
-      if (action === 'resolved' || action === 'dismissed') {
+      if ((action === 'resolved' || action === 'dismissed') && postId) {
         await supabase.from('posts').update({ flag_status: 'reviewed' }).eq('id', postId);
       }
     }

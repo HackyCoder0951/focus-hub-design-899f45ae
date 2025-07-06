@@ -21,7 +21,7 @@ import {
   DialogContent,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 // import { Document, Page } from 'react-pdf';
 // import 'react-pdf/dist/Page/AnnotationLayer.css';
 // import 'react-pdf/dist/Page/TextLayer.css';
@@ -138,7 +138,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
   const [deleting, setDeleting] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  // const [sharing, setSharing] = useState(false);
   const postUrl = `${window.location.origin}/app/post/${post.id}`;
   const isOwner = user && user.id === post.user_id;
   const [editLoading, setEditLoading] = useState(false);
@@ -149,8 +149,8 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   const commentInputRef = useRef<HTMLInputElement>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewType, setPreviewType] = useState<'image' | 'pdf' | 'video' | null>(null);
-  const [numPages, setNumPages] = useState<number>(0);
-  const [pageNumber, setPageNumber] = useState<number>(1);
+  // const [numPages, setNumPages] = useState<number>(0);
+  // const [pageNumber, setPageNumber] = useState<number>(1);
   const [mediaType, setMediaType] = useState<'image' | 'pdf' | 'video' | null>(null);
 
   // Check if user has liked this post

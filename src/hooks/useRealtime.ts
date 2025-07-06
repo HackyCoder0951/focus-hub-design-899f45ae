@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { Tables } from '@/integrations/supabase/types';
 
 interface VoteUpdate {
   target_type: 'question' | 'answer';
@@ -54,15 +55,15 @@ export const useRealtime = (options: UseRealtimeOptions = {}) => {
         table: 'question_votes'
       }, (payload) => {
         if (onVoteUpdate) {
-          const newRecord = payload.new as any;
-          const oldRecord = payload.old as any;
+          const newRecord = payload.new as Tables<'question_votes'> | null;
+          const oldRecord = payload.old as Tables<'question_votes'> | null;
           onVoteUpdate({
             target_type: 'question',
-            target_id: newRecord?.question_id || oldRecord?.question_id,
+            target_id: newRecord?.question_id || oldRecord?.question_id || 0,
             vote_count: 0, // Will be calculated by the trigger
             vote_score: 0, // Will be calculated by the trigger
-            user_id: newRecord?.user_id || oldRecord?.user_id,
-            vote_value: newRecord?.vote_value || 0
+            user_id: newRecord?.user_id || oldRecord?.user_id || '',
+            vote_value: newRecord?.vote_value || oldRecord?.vote_value || 0
           });
         }
       })
@@ -72,15 +73,15 @@ export const useRealtime = (options: UseRealtimeOptions = {}) => {
         table: 'answer_votes'
       }, (payload) => {
         if (onVoteUpdate) {
-          const newRecord = payload.new as any;
-          const oldRecord = payload.old as any;
+          const newRecord = payload.new as Tables<'answer_votes'> | null;
+          const oldRecord = payload.old as Tables<'answer_votes'> | null;
           onVoteUpdate({
             target_type: 'answer',
-            target_id: newRecord?.answer_id || oldRecord?.answer_id,
+            target_id: newRecord?.answer_id || oldRecord?.answer_id || 0,
             vote_count: 0, // Will be calculated by the trigger
             vote_score: 0, // Will be calculated by the trigger
-            user_id: newRecord?.user_id || oldRecord?.user_id,
-            vote_value: newRecord?.vote_value || 0
+            user_id: newRecord?.user_id || oldRecord?.user_id || '',
+            vote_value: newRecord?.vote_value || oldRecord?.vote_value || 0
           });
         }
       })
@@ -101,15 +102,15 @@ export const useRealtime = (options: UseRealtimeOptions = {}) => {
         table: 'answer_comments'
       }, (payload) => {
         if (onCommentUpdate) {
-          const newRecord = payload.new as any;
-          const oldRecord = payload.old as any;
+          const newRecord = payload.new as Tables<'answer_comments'> | null;
+          const oldRecord = payload.old as Tables<'answer_comments'> | null;
           onCommentUpdate({
-            id: newRecord?.id || oldRecord?.id,
-            answer_id: newRecord?.answer_id || oldRecord?.answer_id,
-            user_id: newRecord?.user_id || oldRecord?.user_id,
-            body: newRecord?.body || oldRecord?.body,
+            id: newRecord?.id || oldRecord?.id || 0,
+            answer_id: newRecord?.answer_id || oldRecord?.answer_id || 0,
+            user_id: newRecord?.user_id || oldRecord?.user_id || '',
+            body: newRecord?.body || oldRecord?.body || '',
             parent_comment_id: newRecord?.parent_comment_id || oldRecord?.parent_comment_id,
-            created_at: newRecord?.created_at || oldRecord?.created_at,
+            created_at: newRecord?.created_at || oldRecord?.created_at || '',
             action: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE'
           });
         }
@@ -134,16 +135,16 @@ export const useRealtime = (options: UseRealtimeOptions = {}) => {
         filter: `user_id=eq.${userId}`
       }, (payload) => {
         if (onNotificationUpdate) {
-          const newRecord = payload.new as any;
-          const oldRecord = payload.old as any;
+          const newRecord = payload.new as Tables<'question_notifications'> | null;
+          const oldRecord = payload.old as Tables<'question_notifications'> | null;
           onNotificationUpdate({
-            id: newRecord?.id || oldRecord?.id,
-            user_id: newRecord?.user_id || oldRecord?.user_id,
-            notification_type: newRecord?.notification_type || oldRecord?.notification_type,
-            message: newRecord?.message || oldRecord?.message,
-            is_read: newRecord?.is_read || oldRecord?.is_read,
+            id: newRecord?.id || oldRecord?.id || 0,
+            user_id: newRecord?.user_id || oldRecord?.user_id || '',
+            notification_type: newRecord?.notification_type || oldRecord?.notification_type || '',
+            message: newRecord?.message || oldRecord?.message || '',
+            is_read: newRecord?.is_read || oldRecord?.is_read || false,
             related_id: newRecord?.related_id || oldRecord?.related_id,
-            created_at: newRecord?.created_at || oldRecord?.created_at,
+            created_at: newRecord?.created_at || oldRecord?.created_at || '',
             action: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE'
           });
         }
@@ -155,16 +156,16 @@ export const useRealtime = (options: UseRealtimeOptions = {}) => {
         filter: `user_id=eq.${userId}`
       }, (payload) => {
         if (onNotificationUpdate) {
-          const newRecord = payload.new as any;
-          const oldRecord = payload.old as any;
+          const newRecord = payload.new as Tables<'answer_notifications'> | null;
+          const oldRecord = payload.old as Tables<'answer_notifications'> | null;
           onNotificationUpdate({
-            id: newRecord?.id || oldRecord?.id,
-            user_id: newRecord?.user_id || oldRecord?.user_id,
-            notification_type: newRecord?.notification_type || oldRecord?.notification_type,
-            message: newRecord?.message || oldRecord?.message,
-            is_read: newRecord?.is_read || oldRecord?.is_read,
+            id: newRecord?.id || oldRecord?.id || 0,
+            user_id: newRecord?.user_id || oldRecord?.user_id || '',
+            notification_type: newRecord?.notification_type || oldRecord?.notification_type || '',
+            message: newRecord?.message || oldRecord?.message || '',
+            is_read: newRecord?.is_read || oldRecord?.is_read || false,
             related_id: newRecord?.related_id || oldRecord?.related_id,
-            created_at: newRecord?.created_at || oldRecord?.created_at,
+            created_at: newRecord?.created_at || oldRecord?.created_at || '',
             action: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE'
           });
         }

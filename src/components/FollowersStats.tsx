@@ -1,13 +1,30 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Tables } from "@/integrations/supabase/types";
+
+interface FollowerItem {
+  follower_id: string;
+  profiles: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+interface FollowingItem {
+  following_id: string;
+  profiles: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
 
 const FollowersStats = ({ profileUserId }: { profileUserId: string }) => {
   const [followers, setFollowers] = useState(0);
   const [following, setFollowing] = useState(0);
   const [showList, setShowList] = useState<null | "followers" | "following">(null);
-  const [followersList, setFollowersList] = useState<any[]>([]);
-  const [followingList, setFollowingList] = useState<any[]>([]);
+  const [followersList, setFollowersList] = useState<FollowerItem[]>([]);
+  const [followingList, setFollowingList] = useState<FollowingItem[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -35,7 +52,7 @@ const FollowersStats = ({ profileUserId }: { profileUserId: string }) => {
       setLoading(true);
       const { data, error } = await supabase
         .from('followers')
-        .select('follower_id, profiles:profiles(full_name, avatar_url)')
+        .select('follower_id, profiles!followers_follower_id_fkey(full_name, avatar_url)')
         .eq('following_id', profileUserId)
         .order('created_at', { ascending: false });
       setFollowersList(data || []);
@@ -49,7 +66,7 @@ const FollowersStats = ({ profileUserId }: { profileUserId: string }) => {
       setLoading(true);
       const { data, error } = await supabase
         .from('followers')
-        .select('following_id, profiles:profiles(full_name, avatar_url)')
+        .select('following_id, profiles!followers_following_id_fkey(full_name, avatar_url)')
         .eq('follower_id', profileUserId)
         .order('created_at', { ascending: false });
       setFollowingList(data || []);
@@ -76,7 +93,7 @@ const FollowersStats = ({ profileUserId }: { profileUserId: string }) => {
             <div>No followers found.</div>
           ) : (
             <ul style={{ marginTop: 4 }}>
-              {followersList.map((item: any) => (
+              {followersList.map((item: FollowerItem) => (
                 <li key={item.follower_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   {item.profiles?.avatar_url && (
                     <img src={item.profiles.avatar_url} alt="avatar" style={{ width: 24, height: 24, borderRadius: '50%' }} />
@@ -98,7 +115,7 @@ const FollowersStats = ({ profileUserId }: { profileUserId: string }) => {
             <div>No following found.</div>
           ) : (
             <ul style={{ marginTop: 4 }}>
-              {followingList.map((item: any) => (
+              {followingList.map((item: FollowingItem) => (
                 <li key={item.following_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   {item.profiles?.avatar_url && (
                     <img src={item.profiles.avatar_url} alt="avatar" style={{ width: 24, height: 24, borderRadius: '50%' }} />

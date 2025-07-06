@@ -10,10 +10,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Tables } from "@/integrations/supabase/types";
 
 const NotificationDropdown = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Tables<'notifications'>[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ const NotificationDropdown = () => {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   // Mark notification as read and remove from list
-  const handleNotificationClick = async (notificationId) => {
+  const handleNotificationClick = async (notificationId: string) => {
     await supabase
       .from('notifications')
       .update({ is_read: true })
@@ -70,7 +71,11 @@ const NotificationDropdown = () => {
                     <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm">{notification.data?.text || notification.type}</p>
+                    <p className="text-sm">
+                      {typeof notification.data === 'object' && notification.data && 'text' in notification.data 
+                        ? (notification.data as { text: string }).text 
+                        : notification.type}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {notification.created_at ? new Date(notification.created_at).toLocaleString() : ""}
                     </p>

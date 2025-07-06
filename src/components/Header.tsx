@@ -17,14 +17,20 @@ import NotificationDropdown from "./NotificationDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
-const Header = ({ search, setSearch }) => {
+interface HeaderProps {
+  search: string;
+  setSearch: (search: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ search, setSearch }) => {
   const { user, profile, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Tables<'profiles'>[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const searchTimeout = useRef<any>(null);
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const getInitials = (name: string) => {

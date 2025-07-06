@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Tables } from "@/integrations/supabase/types";
 
 interface ChatNotificationProps {
   className?: string;
@@ -54,7 +55,7 @@ const ChatNotification = ({ className }: ChatNotificationProps) => {
           table: 'chat_messages'
         },
         (payload) => {
-          const newMessage = payload.new as any;
+          const newMessage = payload.new as Tables<'chat_messages'>;
           if (newMessage.user_id !== user.id) {
             setUnreadCount(prev => prev + 1);
           }

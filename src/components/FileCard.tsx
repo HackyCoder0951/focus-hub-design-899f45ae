@@ -4,12 +4,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Eye, Download, Edit, Trash2, FileImage, FileVideo, FileText, FileArchive, File, FileAudio, FileCode, FileSpreadsheet, FileType2, Presentation } from "lucide-react";
 import React from "react";
+import { Tables } from "@/integrations/supabase/types";
+
+type FileWithProfile = Tables<'filemodels'> & {
+  profiles?: Tables<'profiles'> | null;
+};
 
 interface FileCardProps {
-  file: any;
-  onPreview?: (file: any) => void;
-  onEdit?: (file: any) => void;
-  onDelete?: (file: any) => void;
+  file: FileWithProfile;
+  onPreview?: (file: FileWithProfile) => void;
+  onEdit?: (file: FileWithProfile) => void;
+  onDelete?: (file: FileWithProfile) => void;
   canManageFile?: boolean;
 }
 

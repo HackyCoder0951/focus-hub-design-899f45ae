@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +31,7 @@ const CreateChat = ({ onChatCreated }: CreateChatProps) => {
   const [loading, setLoading] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      fetchUsers();
-    }
-  }, [open]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
       const { data, error } = await supabase
@@ -53,7 +47,13 @@ const CreateChat = ({ onChatCreated }: CreateChatProps) => {
     } finally {
       setLoadingUsers(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (open) {
+      fetchUsers();
+    }
+  }, [open, fetchUsers]);
 
   const filteredUsers = users.filter(user =>
     user.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||

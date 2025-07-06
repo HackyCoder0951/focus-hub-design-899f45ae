@@ -45,13 +45,14 @@ const AITest: React.FC = () => {
       } else {
         throw new Error(result.error || 'Failed to generate AI answer');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to test AI integration';
       console.error('Error testing AI integration:', error);
-              toast({
-          title: "Error",
-          description: error.message || "Failed to test AI integration. Check your Groq API key.",
-          variant: "destructive",
-        });
+      toast({
+        title: "Error",
+        description: errorMessage || "Failed to test AI integration. Check your Groq API key.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
