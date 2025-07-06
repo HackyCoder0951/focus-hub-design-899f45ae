@@ -14,7 +14,7 @@ router.post('/generate', requireAuth, async (req, res) => {
   const { question, questionId } = req.body;
 
   // Require authentication
-  const userId = req.user?.id;
+  const userId = req.user?.sub;
   if (!userId) {
     return res.status(401).json({ error: 'Authentication required' });
   }
