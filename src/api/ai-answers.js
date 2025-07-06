@@ -116,6 +116,25 @@ router.get('/question/:id', async (req, res) => {
   }
 });
 
+// PATCH /api/ai-answers/:id/feedback
+router.patch('/:id/feedback', requireAuth, async (req, res) => {
+  const { id } = req.params;
+  const { user_feedback_rating } = req.body;
+  if (typeof user_feedback_rating !== 'number') {
+    return res.status(400).json({ error: 'Invalid feedback rating' });
+  }
+  const { data, error } = await supabase
+    .from('ai_answers')
+    .update({ user_feedback_rating })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+  res.json({ success: true, aiAnswer: data });
+});
+
 // Add a test route for GET /api/ai-answers
 router.get('/', (req, res) => {
   res.json({ message: 'AI Answers API is working! Use POST /generate or GET /question/:id.' });
