@@ -93,11 +93,11 @@ const CreateChat = ({ onChatCreated }: CreateChatProps) => {
       if (chatError) throw chatError;
 
       // Add current user (creator) to chat
-      console.log('Inserting creator as admin:', {
-        chat_id: chat.id,
-        user_id: user.id,
-        is_admin: !!isGroup
-      });
+      // console.log('Inserting creator as admin:', {
+      //   chat_id: chat.id,
+      //   user_id: user.id,
+      //   is_admin: !!isGroup
+      // });
       const { error: creatorError } = await supabase
         .from('chat_members')
         .insert({

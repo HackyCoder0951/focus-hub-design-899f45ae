@@ -1,9 +1,9 @@
 // Quick test script for Groq integration
-const Groq = require('groq-sdk');
+import Groq from 'groq-sdk';
 
 // Initialize Groq (you'll need to set GROQ_API_KEY in environment)
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
+  apiKey: process.env.GROQ_API_KEY
 });
 
 async function testGroq() {

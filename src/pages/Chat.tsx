@@ -133,7 +133,7 @@ const Chat = () => {
             profiles: user_id (full_name, avatar_url, last_seen)
           `)
           .eq('chat_id', chat.id);
-        console.log('Fetched members:', members);
+        // console.log('Fetched members:', members);
 
         // Get last message
         const { data: lastMessage } = await supabase
@@ -452,7 +452,7 @@ const Chat = () => {
     (m) => m.user_id === user?.id && m.is_admin
   );
 
-  console.log("isCurrentUserAdmin", isCurrentUserAdmin, user?.id, currentChat?.chat_members);
+  // console.log("isCurrentUserAdmin", isCurrentUserAdmin, user?.id, currentChat?.chat_members);
 
   const handleAddMember = async (userId: string) => {
     setAddMemberLoading(true);
@@ -520,7 +520,7 @@ const Chat = () => {
   useEffect(() => {
     if (!user) return;
     const updateLastSeen = async () => {
-      console.log("Updating last_seen");
+      // console.log("Updating last_seen");
       const { error } = await supabase.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', user.id);
       if (error) {
         console.error("Error updating last_seen:", error);

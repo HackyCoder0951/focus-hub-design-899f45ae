@@ -8,7 +8,7 @@ const AppRedirect = () => {
 
   useEffect(() => {
     if (loading || userRole === null) return;
-    console.log('AppRedirect:', { isAdmin, loading, userRole });
+    // console.log('AppRedirect:', { isAdmin, loading, userRole });
     if (isAdmin) {
       navigate("/app/AdminDashboard", { replace: true });
     } else {

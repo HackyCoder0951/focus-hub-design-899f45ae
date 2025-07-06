@@ -129,7 +129,7 @@ const Feed = () => {
     const query = search.toLowerCase();
     return content.includes(query) || author.includes(query);
   });
-  console.log({ posts, search, filteredPosts });
+  // console.log({ posts, search, filteredPosts });
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

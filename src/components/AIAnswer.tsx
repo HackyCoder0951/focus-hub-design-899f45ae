@@ -54,7 +54,6 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
-      console.log('Token:', accessToken);
 
       const response = await fetch('/api/ai-answers/generate', {
         method: 'POST',
