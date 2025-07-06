@@ -93,6 +93,20 @@ router.post('/generate', requireAuth, async (req, res) => {
   }
 });
 
+// GET /api/ai-answers/:id - Get AI answer by its primary key
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('ai_answers')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error && error.code !== 'PGRST116') {
+    return res.status(500).json({ error: error.message });
+  }
+  res.json({ aiAnswer: data || null });
+});
+
 // GET /api/ai-answers/question/:id - Get AI answer for a specific question
 router.get('/question/:id', async (req, res) => {
   const { id } = req.params;

@@ -112,23 +112,12 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
   };
 
   // Mark as helpful/not helpful
-  const markHelpful = async (isHelpful: boolean) => {
-    const value = isHelpful ? 'helpful' : 'not-helpful';
-    setHelpful(value);
-    
-    // Here you could store the feedback in the database
-    // For now, we'll just show a toast
-    toast({
-      title: "Thank you!",
-      description: `Marked as ${isHelpful ? 'helpful' : 'not helpful'}.`,
-    });
-
+  const handleFeedback = async (isHelpful: boolean) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const accessToken = session?.access_token;
 
-      console.log('Token:', accessToken);
-
+      // PATCH feedback
       await fetch(`/api/ai-answers/${aiAnswer.id}/feedback`, {
         method: 'PATCH',
         headers: {
@@ -138,14 +127,10 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
         body: JSON.stringify({ user_feedback_rating: isHelpful ? 1 : 0 })
       });
 
-      // Re-fetch the AI answer
-      const response = await fetch('/api/ai-answers/' + aiAnswer.id, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+      // Re-fetch updated AI answer
+      const response = await fetch(`/api/ai-answers/${aiAnswer.id}`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
       });
-
       const result = await response.json();
 
       if (response.ok) {
@@ -158,7 +143,6 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
         throw new Error(result.error || 'Failed to update AI answer');
       }
     } catch (error: any) {
-      console.error('Error updating AI answer:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update AI answer. Please try again.",
@@ -257,7 +241,7 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
               <Button
                 variant={helpful === 'helpful' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => markHelpful(true)}
+                onClick={() => handleFeedback(true)}
                 className="h-6 px-2"
               >
                 <ThumbsUp className="h-3 w-3 mr-1" />
@@ -266,7 +250,7 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
               <Button
                 variant={helpful === 'not-helpful' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => markHelpful(false)}
+                onClick={() => handleFeedback(false)}
                 className="h-6 px-2"
               >
                 <ThumbsDown className="h-3 w-3 mr-1" />
