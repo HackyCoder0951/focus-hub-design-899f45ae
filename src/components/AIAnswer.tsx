@@ -122,6 +122,49 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
       title: "Thank you!",
       description: `Marked as ${isHelpful ? 'helpful' : 'not helpful'}.`,
     });
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      console.log('Token:', accessToken);
+
+      await fetch(`/api/ai-answers/${aiAnswer.id}/feedback`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ user_feedback_rating: isHelpful ? 1 : 0 })
+      });
+
+      // Re-fetch the AI answer
+      const response = await fetch('/api/ai-answers/' + aiAnswer.id, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setAiAnswer(result.aiAnswer);
+        toast({
+          title: "AI Answer Updated!",
+          description: "AI answer updated based on your feedback.",
+        });
+      } else {
+        throw new Error(result.error || 'Failed to update AI answer');
+      }
+    } catch (error: any) {
+      console.error('Error updating AI answer:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update AI answer. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
