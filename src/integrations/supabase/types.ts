@@ -570,6 +570,448 @@ export type Database = {
         };
         Relationships: [];
       }
+      questions: {
+        Row: {
+          id: number;
+          user_id: string;
+          title: string;
+          body: string;
+          category: string | null;
+          status: string;
+          best_answer_id: number | null;
+          view_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          user_id: string;
+          title: string;
+          body: string;
+          category?: string | null;
+          status?: string;
+          best_answer_id?: number | null;
+          view_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          user_id?: string;
+          title?: string;
+          body?: string;
+          category?: string | null;
+          status?: string;
+          best_answer_id?: number | null;
+          view_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "questions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_best_answer_id_fkey"
+            columns: ["best_answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      question_tags: {
+        Row: {
+          id: number;
+          question_id: number;
+          tag_name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          question_id: number;
+          tag_name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          question_id?: number;
+          tag_name?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "question_tags_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      question_votes: {
+        Row: {
+          id: number;
+          question_id: number;
+          user_id: string;
+          vote_value: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          question_id: number;
+          user_id: string;
+          vote_value: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          question_id?: number;
+          user_id?: string;
+          vote_value?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "question_votes_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      question_notifications: {
+        Row: {
+          id: number;
+          question_id: number;
+          user_id: string;
+          notification_type: string;
+          message: string;
+          is_read: boolean;
+          related_id: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          question_id: number;
+          user_id: string;
+          notification_type: string;
+          message: string;
+          is_read?: boolean;
+          related_id?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          question_id?: number;
+          user_id?: string;
+          notification_type?: string;
+          message?: string;
+          is_read?: boolean;
+          related_id?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "question_notifications_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      answers: {
+        Row: {
+          id: number;
+          question_id: number;
+          user_id: string;
+          body: string;
+          is_accepted: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          question_id: number;
+          user_id: string;
+          body: string;
+          is_accepted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          question_id?: number;
+          user_id?: string;
+          body?: string;
+          is_accepted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      ai_answers: {
+        Row: {
+          id: number;
+          question_id: number;
+          answer_text: string;
+          confidence_score: number | null;
+          model_used: string | null;
+          tokens_used: number | null;
+          processing_time_ms: number | null;
+          relevance_score: number | null;
+          completeness_score: number | null;
+          user_feedback_rating: number | null;
+          generation_attempts: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          question_id: number;
+          answer_text: string;
+          confidence_score?: number | null;
+          model_used?: string | null;
+          tokens_used?: number | null;
+          processing_time_ms?: number | null;
+          relevance_score?: number | null;
+          completeness_score?: number | null;
+          user_feedback_rating?: number | null;
+          generation_attempts?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          question_id?: number;
+          answer_text?: string;
+          confidence_score?: number | null;
+          model_used?: string | null;
+          tokens_used?: number | null;
+          processing_time_ms?: number | null;
+          relevance_score?: number | null;
+          completeness_score?: number | null;
+          user_feedback_rating?: number | null;
+          generation_attempts?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      answer_comments: {
+        Row: {
+          id: number;
+          answer_id: number;
+          user_id: string;
+          parent_comment_id: number | null;
+          body: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          answer_id: number;
+          user_id: string;
+          parent_comment_id?: number | null;
+          body: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          answer_id?: number;
+          user_id?: string;
+          parent_comment_id?: number | null;
+          body?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "answer_comments_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answer_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answer_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "answer_comments"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      answer_votes: {
+        Row: {
+          id: number;
+          answer_id: number;
+          user_id: string;
+          vote_value: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          answer_id: number;
+          user_id: string;
+          vote_value: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          answer_id?: number;
+          user_id?: string;
+          vote_value?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "answer_votes_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answer_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      answer_notifications: {
+        Row: {
+          id: number;
+          answer_id: number;
+          user_id: string;
+          notification_type: string;
+          message: string;
+          is_read: boolean;
+          related_id: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          answer_id: number;
+          user_id: string;
+          notification_type: string;
+          message: string;
+          is_read?: boolean;
+          related_id?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          answer_id?: number;
+          user_id?: string;
+          notification_type?: string;
+          message?: string;
+          is_read?: boolean;
+          related_id?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "answer_notifications_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answer_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
+      answer_tags: {
+        Row: {
+          id: number;
+          answer_id: number;
+          tag_name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: number;
+          answer_id: number;
+          tag_name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: number;
+          answer_id?: number;
+          tag_name?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "answer_tags_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "answers"
+            referencedColumns: ["id"]
+          }
+        ];
+      };
     }
     Views: {
       [_ in never]: never
@@ -586,6 +1028,29 @@ export type Database = {
         Args: { p_chat_id: string; p_user_id: string }
         Returns: undefined
       }
+      get_vote_counts: {
+        Args: {
+          target_type: string;
+          target_id: number;
+        };
+        Returns: {
+          vote_count: number;
+          vote_score: number;
+        }[];
+      };
+      get_unread_notification_count: {
+        Args: {
+          user_uuid: string;
+        };
+        Returns: number;
+      };
+      mark_notifications_as_read: {
+        Args: {
+          user_uuid: string;
+          notification_ids: number[];
+        };
+        Returns: number;
+      };
     }
     Enums: {
       app_role: "admin" | "user"
