@@ -63,9 +63,6 @@ router.post('/generate', requireAuth, async (req, res) => {
           model_used,
           tokens_used,
           processing_time_ms,
-          confidence_score: null,
-          relevance_score: null,
-          completeness_score: null,
           user_feedback_rating: null,
           generation_attempts: 1
         }
