@@ -17,7 +17,7 @@ DECLARE
     vote_count INTEGER;
     vote_score INTEGER;
     target_type TEXT;
-    target_id INTEGER;
+    target_id UUID;
 BEGIN
     -- Determine if this is a question or answer vote
     IF TG_TABLE_NAME = 'question_votes' THEN
@@ -249,7 +249,7 @@ CREATE TRIGGER realtime_answer_vote_notification_trigger
     FOR EACH ROW EXECUTE FUNCTION create_realtime_notifications();
 
 -- Function to get real-time vote counts
-CREATE OR REPLACE FUNCTION get_vote_counts(target_type TEXT, target_id INTEGER)
+CREATE OR REPLACE FUNCTION get_vote_counts(target_type TEXT, target_id UUID)
 RETURNS TABLE(vote_count BIGINT, vote_score BIGINT) AS $$
 BEGIN
     IF target_type = 'question' THEN
@@ -291,7 +291,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to mark notifications as read
-CREATE OR REPLACE FUNCTION mark_notifications_as_read(user_uuid UUID, notification_ids INTEGER[])
+CREATE OR REPLACE FUNCTION mark_notifications_as_read(user_uuid UUID, notification_ids UUID[])
 RETURNS INTEGER AS $$
 DECLARE
     question_updated INTEGER;
@@ -314,6 +314,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Grant permissions for real-time functions
-GRANT EXECUTE ON FUNCTION get_vote_counts(TEXT, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_vote_counts(TEXT, UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_unread_notification_count(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION mark_notifications_as_read(UUID, INTEGER[]) TO authenticated; 
+GRANT EXECUTE ON FUNCTION mark_notifications_as_read(UUID, UUID[]) TO authenticated; 

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, TrendingUp, ChevronUp, ChevronDown, MessageCircle, Loader2, MoreVertical } from "lucide-react";
+import { Search, Plus, TrendingUp, ChevronUp, ChevronDown, MessageCircle, Loader2, MoreVertical, CheckCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,105 +13,161 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import AIAnswer from "@/components/AIAnswer";
+import type { Database } from "@/integrations/supabase/types";
+
+type Question = Database['public']['Tables']['questions']['Row'] & {
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
+  answer_count?: number;
+  vote_score?: number;
+};
+
+type Answer = Database['public']['Tables']['answers']['Row'] & {
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
+  vote_score?: number;
+};
+
+type Comment = Database['public']['Tables']['answer_comments']['Row'] & {
+  profiles: { full_name: string | null; avatar_url: string | null } | null;
+  replies?: Comment[];
+};
 
 const QandA = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreatingQuestion, setIsCreatingQuestion] = useState(false);
-  const [newQuestion, setNewQuestion] = useState("");
+  const [newQuestionTitle, setNewQuestionTitle] = useState("");
+  const [newQuestionBody, setNewQuestionBody] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
-  const [allAnswers, setAllAnswers] = useState<any[]>([]);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [answers, setAnswers] = useState<Answer[]>([]);
   const [answerLoading, setAnswerLoading] = useState(false);
   const [newAnswer, setNewAnswer] = useState("");
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<any | null>(null);
-  const [answerComments, setAnswerComments] = useState<any[]>([]);
+  const [selectedAnswer, setSelectedAnswer] = useState<Answer | null>(null);
+  const [answerComments, setAnswerComments] = useState<Comment[]>([]);
   const [commentInput, setCommentInput] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editContent, setEditContent] = useState("");
   const commentInputRef = useRef<HTMLInputElement>(null);
-  const [answerVotes, setAnswerVotes] = useState<{ [answerId: string]: number }>({});
-  const [userVotes, setUserVotes] = useState<{ [answerId: string]: number }>({});
-  const [expandedAnswerId, setExpandedAnswerId] = useState<string | null>(null);
-  const [questionVotes, setQuestionVotes] = useState<{ [questionId: string]: number }>({});
-  const [userQuestionVotes, setUserQuestionVotes] = useState<{ [questionId: string]: number }>({});
-  const [editQuestionMode, setEditQuestionMode] = useState<string | null>(null);
-  const [editQuestionContent, setEditQuestionContent] = useState("");
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [answerVotes, setAnswerVotes] = useState<{ [answerId: number]: number }>({});
+  const [userAnswerVotes, setUserAnswerVotes] = useState<{ [answerId: number]: number }>({});
+  const [expandedAnswerId, setExpandedAnswerId] = useState<number | null>(null);
+  const [questionVotes, setQuestionVotes] = useState<{ [questionId: number]: number }>({});
+  const [userQuestionVotes, setUserQuestionVotes] = useState<{ [questionId: number]: number }>({});
+  const [editQuestionMode, setEditQuestionMode] = useState<number | null>(null);
+  const [editQuestionTitle, setEditQuestionTitle] = useState("");
+  const [editQuestionBody, setEditQuestionBody] = useState("");
+  const [replyTo, setReplyTo] = useState<number | null>(null);
   const [replyInput, setReplyInput] = useState("");
 
   const categories = ["All", "React", "JavaScript", "Python", "Design", "Career"];
 
-  const fetchQuestionsAndAnswers = async () => {
+  const fetchQuestions = async () => {
     setLoading(true);
     try {
-      // Fetch questions (is_answered: false)
-      let qQuery = supabase
-        .from('questionanswers')
-        .select('*, profiles: user_id (full_name, avatar_url)')
-        .eq('is_answered', false)
+      // Fetch questions with user profiles and answer counts
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('questions')
+        .select(`
+          *,
+          profiles:user_id(id, full_name, avatar_url),
+          answers!inner(count)
+        `)
         .order('created_at', { ascending: false });
 
-      // Fetch answers (is_answered: true)
-      let aQuery = supabase
-        .from('questionanswers')
-        .select('*, profiles: user_id (full_name, avatar_url)')
-        .eq('is_answered', true)
-        .order('created_at', { ascending: true });
+      if (questionsError) throw questionsError;
 
-      // Fetch all votes for answers
-      let vQuery = (supabase.from as any)('answer_votes')
+      // Fetch vote counts for questions
+      const { data: questionVotesData, error: votesError } = await supabase
+        .from('question_votes')
         .select('*');
 
-      // Fetch all votes for questions
-      let qvQuery = (supabase.from as any)('question_votes')
-        .select('*');
+      if (votesError) throw votesError;
 
-      const [
-        { data: questions },
-        { data: answers },
-        { data: votes },
-        { data: qVotes }
-      ] = await Promise.all([qQuery, aQuery, vQuery, qvQuery]);
-      setQuestions(questions || []);
-      setAllAnswers(answers || []);
-      // Group votes by answerId
-      const voteCount: { [answerId: string]: number } = {};
-      const userVoteMap: { [answerId: string]: number } = {};
-      (votes || []).forEach((v: any) => {
-        voteCount[v.answer_id] = (voteCount[v.answer_id] || 0) + v.vote_type;
+      // Process questions data
+      const processedQuestions = (questionsData || []).map((q: any) => ({
+        ...q,
+        answer_count: q.answers?.[0]?.count || 0
+      }));
+
+      // Process vote data
+      const voteCount: { [questionId: number]: number } = {};
+      const userVoteMap: { [questionId: number]: number } = {};
+      
+      (questionVotesData || []).forEach((v: any) => {
+        voteCount[v.question_id] = (voteCount[v.question_id] || 0) + v.vote_value;
         if (user && v.user_id === user.id) {
-          userVoteMap[v.answer_id] = v.vote_type;
+          userVoteMap[v.question_id] = v.vote_value;
         }
       });
-      setAnswerVotes(voteCount);
-      setUserVotes(userVoteMap);
-      // Group question votes by questionId
-      const qVoteCount: { [questionId: string]: number } = {};
-      const userQVoteMap: { [questionId: string]: number } = {};
-      (qVotes || []).forEach((v: any) => {
-        qVoteCount[v.question_id] = (qVoteCount[v.question_id] || 0) + v.vote_type;
-        if (user && v.user_id === user.id) {
-          userQVoteMap[v.question_id] = v.vote_type;
-        }
-      });
-      setQuestionVotes(qVoteCount);
-      setUserQuestionVotes(userQVoteMap);
+
+      setQuestions(processedQuestions);
+      setQuestionVotes(voteCount);
+      setUserQuestionVotes(userVoteMap);
     } catch (error) {
-      // handle error
+      console.error('Error fetching questions:', error);
+      toast({
+        title: "Error loading questions",
+        description: "Failed to load questions. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchAnswers = async (questionId: number) => {
+    setAnswerLoading(true);
+    try {
+      const { data: answersData, error: answersError } = await supabase
+        .from('answers')
+        .select(`
+          *,
+          profiles:user_id(id, full_name, avatar_url)
+        `)
+        .eq('question_id', questionId)
+        .order('is_accepted', { ascending: false })
+        .order('created_at', { ascending: true });
+
+      if (answersError) throw answersError;
+
+      // Fetch vote counts for answers
+      const { data: answerVotesData, error: votesError } = await supabase
+        .from('answer_votes')
+        .select('*')
+        .in('answer_id', answersData?.map(a => a.id) || []);
+
+      if (votesError) throw votesError;
+
+      // Process vote data
+      const voteCount: { [answerId: number]: number } = {};
+      const userVoteMap: { [answerId: number]: number } = {};
+      
+      (answerVotesData || []).forEach((v: any) => {
+        voteCount[v.answer_id] = (voteCount[v.answer_id] || 0) + v.vote_value;
+        if (user && v.user_id === user.id) {
+          userVoteMap[v.answer_id] = v.vote_value;
+        }
+      });
+
+      setAnswers(answersData || []);
+      setAnswerVotes(voteCount);
+      setUserAnswerVotes(userVoteMap);
+    } catch (error) {
+      console.error('Error fetching answers:', error);
+      setAnswers([]);
+    } finally {
+      setAnswerLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchQuestionsAndAnswers();
-  }, [searchQuery]);
+    fetchQuestions();
+  }, []);
 
   const handleCreateQuestion = async () => {
     if (!user) {
@@ -123,10 +179,10 @@ const QandA = () => {
       return;
     }
 
-    if (!newQuestion.trim()) {
+    if (!newQuestionTitle.trim() || !newQuestionBody.trim()) {
       toast({
         title: "Question required",
-        description: "Please enter your question.",
+        description: "Please enter both title and body for your question.",
         variant: "destructive",
       });
       return;
@@ -136,10 +192,12 @@ const QandA = () => {
 
     try {
       const { error } = await supabase
-        .from('questionanswers')
+        .from('questions')
         .insert({
           user_id: user.id,
-          question: newQuestion.trim(),
+          title: newQuestionTitle.trim(),
+          body: newQuestionBody.trim(),
+          category: selectedCategory === "All" ? null : selectedCategory,
         });
 
       if (error) throw error;
@@ -149,8 +207,9 @@ const QandA = () => {
         description: "Your question has been published successfully.",
       });
 
-      setNewQuestion("");
-      fetchQuestionsAndAnswers(); // Refresh the questions list
+      setNewQuestionTitle("");
+      setNewQuestionBody("");
+      fetchQuestions(); // Refresh the questions list
     } catch (error: any) {
       console.error('Error creating question:', error);
       toast({
@@ -165,44 +224,23 @@ const QandA = () => {
 
   const filteredQuestions = questions.filter(question => {
     if (selectedCategory === "All") return true;
-    // For now, we'll just show all questions since we don't have category field
-    // In a real app, you'd filter by category
-    return true;
+    return question.category === selectedCategory;
   });
 
-  const unansweredQuestions = questions.filter(question => !question.is_answered);
+  const unansweredQuestions = questions.filter(question => question.answer_count === 0);
 
-  const fetchAnswers = async (questionText: string) => {
-    setAnswerLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('questionanswers')
-        .select('*, profiles: user_id (full_name, avatar_url)')
-        .eq('question', questionText)
-        .not('answer', 'is', null)
-        .eq('is_answered', true)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      setAllAnswers(data || []);
-    } catch (error) {
-      setAllAnswers([]);
-    } finally {
-      setAnswerLoading(false);
-    }
-  };
-
-  const handleOpenQuestion = (question: any) => {
+  const handleOpenQuestion = (question: Question) => {
     setSelectedQuestion(question);
-    fetchAnswers(question.question);
+    fetchAnswers(question.id);
   };
 
   const handleCloseDialog = () => {
     setSelectedQuestion(null);
-    setAllAnswers([]);
+    setAnswers([]);
     setNewAnswer("");
   };
 
-  const handleSubmitAnswer = async (questionObj) => {
+  const handleSubmitAnswer = async (questionId: number) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -222,12 +260,11 @@ const QandA = () => {
     setIsSubmittingAnswer(true);
     try {
       const { error } = await supabase
-        .from('questionanswers')
+        .from('answers')
         .insert({
           user_id: user.id,
-          question: questionObj.question,
-          answer: newAnswer.trim(),
-          is_answered: true,
+          question_id: questionId,
+          body: newAnswer.trim(),
         });
       if (error) throw error;
       toast({
@@ -235,7 +272,8 @@ const QandA = () => {
         description: "Your answer has been published.",
       });
       setNewAnswer("");
-      fetchAnswers(questionObj.question);
+      fetchAnswers(questionId);
+      fetchQuestions(); // Refresh question count
     } catch (error: any) {
       toast({
         title: "Error posting answer",
@@ -247,126 +285,204 @@ const QandA = () => {
     }
   };
 
-  const handleVote = async (answerId: string, type: 1 | -1) => {
+  const handleVote = async (answerId: number, voteValue: 1 | -1) => {
     if (!user) return;
-    const currentUserVote = userVotes[answerId] || 0;
-    if (currentUserVote !== 0) return; // Prevent multiple votes
+    
+    try {
+      const { error } = await supabase
+        .from('answer_votes')
+        .upsert({
+          answer_id: answerId,
+          user_id: user.id,
+          vote_value: voteValue,
+        });
 
-    await (supabase.from as any)('answer_votes').upsert({
-      answer_id: answerId,
-      user_id: user.id,
-      vote_type: type,
-    });
+      if (error) throw error;
 
-    // Update local state instantly
-    setUserVotes(prev => ({ ...prev, [answerId]: type }));
-    setAnswerVotes(prev => ({
-      ...prev,
-      [answerId]: (prev[answerId] || 0) + type
-    }));
+      // Update local state
+      setUserAnswerVotes(prev => ({ ...prev, [answerId]: voteValue }));
+      setAnswerVotes(prev => ({
+        ...prev,
+        [answerId]: (prev[answerId] || 0) + voteValue
+      }));
+    } catch (error) {
+      console.error('Error voting:', error);
+    }
+  };
+
+  const handleQuestionVote = async (questionId: number, voteValue: 1 | -1) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('question_votes')
+        .upsert({
+          question_id: questionId,
+          user_id: user.id,
+          vote_value: voteValue,
+        });
+
+      if (error) throw error;
+
+      // Update local state
+      setUserQuestionVotes(prev => ({ ...prev, [questionId]: voteValue }));
+      setQuestionVotes(prev => ({
+        ...prev,
+        [questionId]: (prev[questionId] || 0) + voteValue
+      }));
+    } catch (error) {
+      console.error('Error voting:', error);
+    }
   };
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !commentInput.trim() || !selectedAnswer) return;
-    setCommentLoading(true);
-    await (supabase.from as any)("answer_comments").insert({
-      answer_id: selectedAnswer.id,
-      user_id: user.id,
-      comment: commentInput.trim(),
-      parent_comment_id: null,
-    });
-    setCommentInput("");
-    await fetchAnswerComments(selectedAnswer.id);
-    setCommentLoading(false);
-    if (commentInputRef.current) commentInputRef.current.focus();
-  };
-
-  const handleEditAnswer = async (answerId: string, questionText: string, newContent: string) => {
-    if (!user || !newContent.trim()) return;
-    await supabase.from('questionanswers').update({ answer: newContent.trim() }).eq('id', answerId);
-    setEditMode(false);
-    setEditContent("");
-    fetchAnswers(questionText);
-  };
-
-  const handleDeleteAnswer = async (answerId: string, questionText: string) => {
-    if (!user) return;
-    await supabase.from('questionanswers').delete().eq('id', answerId);
-    fetchAnswers(questionText);
-  };
-
-  const fetchAnswerComments = async (answerId: string) => {
+    
     setCommentLoading(true);
     try {
-      const { data, error } = await (supabase.from as any)("answer_comments")
-        .select("*, profiles: user_id (full_name, avatar_url)")
-        .eq("answer_id", answerId)
-        .order("created_at", { ascending: true });
+      const { error } = await supabase
+        .from('answer_comments')
+        .insert({
+          answer_id: selectedAnswer.id,
+          user_id: user.id,
+          body: commentInput.trim(),
+          parent_comment_id: null,
+        });
+
+      if (error) throw error;
+
+      setCommentInput("");
+      await fetchAnswerComments(selectedAnswer.id);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    } finally {
+      setCommentLoading(false);
+      if (commentInputRef.current) commentInputRef.current.focus();
+    }
+  };
+
+  const fetchAnswerComments = async (answerId: number) => {
+    setCommentLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('answer_comments')
+        .select(`
+          *,
+          profiles:user_id(id, full_name, avatar_url)
+        `)
+        .eq('answer_id', answerId)
+        .order('created_at', { ascending: true });
+
       if (error) throw error;
       setAnswerComments(data || []);
-    } catch {
+    } catch (error) {
+      console.error('Error fetching comments:', error);
       setAnswerComments([]);
     } finally {
       setCommentLoading(false);
     }
   };
 
-  const fetchAnswerVotes = async (answerId: string) => {
-    const { data: votes, error } = await (supabase.from as any)('answer_votes')
-      .select('*')
-      .eq('answer_id', answerId);
-    if (!error && votes) {
-      setAnswerVotes(votes.reduce((sum: number, v: any) => sum + v.vote_type, 0));
-      if (user) {
-        const myVote = votes.find((v: any) => v.user_id === user.id);
-        setUserVotes(myVote ? { [answerId]: myVote.vote_type } : {});
+  const handleEditAnswer = async (answerId: number, newContent: string) => {
+    if (!user || !newContent.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('answers')
+        .update({ body: newContent.trim() })
+        .eq('id', answerId);
+
+      if (error) throw error;
+
+      setEditMode(false);
+      setEditContent("");
+      if (selectedQuestion) {
+        fetchAnswers(selectedQuestion.id);
       }
+    } catch (error) {
+      console.error('Error editing answer:', error);
     }
   };
 
-  const handleQuestionVote = async (questionId: string, type: 1 | -1) => {
+  const handleDeleteAnswer = async (answerId: number) => {
     if (!user) return;
-    const currentUserVote = userQuestionVotes[questionId] || 0;
-    if (currentUserVote !== 0) return;
+    
+    try {
+      const { error } = await supabase
+        .from('answers')
+        .delete()
+        .eq('id', answerId);
 
-    await (supabase.from as any)('question_votes').upsert({
-      question_id: questionId,
-      user_id: user.id,
-      vote_type: type,
-    });
+      if (error) throw error;
 
-    setUserQuestionVotes(prev => ({ ...prev, [questionId]: type }));
-    setQuestionVotes(prev => ({
-      ...prev,
-      [questionId]: (prev[questionId] || 0) + type
-    }));
+      if (selectedQuestion) {
+        fetchAnswers(selectedQuestion.id);
+        fetchQuestions(); // Refresh question count
+      }
+    } catch (error) {
+      console.error('Error deleting answer:', error);
+    }
   };
 
-  const handleEditQuestion = async (questionId: string) => {
-    if (!user || !editQuestionContent.trim()) return;
-    await supabase.from('questionanswers').update({ question: editQuestionContent.trim() }).eq('id', questionId);
-    setEditQuestionMode(null);
-    setEditQuestionContent("");
-    fetchQuestionsAndAnswers();
+  const handleEditQuestion = async (questionId: number) => {
+    if (!user || !editQuestionTitle.trim() || !editQuestionBody.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .update({ 
+          title: editQuestionTitle.trim(),
+          body: editQuestionBody.trim()
+        })
+        .eq('id', questionId);
+
+      if (error) throw error;
+
+      setEditQuestionMode(null);
+      setEditQuestionTitle("");
+      setEditQuestionBody("");
+      fetchQuestions();
+    } catch (error) {
+      console.error('Error editing question:', error);
+    }
   };
 
-  const handleDeleteQuestion = async (questionId: string) => {
+  const handleDeleteQuestion = async (questionId: number) => {
     if (!user) return;
-    await supabase.from('questionanswers').delete().eq('id', questionId);
-    fetchQuestionsAndAnswers();
+    
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', questionId);
+
+      if (error) throw error;
+
+      fetchQuestions();
+    } catch (error) {
+      console.error('Error deleting question:', error);
+    }
   };
 
-  const handleDeleteComment = async (commentId: string, answerId: string) => {
+  const handleDeleteComment = async (commentId: number, answerId: number) => {
     if (!user) return;
+    
     setCommentLoading(true);
     try {
-      await (supabase.from as any)("answer_comments").delete().eq("id", commentId);
+      const { error } = await supabase
+        .from('answer_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
       await fetchAnswerComments(answerId);
     } catch (error) {
+      console.error('Error deleting comment:', error);
       toast({
         title: "Error deleting comment",
-        description: (error as any)?.message || "Something went wrong.",
+        description: "Something went wrong.",
         variant: "destructive",
       });
     } finally {
@@ -374,37 +490,93 @@ const QandA = () => {
     }
   };
 
-  function buildCommentTree(comments) {
-    const map = {};
-    const roots = [];
-    comments.forEach(c => { map[c.id] = { ...c, replies: [] }; });
+  const handleAddReply = async (e: React.FormEvent, parentId: number) => {
+    e.preventDefault();
+    if (!user || !replyInput.trim() || !selectedAnswer) return;
+    
+    setCommentLoading(true);
+    try {
+      const { error } = await supabase
+        .from('answer_comments')
+        .insert({
+          answer_id: selectedAnswer.id,
+          user_id: user.id,
+          body: replyInput.trim(),
+          parent_comment_id: parentId,
+        });
+
+      if (error) throw error;
+
+      setReplyInput("");
+      setReplyTo(null);
+      await fetchAnswerComments(selectedAnswer.id);
+    } catch (error) {
+      console.error('Error adding reply:', error);
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
+  const handleAcceptAnswer = async (answerId: number) => {
+    if (!user || !selectedQuestion) return;
+    
+    try {
+      // First, unaccept all other answers for this question
+      await supabase
+        .from('answers')
+        .update({ is_accepted: false })
+        .eq('question_id', selectedQuestion.id);
+
+      // Then accept the selected answer
+      const { error } = await supabase
+        .from('answers')
+        .update({ is_accepted: true })
+        .eq('id', answerId);
+
+      if (error) throw error;
+
+      fetchAnswers(selectedQuestion.id);
+    } catch (error) {
+      console.error('Error accepting answer:', error);
+    }
+  };
+
+  function buildCommentTree(comments: Comment[]): Comment[] {
+    const map: { [key: number]: Comment } = {};
+    const roots: Comment[] = [];
+    
+    comments.forEach(c => { 
+      map[c.id] = { ...c, replies: [] }; 
+    });
+    
     comments.forEach(c => {
       if (c.parent_comment_id) {
-        map[c.parent_comment_id]?.replies.push(map[c.id]);
+        map[c.parent_comment_id]?.replies?.push(map[c.id]);
       } else {
         roots.push(map[c.id]);
       }
     });
+    
     return roots;
   }
 
-  function CommentThread({ comments }) {
+  function CommentThread({ comments }: { comments: Comment[] }) {
     return comments.map((c) => (
       <div key={c.id} className="flex gap-2 items-start mt-2 ml-0" style={{ marginLeft: c.parent_comment_id ? 24 : 0 }}>
         <Avatar className="h-6 w-6">
-          <AvatarImage src={c.profiles?.avatar_url} />
-          <AvatarFallback>{c.profiles?.full_name?.charAt(0)}</AvatarFallback>
+          <AvatarImage src={c.profiles?.avatar_url || undefined} />
+          <AvatarFallback>{c.profiles?.full_name?.charAt(0) || "U"}</AvatarFallback>
         </Avatar>
         <div className="bg-muted rounded-lg px-3 py-2 flex-1">
           <div className="flex items-center gap-2">
             <span className="font-medium text-xs">{c.profiles?.full_name || "Unknown User"}</span>
-            <span className="text-xs text-muted-foreground">{c.created_at ? new Date(c.created_at).toLocaleString() : ''}</span>
+            <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleString()}</span>
             {user && c.user_id === user.id && (
               <Button
                 size="sm"
                 variant="ghost"
                 className="text-red-500 ml-2 px-2 py-0 h-6"
-                onClick={() => handleDeleteComment(c.id, selectedAnswer?.id)}
+                onClick={() => handleDeleteComment(c.id, selectedAnswer?.id || 0)}
                 disabled={commentLoading}
               >
                 Delete
@@ -420,7 +592,7 @@ const QandA = () => {
               Reply
             </Button>
           </div>
-          <div className="text-sm mt-1">{c.comment}</div>
+          <div className="text-sm mt-1">{c.body}</div>
           {replyTo === c.id && (
             <form onSubmit={e => handleAddReply(e, c.id)} className="flex gap-2 items-center mt-2">
               <input
@@ -451,22 +623,6 @@ const QandA = () => {
     ));
   }
 
-  const handleAddReply = async (e: React.FormEvent, parentId: string) => {
-    e.preventDefault();
-    if (!user || !replyInput.trim() || !selectedAnswer) return;
-    setCommentLoading(true);
-    await (supabase.from as any)("answer_comments").insert({
-      answer_id: selectedAnswer.id,
-      user_id: user.id,
-      comment: replyInput.trim(),
-      parent_comment_id: parentId,
-    });
-    setReplyInput("");
-    setReplyTo(null);
-    await fetchAnswerComments(selectedAnswer.id);
-    setCommentLoading(false);
-  };
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
@@ -477,27 +633,55 @@ const QandA = () => {
         </div>
         <Dialog>
           <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Ask Question
-        </Button>
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Ask Question
+            </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Ask a Question</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <Textarea
-                placeholder="What would you like to ask?"
-                value={newQuestion}
-                onChange={(e) => setNewQuestion(e.target.value)}
-                className="min-h-[120px]"
-                disabled={isCreatingQuestion}
-              />
+              <div>
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  placeholder="What's your question? Be specific."
+                  value={newQuestionTitle}
+                  onChange={(e) => setNewQuestionTitle(e.target.value)}
+                  className="mt-1"
+                  disabled={isCreatingQuestion}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Details</label>
+                <Textarea
+                  placeholder="Provide more context about your question..."
+                  value={newQuestionBody}
+                  onChange={(e) => setNewQuestionBody(e.target.value)}
+                  className="min-h-[120px] mt-1"
+                  disabled={isCreatingQuestion}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full mt-1 p-2 border rounded-md"
+                  disabled={isCreatingQuestion}
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button
                   onClick={handleCreateQuestion}
-                  disabled={!newQuestion.trim() || isCreatingQuestion}
+                  disabled={!newQuestionTitle.trim() || !newQuestionBody.trim() || isCreatingQuestion}
                 >
                   {isCreatingQuestion ? (
                     <>
@@ -563,10 +747,8 @@ const QandA = () => {
           ) : filteredQuestions.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">No questions found.</div>
           ) : (
-            filteredQuestions.map((question) => {
-              const answersForThisQuestion = allAnswers.filter(ans => ans.question === question.question);
-              return (
-                <Card key={question.id} className="hover:shadow-md transition-shadow cursor-pointer mb-6">
+            filteredQuestions.map((question) => (
+              <Card key={question.id} className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex gap-4">
                     {/* Vote Section */}
@@ -594,11 +776,20 @@ const QandA = () => {
                     {/* Question Content */}
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg hover:text-primary">
-                          {question.question}
+                        <h3 
+                          className="font-semibold text-lg hover:text-primary cursor-pointer"
+                          onClick={() => handleOpenQuestion(question)}
+                        >
+                          {question.title}
                         </h3>
-                        {!question.is_answered && (
+                        {question.answer_count === 0 && (
                           <Badge variant="secondary" className="text-xs">Unanswered</Badge>
+                        )}
+                        {question.best_answer_id && (
+                          <Badge variant="default" className="text-xs">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Answered
+                          </Badge>
                         )}
                         {user && question.user_id === user.id && editQuestionMode !== question.id && (
                           <div className="ml-auto">
@@ -612,14 +803,17 @@ const QandA = () => {
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setEditQuestionMode(question.id);
-                                    setEditQuestionContent(question.question);
+                                    setEditQuestionTitle(question.title);
+                                    setEditQuestionBody(question.body);
                                   }}
                                 >
                                   Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => {
-                                    if (window.confirm('Are you sure you want to delete this question?')) handleDeleteQuestion(question.id);
+                                    if (window.confirm('Are you sure you want to delete this question?')) {
+                                      handleDeleteQuestion(question.id);
+                                    }
                                   }}
                                   className="text-red-600"
                                 >
@@ -630,156 +824,67 @@ const QandA = () => {
                           </div>
                         )}
                       </div>
-                      <p className="text-muted-foreground text-sm line-clamp-2">
-                        {question.answer || "No answer yet."}
-                      </p>
+                      
+                      {editQuestionMode === question.id ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editQuestionTitle}
+                            onChange={(e) => setEditQuestionTitle(e.target.value)}
+                            placeholder="Question title"
+                          />
+                          <Textarea
+                            value={editQuestionBody}
+                            onChange={(e) => setEditQuestionBody(e.target.value)}
+                            placeholder="Question details"
+                            className="min-h-[80px]"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleEditQuestion(question.id)}
+                              disabled={!editQuestionTitle.trim() || !editQuestionBody.trim()}
+                            >
+                              Save
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => setEditQuestionMode(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground text-sm line-clamp-2">
+                          {question.body}
+                        </p>
+                      )}
+                      
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarImage src={question.profiles?.avatar_url} />
-                              <AvatarFallback>{question.profiles?.full_name?.charAt(0)}</AvatarFallback>
+                              <AvatarImage src={question.profiles?.avatar_url || undefined} />
+                              <AvatarFallback>{question.profiles?.full_name?.charAt(0) || "U"}</AvatarFallback>
                             </Avatar>
-                            <span>{question.profiles?.full_name}</span>
+                            <span>{question.profiles?.full_name || "Unknown User"}</span>
                           </div>
-                          <span>{question.created_at ? new Date(question.created_at).toLocaleDateString() : ''}</span>
+                          <span>{new Date(question.created_at).toLocaleDateString()}</span>
+                          {question.category && (
+                            <Badge variant="outline" className="text-xs">{question.category}</Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <MessageCircle className="h-4 w-4" />
-                            <span>{answersForThisQuestion.length} answers</span>
-                          </div>
+                          <span>{question.answer_count} answers</span>
                         </div>
-                        {/* AI Answer Section */}
-                        <AIAnswer 
-                          questionId={question.id}
-                          question={question.question}
-                          onAnswerGenerated={(answer) => {
-                            // Refresh the questions list to show the AI answer
-                            fetchQuestionsAndAnswers();
-                          }}
-                        />
-                        
-                        {/* User Answers Section */}
-                        <div className="font-semibold mt-4">User Answers</div>
-                        {answerLoading ? (
-                          <div className="text-center py-4"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
-                        ) : answersForThisQuestion.length === 0 ? (
-                          <div className="text-muted-foreground">No user answers yet. Be the first to answer!</div>
-                        ) : (
-                          <div className="space-y-3 max-h-60 overflow-y-auto">
-                            {answersForThisQuestion.map((ans) => (
-                              <div key={ans.id} className="border rounded p-3 flex gap-3 items-start">
-                                <Avatar className="h-7 w-7">
-                                  <AvatarImage src={ans.profiles?.avatar_url} />
-                                  <AvatarFallback>{ans.profiles?.full_name?.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <div className="font-medium">{ans.profiles?.full_name}</div>
-                                    <span className="text-xs text-muted-foreground">{ans.created_at ? new Date(ans.created_at).toLocaleString() : ''}</span>
-                                  </div>
-                                  {editMode && expandedAnswerId === ans.id ? (
-                                    <form onSubmit={e => { e.preventDefault(); handleEditAnswer(ans.id, ans.question, editContent); }} className="flex flex-col gap-2 mt-2">
-                                      <Textarea value={editContent} onChange={e => setEditContent(e.target.value)} className="min-h-[60px]" />
-                                      <div className="flex gap-2 justify-end">
-                                        <Button type="submit" size="sm" disabled={!editContent.trim()}>Save</Button>
-                                        <Button type="button" size="sm" variant="outline" onClick={() => setEditMode(false)}>Cancel</Button>
-                                      </div>
-                                    </form>
-                                  ) : (
-                                    <div className="text-base">{ans.answer}</div>
-                                  )}
-                                  <div className="flex items-center gap-2 pt-2">
-                                    <Button
-                                      variant={userVotes[ans.id] === 1 ? "default" : "ghost"}
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => handleVote(ans.id, 1)}
-                                      disabled={userVotes[ans.id] !== undefined && userVotes[ans.id] !== 0}
-                                    >
-                                      <ChevronUp className="h-4 w-4" />
-                                    </Button>
-                                    <span className="font-semibold text-lg">{answerVotes[ans.id] || 0}</span>
-                                    <Button
-                                      variant={userVotes[ans.id] === -1 ? "default" : "ghost"}
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => handleVote(ans.id, -1)}
-                                      disabled={userVotes[ans.id] !== undefined && userVotes[ans.id] !== 0}
-                                    >
-                                      <ChevronDown className="h-4 w-4" />
-                                    </Button>
-                                    {user && ans.user_id === user.id && (
-                                      <>
-                                        <Button size="sm" variant="outline" onClick={() => { setEditMode(true); setEditContent(ans.answer); setExpandedAnswerId(ans.id); }}>Edit</Button>
-                                        <Button size="sm" variant="destructive" onClick={() => handleDeleteAnswer(ans.id, ans.question)}>Delete</Button>
-                                      </>
-                                    )}
-                                    <Button size="sm" variant="ghost" onClick={() => setExpandedAnswerId(expandedAnswerId === ans.id ? null : ans.id)}>
-                                      {expandedAnswerId === ans.id ? "Hide Comments" : "Show Comments"}
-                                    </Button>
-                                  </div>
-                                  {expandedAnswerId === ans.id && (
-                                    <div className="pt-4">
-                                      <div className="font-semibold mb-2">Comments</div>
-                                      {commentLoading ? (
-                                        <div className="text-center py-2"><Loader2 className="h-4 w-4 animate-spin mx-auto" /></div>
-                                      ) : answerComments.length === 0 ? (
-                                        <div className="text-muted-foreground">No comments yet.</div>
-                                      ) : (
-                                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                                          {CommentThread({ comments: buildCommentTree(answerComments) })}
-                                        </div>
-                                      )}
-                                      {user && (
-                                        <form onSubmit={handleAddComment} className="flex gap-2 items-center mt-3">
-                                          <Avatar className="h-6 w-6">
-                                            <AvatarImage src={user?.user_metadata?.avatar_url} />
-                                            <AvatarFallback>{user?.user_metadata?.full_name?.charAt(0) || "U"}</AvatarFallback>
-                                          </Avatar>
-                                          <input
-                                            ref={commentInputRef}
-                                            type="text"
-                                            className="flex-1 rounded-full border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                                            placeholder="Add a comment..."
-                                            value={commentInput}
-                                            onChange={e => setCommentInput(e.target.value)}
-                                            disabled={commentLoading}
-                                            maxLength={500}
-                                          />
-                                          <Button type="submit" size="sm" disabled={commentLoading || !commentInput.trim()}>
-                                            Post
-                                          </Button>
-                                        </form>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <div className="pt-2">
-                          <Textarea
-                            placeholder="Write your answer..."
-                            value={newAnswer}
-                            onChange={e => setNewAnswer(e.target.value)}
-                            disabled={isSubmittingAnswer}
-                            className="min-h-[80px]"
-                          />
-                          <div className="flex justify-end pt-2">
-                            <Button onClick={() => handleSubmitAnswer(question)} disabled={!newAnswer.trim() || isSubmittingAnswer}>
-                              {isSubmittingAnswer ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                              {isSubmittingAnswer ? "Posting..." : "Post Answer"}
-                            </Button>
-                          </div>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              );
-            })
+            ))
           )}
         </TabsContent>
         
@@ -825,21 +930,30 @@ const QandA = () => {
                     </div>
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg hover:text-primary">
-                          {question.question}
+                        <h3 
+                          className="font-semibold text-lg hover:text-primary cursor-pointer"
+                          onClick={() => handleOpenQuestion(question)}
+                        >
+                          {question.title}
                         </h3>
                         <Badge variant="secondary" className="text-xs">Unanswered</Badge>
                       </div>
+                      <p className="text-muted-foreground text-sm line-clamp-2">
+                        {question.body}
+                      </p>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-2">
                             <Avatar className="h-6 w-6">
-                              <AvatarImage src={question.profiles?.avatar_url} />
-                              <AvatarFallback>{question.profiles?.full_name?.charAt(0)}</AvatarFallback>
+                              <AvatarImage src={question.profiles?.avatar_url || undefined} />
+                              <AvatarFallback>{question.profiles?.full_name?.charAt(0) || "U"}</AvatarFallback>
                             </Avatar>
-                            <span>{question.profiles?.full_name}</span>
+                            <span>{question.profiles?.full_name || "Unknown User"}</span>
                           </div>
-                          <span>{question.created_at ? new Date(question.created_at).toLocaleDateString() : ''}</span>
+                          <span>{new Date(question.created_at).toLocaleDateString()}</span>
+                          {question.category && (
+                            <Badge variant="outline" className="text-xs">{question.category}</Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -850,6 +964,248 @@ const QandA = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Question Detail Dialog */}
+      {selectedQuestion && (
+        <Dialog open={!!selectedQuestion} onOpenChange={handleCloseDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedQuestion.title}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Question Details */}
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="text-sm">{selectedQuestion.body}</p>
+                <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={selectedQuestion.profiles?.avatar_url || undefined} />
+                      <AvatarFallback>{selectedQuestion.profiles?.full_name?.charAt(0) || "U"}</AvatarFallback>
+                    </Avatar>
+                    <span>{selectedQuestion.profiles?.full_name || "Unknown User"}</span>
+                  </div>
+                  <span>{new Date(selectedQuestion.created_at).toLocaleDateString()}</span>
+                  {selectedQuestion.category && (
+                    <Badge variant="outline">{selectedQuestion.category}</Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* AI Answer Section */}
+              <AIAnswer 
+                questionId={selectedQuestion.id.toString()}
+                question={selectedQuestion.title + "\n\n" + selectedQuestion.body}
+                onAnswerGenerated={(answer) => {
+                  // Refresh the answers list to show the AI answer
+                  fetchAnswers(selectedQuestion.id);
+                }}
+              />
+              
+              {/* User Answers Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">User Answers</h3>
+                {answerLoading ? (
+                  <div className="text-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                  </div>
+                ) : answers.length === 0 ? (
+                  <div className="text-muted-foreground">No user answers yet. Be the first to answer!</div>
+                ) : (
+                  <div className="space-y-4">
+                    {answers.map((answer) => (
+                      <div key={answer.id} className="border rounded-lg p-4">
+                        <div className="flex gap-3 items-start">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={answer.profiles?.avatar_url || undefined} />
+                            <AvatarFallback>{answer.profiles?.full_name?.charAt(0) || "U"}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="font-medium">{answer.profiles?.full_name || "Unknown User"}</div>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(answer.created_at).toLocaleString()}
+                              </span>
+                              {answer.is_accepted && (
+                                <Badge variant="default" className="text-xs">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Accepted
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {editMode && expandedAnswerId === answer.id ? (
+                              <form onSubmit={e => { 
+                                e.preventDefault(); 
+                                handleEditAnswer(answer.id, editContent); 
+                              }} className="space-y-2">
+                                <Textarea 
+                                  value={editContent} 
+                                  onChange={e => setEditContent(e.target.value)} 
+                                  className="min-h-[80px]" 
+                                />
+                                <div className="flex gap-2 justify-end">
+                                  <Button type="submit" size="sm" disabled={!editContent.trim()}>
+                                    Save
+                                  </Button>
+                                  <Button 
+                                    type="button" 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => setEditMode(false)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </form>
+                            ) : (
+                              <div className="text-base mb-3">{answer.body}</div>
+                            )}
+                            
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant={userAnswerVotes[answer.id] === 1 ? "default" : "ghost"}
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleVote(answer.id, 1)}
+                                disabled={userAnswerVotes[answer.id] !== undefined && userAnswerVotes[answer.id] !== 0}
+                              >
+                                <ChevronUp className="h-4 w-4" />
+                              </Button>
+                              <span className="font-semibold text-lg">{answerVotes[answer.id] || 0}</span>
+                              <Button
+                                variant={userAnswerVotes[answer.id] === -1 ? "default" : "ghost"}
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleVote(answer.id, -1)}
+                                disabled={userAnswerVotes[answer.id] !== undefined && userAnswerVotes[answer.id] !== 0}
+                              >
+                                <ChevronDown className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            
+                            {/* Answer Actions */}
+                            <div className="flex items-center gap-2 mt-3">
+                              {user && answer.user_id === user.id && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setEditMode(true);
+                                      setExpandedAnswerId(answer.id);
+                                      setEditContent(answer.body);
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="text-red-500"
+                                    onClick={() => {
+                                      if (window.confirm('Are you sure you want to delete this answer?')) {
+                                        handleDeleteAnswer(answer.id);
+                                      }
+                                    }}
+                                  >
+                                    Delete
+                                  </Button>
+                                </>
+                              )}
+                              {user && selectedQuestion && selectedQuestion.user_id === user.id && !answer.is_accepted && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleAcceptAnswer(answer.id)}
+                                >
+                                  Accept Answer
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedAnswer(answer);
+                                  fetchAnswerComments(answer.id);
+                                  setExpandedAnswerId(expandedAnswerId === answer.id ? null : answer.id);
+                                }}
+                              >
+                                <MessageCircle className="h-4 w-4 mr-1" />
+                                Comments
+                              </Button>
+                            </div>
+                            
+                            {/* Comments Section */}
+                            {expandedAnswerId === answer.id && selectedAnswer?.id === answer.id && (
+                              <div className="mt-4 border-t pt-4">
+                                <h4 className="font-medium mb-3">Comments</h4>
+                                {commentLoading ? (
+                                  <div className="text-center py-2">
+                                    <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <CommentThread comments={buildCommentTree(answerComments)} />
+                                    <form onSubmit={handleAddComment} className="flex gap-2 items-center mt-3">
+                                      <input
+                                        ref={commentInputRef}
+                                        type="text"
+                                        className="flex-1 rounded-full border px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                                        placeholder="Add a comment..."
+                                        value={commentInput}
+                                        onChange={e => setCommentInput(e.target.value)}
+                                        disabled={commentLoading}
+                                        maxLength={500}
+                                      />
+                                      <Button type="submit" size="sm" disabled={commentLoading || !commentInput.trim()}>
+                                        Post
+                                      </Button>
+                                    </form>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Add Answer Section */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Your Answer</h3>
+                <div className="space-y-4">
+                  <Textarea
+                    placeholder="Write your answer..."
+                    value={newAnswer}
+                    onChange={(e) => setNewAnswer(e.target.value)}
+                    className="min-h-[120px]"
+                    disabled={isSubmittingAnswer}
+                  />
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={() => handleSubmitAnswer(selectedQuestion.id)}
+                      disabled={!newAnswer.trim() || isSubmittingAnswer}
+                    >
+                      {isSubmittingAnswer ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Posting...
+                        </>
+                      ) : (
+                        'Post Answer'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

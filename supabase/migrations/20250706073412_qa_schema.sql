@@ -7,13 +7,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Questions Table
 CREATE TABLE IF NOT EXISTS questions (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     body TEXT NOT NULL,
     category TEXT,
     status TEXT DEFAULT 'open' CHECK (status IN ('open', 'closed', 'duplicate')),
-    best_answer_id INTEGER, -- Will be set by trigger or application logic
+    best_answer_id UUID, -- Will be set by trigger or application logic
     view_count INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS questions (
 
 -- 2. Question Tags Table (Normalized tags)
 CREATE TABLE IF NOT EXISTS question_tags (
-    id SERIAL PRIMARY KEY,
-    question_id INTEGER REFERENCES questions(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
     tag_name TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(question_id, tag_name)
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS question_tags (
 
 -- 3. Question Votes Table
 CREATE TABLE IF NOT EXISTS question_votes (
-    id SERIAL PRIMARY KEY,
-    question_id INTEGER REFERENCES questions(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     vote_value SMALLINT CHECK (vote_value IN (1, -1)), -- 1 for upvote, -1 for downvote
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -41,20 +41,20 @@ CREATE TABLE IF NOT EXISTS question_votes (
 
 -- 4. Question Notifications Table
 CREATE TABLE IF NOT EXISTS question_notifications (
-    id SERIAL PRIMARY KEY,
-    question_id INTEGER REFERENCES questions(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     notification_type TEXT CHECK (notification_type IN ('answer', 'comment', 'vote', 'best_answer')),
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    related_id INTEGER, -- ID of related answer, comment, etc.
+    related_id UUID, -- ID of related answer, comment, etc.
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 5. Answers Table
 CREATE TABLE IF NOT EXISTS answers (
-    id SERIAL PRIMARY KEY,
-    question_id INTEGER REFERENCES questions(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     body TEXT NOT NULL,
     is_accepted BOOLEAN DEFAULT FALSE,
@@ -64,8 +64,8 @@ CREATE TABLE IF NOT EXISTS answers (
 
 -- 6. AI Answer Table
 CREATE TABLE IF NOT EXISTS ai_answers (
-    id SERIAL PRIMARY KEY,
-    question_id INTEGER REFERENCES questions(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
     answer_text TEXT NOT NULL,
     confidence_score DECIMAL(3,2) CHECK (confidence_score >= 0 AND confidence_score <= 1),
     model_used TEXT,
@@ -80,10 +80,10 @@ CREATE TABLE IF NOT EXISTS ai_answers (
 
 -- 7. Answer Comments Table
 CREATE TABLE IF NOT EXISTS answer_comments (
-    id SERIAL PRIMARY KEY,
-    answer_id INTEGER REFERENCES answers(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    answer_id UUID REFERENCES answers(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    parent_comment_id INTEGER REFERENCES answer_comments(id) ON DELETE CASCADE,
+    parent_comment_id UUID REFERENCES answer_comments(id) ON DELETE CASCADE,
     body TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS answer_comments (
 
 -- 8. Answer Votes Table
 CREATE TABLE IF NOT EXISTS answer_votes (
-    id SERIAL PRIMARY KEY,
-    answer_id INTEGER REFERENCES answers(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    answer_id UUID REFERENCES answers(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     vote_value SMALLINT CHECK (vote_value IN (1, -1)), -- 1 for upvote, -1 for downvote
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -102,20 +102,20 @@ CREATE TABLE IF NOT EXISTS answer_votes (
 
 -- 9. Answer Notifications Table
 CREATE TABLE IF NOT EXISTS answer_notifications (
-    id SERIAL PRIMARY KEY,
-    answer_id INTEGER REFERENCES answers(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    answer_id UUID REFERENCES answers(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     notification_type TEXT CHECK (notification_type IN ('comment', 'vote', 'acceptance', 'mention')),
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    related_id INTEGER, -- ID of related comment, vote, etc.
+    related_id UUID, -- ID of related comment, vote, etc.
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 10. Answer Tags Table
 CREATE TABLE IF NOT EXISTS answer_tags (
-    id SERIAL PRIMARY KEY,
-    answer_id INTEGER REFERENCES answers(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    answer_id UUID REFERENCES answers(id) ON DELETE CASCADE,
     tag_name TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(answer_id, tag_name)
