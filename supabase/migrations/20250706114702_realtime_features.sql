@@ -294,21 +294,22 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION mark_notifications_as_read(user_uuid UUID, notification_ids INTEGER[])
 RETURNS INTEGER AS $$
 DECLARE
-    updated_count INTEGER;
+    question_updated INTEGER;
+    answer_updated INTEGER;
 BEGIN
     UPDATE question_notifications 
     SET is_read = TRUE 
     WHERE user_id = user_uuid AND id = ANY(notification_ids);
     
-    GET DIAGNOSTICS updated_count = ROW_COUNT;
+    GET DIAGNOSTICS question_updated = ROW_COUNT;
     
     UPDATE answer_notifications 
     SET is_read = TRUE 
     WHERE user_id = user_uuid AND id = ANY(notification_ids);
     
-    GET DIAGNOSTICS updated_count = updated_count + ROW_COUNT;
+    GET DIAGNOSTICS answer_updated = ROW_COUNT;
     
-    RETURN updated_count;
+    RETURN question_updated + answer_updated;
 END;
 $$ LANGUAGE plpgsql;
 
