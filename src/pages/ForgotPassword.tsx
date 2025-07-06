@@ -13,7 +13,7 @@ const ForgotPassword = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Password reset request for:", email);
+    // console.log("Password reset request for:", email);
     setIsSubmitted(true);
   };
 
