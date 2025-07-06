@@ -1,7 +1,6 @@
 import express from 'express';
 import { supabase } from './supabaseClient.js';
 import Groq from 'groq-sdk';
-import { requireAuth } from './requireAuth.js';
 const router = express.Router();
 
 // Initialize Groq
@@ -10,7 +9,7 @@ const groq = new Groq({
 });
 
 // POST /api/ai-answers/generate - Generate AI answer for a question
-router.post('/generate', requireAuth, async (req, res) => {
+router.post('/generate', async (req, res) => {
   const { question, questionId } = req.body;
   
   if (!question || !questionId) {
@@ -40,7 +39,7 @@ router.post('/generate', requireAuth, async (req, res) => {
 
     const aiAnswer = completion.choices[0].message.content;
 
-    // Store the AI answer in the database
+    // Store the AI answer in the database (no user_id required)
     const { data, error } = await supabase
       .from('ai_answers')
       .insert([
@@ -48,7 +47,7 @@ router.post('/generate', requireAuth, async (req, res) => {
           question_id: questionId,
           answer: aiAnswer,
           generated_by: 'groq',
-          user_id: req.user.id // The user who triggered the generation
+          user_id: null // No user authentication required
         }
       ])
       .select()
