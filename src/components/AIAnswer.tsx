@@ -51,10 +51,14 @@ const AIAnswer: React.FC<AIAnswerProps> = ({ questionId, question, onAnswerGener
   const generateAIAnswer = async () => {
     setGenerating(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
       const response = await fetch('/api/ai-answers/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           question,

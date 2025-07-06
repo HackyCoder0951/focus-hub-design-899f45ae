@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase } from './supabaseClient.js';
 import Groq from 'groq-sdk';
+import { requireAuth } from './requireAuth.js';
 const router = express.Router();
 
 // Initialize Groq
@@ -9,7 +10,7 @@ const groq = new Groq({
 });
 
 // POST /api/ai-answers/generate - Generate AI answer for a question
-router.post('/generate', async (req, res) => {
+router.post('/generate', requireAuth, async (req, res) => {
   const { question, questionId } = req.body;
 
   // Require authentication
