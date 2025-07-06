@@ -24,6 +24,8 @@ router.post('/generate', requireAuth, async (req, res) => {
   }
 
   try {
+    // Measure processing time
+    const start = Date.now();
     // Generate AI answer using Groq
     const completion = await groq.chat.completions.create({
       model: "llama3-8b-8192", // Fast and cost-effective model
@@ -43,10 +45,13 @@ router.post('/generate', requireAuth, async (req, res) => {
       max_tokens: 300,
       temperature: 0.7,
     });
+    const end = Date.now();
 
     const aiAnswer = completion.choices[0].message.content;
-
-    // Store the AI answer in the database with user_id
+    const model_used = completion.model || "llama3-8b-8192";
+    const tokens_used = completion.usage?.total_tokens || null;
+    const processing_time_ms = end - start;
+    // Store the AI answer in the database with user_id and additional metadata
     const { data, error } = await supabase
       .from('ai_answers')
       .insert([
@@ -54,7 +59,15 @@ router.post('/generate', requireAuth, async (req, res) => {
           question_id: questionId,
           answer_text: aiAnswer,
           generated_by: 'groq',
-          user_id: userId
+          user_id: userId,
+          model_used,
+          tokens_used,
+          processing_time_ms,
+          confidence_score: null,
+          relevance_score: null,
+          completeness_score: null,
+          user_feedback_rating: null,
+          generation_attempts: 1
         }
       ])
       .select()
