@@ -38,4 +38,20 @@ erDiagram
 ```
 
 ## Summary
-The QandA page is central to community-driven knowledge sharing and interaction. 
+The QandA page is central to community-driven knowledge sharing and interaction.
+
+---
+
+## AI-Powered Answer Generation
+
+The Q&A module features integrated AI-powered answer generation using the Groq API. Users can:
+- Instantly generate high-quality answers to questions
+- Regenerate, copy, and rate AI answers
+- Benefit from fast, cost-effective, and privacy-focused AI models
+
+**Workflow:**
+- Users request an AI-generated answer for any question
+- The backend calls Groq API, stores the answer, and displays it in the Q&A interface
+- Users can provide feedback, copy, or regenerate the AI answer
+
+For setup and customization, see [AI Integration Setup](../AI_INTEGRATION_SETUP.md). 

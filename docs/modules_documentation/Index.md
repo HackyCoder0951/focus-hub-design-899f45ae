@@ -4,6 +4,7 @@ Welcome to the Focus Hub Modules Documentation. This index provides an overview 
 - Data Flow Diagram Context
 - Use Cases Diagram Context
 - Database Design (if applicable)
+- **AI-powered Q&A and answer generation is now available throughout the platform.**
 
 ## Modules
 - [API Layer](ApiModules.md)
@@ -11,6 +12,7 @@ Welcome to the Focus Hub Modules Documentation. This index provides an overview 
 - [Authentication Context](ContextProviders.md)
 - [Custom React Hooks](CustomHooks.md)
 - [External Integrations](Integrations.md)
+- [AI Answer Generation](../AI_INTEGRATION_SETUP.md)
 
 ## Application Pages
 - [Main Application Pages](Pages.md)

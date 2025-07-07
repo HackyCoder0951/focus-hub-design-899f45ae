@@ -153,7 +153,6 @@ focus_hub/
 │   ├── Components.md
 │   ├── DatabaseDesign.md
 │   ├── QandA.md
-│   ├── Feed.md
 │   ├── Chat.md
 │   ├── Profile.md
 │   ├── Resources.md
@@ -179,4 +178,21 @@ focus_hub/
 └── ... (other config and meta files)
 ```
 
-*Document generated for Focus Hub project. Last updated: July 2024.* 
+*Document generated for Focus Hub project. Last updated: July 2024.*
+
+---
+
+## AI-Powered Q&A and Answer Generation
+
+Focus Hub features an advanced AI-powered answer generation system integrated into the Q&A module. Leveraging the Groq API, users can:
+- Instantly generate high-quality, concise answers to posted questions
+- Regenerate, copy, and rate AI-generated answers
+- Benefit from real-time, cost-effective, and privacy-conscious AI models (Groq Llama3, Mixtral, Gemma2, etc.)
+- Seamlessly combine community and AI answers for a richer knowledge base
+
+**How it works:**
+- When a question is posted, users can request an AI-generated answer
+- The backend calls Groq API, stores the answer, and displays it in the Q&A interface
+- Users can provide feedback, copy, or regenerate the AI answer as needed
+
+For setup and customization, see `docs/AI_INTEGRATION_SETUP.md` and `docs/GROQ_AI_INTEGRATION_SETUP.md`. 

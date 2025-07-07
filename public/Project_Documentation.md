@@ -171,6 +171,23 @@ The application follows a modular component architecture with clear separation o
 - **Categories:** There is a category filter, but categories are currently hardcoded and not stored in the DB.
 - **Trending/Unanswered Tabs:** UI supports sorting/filtering for trending and unanswered questions.
 
+---
+
+### AI-Powered Q&A and Answer Generation
+
+Focus Hub integrates advanced AI answer generation directly into the Q&A module using the Groq API. This enables:
+- Instant, high-quality AI-generated answers to user questions
+- Regeneration, copying, and rating of AI answers
+- Use of fast, cost-effective, and privacy-focused models (Groq Llama3, Mixtral, Gemma2, etc.)
+- A seamless blend of community and AI knowledge
+
+**Workflow:**
+- Users can request an AI-generated answer for any question
+- The backend calls Groq API, stores the answer, and displays it in the Q&A interface
+- Users can provide feedback, copy, or regenerate the AI answer
+
+For setup and customization, see `docs/AI_INTEGRATION_SETUP.md` and `docs/GROQ_AI_INTEGRATION_SETUP.md`.
+
 ### Chat System (Expanded)
 - **File Sharing in Chat:** Users can share files in chat, with file-type icons and download links.
 - **Online Status:** User presence is tracked and updated.

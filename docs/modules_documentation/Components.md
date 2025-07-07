@@ -30,4 +30,18 @@ flowchart TD
 _Not applicable: UI components do not directly interact with the database._
 
 ---
-The UI Component Library is the foundation for a cohesive and user-friendly interface. 
+The UI Component Library is the foundation for a cohesive and user-friendly interface.
+
+## AIAnswer Component
+
+The `AIAnswer` component displays and manages AI-generated answers in the Q&A interface. It provides:
+- A button to generate an AI answer for a question
+- Loading and error states
+- Display of the AI answer with copy and feedback options
+- Regeneration and rating features
+
+**Props:**
+- `questionId: string` – The ID of the question
+- `question: string` – The question text
+
+For usage and customization, see [AI Integration Setup](../AI_INTEGRATION_SETUP.md). 
