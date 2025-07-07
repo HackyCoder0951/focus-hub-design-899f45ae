@@ -13,6 +13,7 @@ Welcome to the Focus Hub Modules Documentation. This index provides an overview 
 - [Custom React Hooks](CustomHooks.md)
 - [External Integrations](Integrations.md)
 - [AI Answer Generation](../AI_INTEGRATION_SETUP.md)
+- [AI Answers Module](AiAnswers.md)
 
 ## Application Pages
 - [Main Application Pages](Pages.md)
