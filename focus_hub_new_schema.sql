@@ -894,20 +894,6 @@ COMMENT ON TABLE "public"."question_tags" IS 'Tags associated with questions for
 
 
 
-CREATE TABLE IF NOT EXISTS "public"."questionanswers" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid",
-    "question" "text" NOT NULL,
-    "answer" "text",
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "is_answered" boolean DEFAULT false NOT NULL
-);
-
-
-ALTER TABLE "public"."questionanswers" OWNER TO "postgres";
-
-
 CREATE TABLE IF NOT EXISTS "public"."reputation_events" (
     "id" integer NOT NULL,
     "user_id" "uuid",
@@ -1162,11 +1148,6 @@ ALTER TABLE ONLY "public"."question_votes"
 
 
 
-ALTER TABLE ONLY "public"."questionanswers"
-    ADD CONSTRAINT "questionanswers_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."questions"
     ADD CONSTRAINT "questions_pkey" PRIMARY KEY ("id");
 
@@ -1348,10 +1329,6 @@ CREATE INDEX "idx_question_votes_question_id" ON "public"."question_votes" USING
 
 
 CREATE INDEX "idx_question_votes_user_id" ON "public"."question_votes" USING "btree" ("user_id");
-
-
-
-CREATE INDEX "idx_questionanswers_user_id" ON "public"."questionanswers" USING "btree" ("user_id");
 
 
 
@@ -1618,11 +1595,6 @@ ALTER TABLE ONLY "public"."question_votes"
 
 
 
-ALTER TABLE ONLY "public"."questionanswers"
-    ADD CONSTRAINT "questionanswers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
-
-
-
 ALTER TABLE ONLY "public"."questions"
     ADD CONSTRAINT "questions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
@@ -1855,10 +1827,6 @@ CREATE POLICY "Users can delete their own messages" ON "public"."chat_messages" 
 
 
 
-CREATE POLICY "Users can delete their own questions" ON "public"."questionanswers" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
 CREATE POLICY "Users can delete their own votes" ON "public"."answer_votes" FOR DELETE USING (("auth"."uid"() = "user_id"));
 
 
@@ -1896,10 +1864,6 @@ CREATE POLICY "Users can insert notifications" ON "public"."notifications" FOR I
 
 
 CREATE POLICY "Users can insert own files" ON "public"."filemodels" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "Users can insert questions" ON "public"."questionanswers" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
 
 
 
@@ -1959,10 +1923,6 @@ CREATE POLICY "Users can update their own profile" ON "public"."profiles" FOR UP
 
 
 
-CREATE POLICY "Users can update their own questions" ON "public"."questionanswers" FOR UPDATE USING (("auth"."uid"() = "user_id"));
-
-
-
 CREATE POLICY "Users can update their own votes" ON "public"."answer_votes" FOR UPDATE USING (("auth"."uid"() = "user_id"));
 
 
@@ -2004,10 +1964,6 @@ CREATE POLICY "Users can view own and public files" ON "public"."filemodels" FOR
 
 
 CREATE POLICY "Users can view public files" ON "public"."filemodels" FOR SELECT USING (("is_public" OR ("auth"."uid"() = "user_id")));
-
-
-
-CREATE POLICY "Users can view questions" ON "public"."questionanswers" FOR SELECT USING (true);
 
 
 
@@ -2100,9 +2056,6 @@ ALTER TABLE "public"."question_tags" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."question_votes" ENABLE ROW LEVEL SECURITY;
-
-
-ALTER TABLE "public"."questionanswers" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."questions" ENABLE ROW LEVEL SECURITY;
@@ -2218,13 +2171,6 @@ ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."question_notifica
 
 
 ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."question_votes";
-
-
-
-ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."questionanswers";
-
-
-
 
 
 
@@ -2624,12 +2570,6 @@ GRANT ALL ON TABLE "public"."question_stats" TO "service_role";
 GRANT ALL ON TABLE "public"."question_tags" TO "anon";
 GRANT ALL ON TABLE "public"."question_tags" TO "authenticated";
 GRANT ALL ON TABLE "public"."question_tags" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."questionanswers" TO "anon";
-GRANT ALL ON TABLE "public"."questionanswers" TO "authenticated";
-GRANT ALL ON TABLE "public"."questionanswers" TO "service_role";
 
 
 

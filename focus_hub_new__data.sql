@@ -1001,28 +1001,6 @@ INSERT INTO "public"."question_votes" ("id", "question_id", "user_id", "vote_val
 
 
 --
--- Data for Name: questionanswers; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO "public"."questionanswers" ("id", "user_id", "question", "answer", "created_at", "updated_at", "is_answered") VALUES
-	('89625fab-19bb-4a84-aa1a-782cf16f4415', '1319be79-c9ec-450f-8115-4445c9da6d98', 'What is the best way to learn React in 2025?', NULL, '2025-01-10 15:30:00+05:30', '2025-01-10 15:30:00+05:30', false),
-	('34eb6229-4c41-499a-91f8-e01f1cdb4541', '306f8931-2603-4c86-b3ab-f804c2c5be57', 'What is the best way to learn React in 2025?', 'Start with the official React documentation and build small projects to practice. Use hooks and functional components from the beginning.', '2025-01-10 17:30:00+05:30', '2025-01-10 17:30:00+05:30', true),
-	('a23fc8fe-e266-497a-81b8-5f4c934784f6', '399e5ea7-4664-4c3c-81d3-b983814d106a', 'What is the best way to learn React in 2025?', 'Join online communities and follow React updates. Practice by contributing to open source projects.', '2025-01-10 17:40:00+05:30', '2025-01-10 17:40:00+05:30', true),
-	('ee28d74c-6e69-44ec-a76e-b2fb724ae8b3', '1319be79-c9ec-450f-8115-4445c9da6d98', 'How do you optimize SQL queries for large datasets?', NULL, '2025-01-10 15:35:00+05:30', '2025-01-10 15:35:00+05:30', false),
-	('cd46b96b-1de8-4468-8c85-0fb081c39db3', '68e5b8aa-c6b8-4e2d-a303-a1c10717837b', 'How do you optimize SQL queries for large datasets?', 'Use proper indexing on frequently queried columns and avoid SELECT * statements in production.', '2025-01-10 17:50:00+05:30', '2025-01-10 17:50:00+05:30', true),
-	('7ec3d95b-63ff-4506-8d93-4de1cd29fb15', '702dc5d1-9186-4350-b20f-d3007319a327', 'How do you optimize SQL queries for large datasets?', 'Analyze query execution plans to identify bottlenecks and consider partitioning large tables.', '2025-01-10 18:00:00+05:30', '2025-01-10 18:00:00+05:30', true),
-	('623852d0-2d0d-4a95-b254-a71e0316bc0b', '306f8931-2603-4c86-b3ab-f804c2c5be57', 'What are the benefits of using TypeScript with Node.js?', NULL, '2025-01-11 14:30:00+05:30', '2025-01-11 14:30:00+05:30', false),
-	('85955047-77c5-4f12-ad56-b802475562b7', '1319be79-c9ec-450f-8115-4445c9da6d98', 'What are the benefits of using TypeScript with Node.js?', 'TypeScript provides static typing which helps catch errors at compile time and improves code maintainability.', '2025-01-11 15:30:00+05:30', '2025-01-11 15:30:00+05:30', true),
-	('5fe19d88-0c5c-4ca9-adcb-b9ff9da6dde2', '67f2070a-0399-485a-a8e1-e73241df52c0', 'What are the benefits of using TypeScript with Node.js?', 'It enhances IDE support with better autocomplete and refactoring capabilities, making development faster.', '2025-01-11 15:40:00+05:30', '2025-01-11 15:40:00+05:30', true),
-	('167d1554-51fb-479f-a1d9-b80c898b86c7', '306f8931-2603-4c86-b3ab-f804c2c5be57', 'How do you implement authentication in a React app?', NULL, '2025-01-11 14:35:00+05:30', '2025-01-11 14:35:00+05:30', false),
-	('30df368e-58a3-46e4-bc92-1a8f021d781e', 'f8adc086-3c84-4038-820d-5e1cf0d63d39', 'How do you implement authentication in a React app?', 'Use authentication libraries like Firebase Auth, Auth0, or Supabase Auth for secure implementation.', '2025-01-11 15:50:00+05:30', '2025-01-11 15:50:00+05:30', true),
-	('603810c4-bc62-4aca-b378-589e7c2c8ab7', 'e657b686-9443-4cc9-800b-bc7fa4985e35', 'How do you implement authentication in a React app?', 'Implement protected routes and manage authentication state using React Context or state management libraries.', '2025-01-11 16:00:00+05:30', '2025-01-11 16:00:00+05:30', true),
-	('58b2ae6a-607d-456d-9f46-424347b1ce67', '399e5ea7-4664-4c3c-81d3-b983814d106a', 'What is the difference between REST and GraphQL?', NULL, '2025-01-12 13:30:00+05:30', '2025-01-12 13:30:00+05:30', false),
-	('f338d424-3b5f-409f-8cdf-90c0f39ee776', '719c5acf-8f3e-4064-ac1a-00c3692901ba', 'What is the difference between REST and GraphQL?', 'REST uses multiple endpoints for different resources, while GraphQL uses a single endpoint where clients specify exactly what data they need.', '2025-01-12 14:30:00+05:30', '2025-01-12 14:30:00+05:30', true),
-	('e04687e4-bb4e-4a15-a4c8-aee9ee3cca65', 'ffbfa1b0-84c5-45fe-8f31-2eda223ac751', 'What is the difference between REST and GraphQL?', 'GraphQL eliminates over-fetching and under-fetching issues that are common with REST APIs.', '2025-01-12 14:40:00+05:30', '2025-01-12 14:40:00+05:30', true);
-
-
---
 -- Data for Name: reputation_events; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
