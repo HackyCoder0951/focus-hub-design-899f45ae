@@ -90,6 +90,7 @@ This documentation is organized into the following modules:
 10. **[10_UI_COMPONENTS.md](./10_UI_COMPONENTS.md)** - Component library and styling
 11. **[11_DEPLOYMENT.md](./11_DEPLOYMENT.md)** - Deployment and configuration
 12. **[12_SECURITY.md](./12_SECURITY.md)** - Security measures and best practices
+13. **[13_AI_INTEGRATION.md](./13_AI_INTEGRATION.md)** - AI Integration implementation
 
 ## Quick Start
 
