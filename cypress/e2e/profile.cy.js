@@ -8,7 +8,7 @@ describe('Profile Update', () => {
   });
 
   it('updates profile info', () => {
-    cy.get('input#fullName').clear().type('Updated Name');
+    cy.get('input#full_name').clear().type('Updated Name');
     cy.get('button').contains('Save').click();
     cy.contains('Profile info updated').should('be.visible');
   });

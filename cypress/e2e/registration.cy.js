@@ -6,7 +6,7 @@ describe('Registration Flow', () => {
     cy.get('input#password').type('Test@1234');
     cy.get('input#confirmPassword').type('Test@1234');
     cy.get('input[type=radio][value=student]').check();
-    cy.get('input#terms').check();
+    // cy.get('input#terms').check();
     cy.get('button[type=submit]').contains('Create Account').click();
     // Assert successful registration (update selector/message as needed)
     cy.contains('Create account').should('not.exist');

@@ -503,7 +503,7 @@ const PostCard = ({ post, onPostUpdated }: PostCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card data-cy="post-card" className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex items-start gap-3">
           <Avatar>
