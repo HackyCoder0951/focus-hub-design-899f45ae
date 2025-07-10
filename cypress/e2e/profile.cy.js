@@ -8,8 +8,9 @@ describe('Profile Update', () => {
   });
 
   it('updates profile info', () => {
-    cy.get('input#full_name').clear().type('Updated Name');
-    cy.get('button').contains('Save').click();
-    cy.contains('Profile info updated').should('be.visible');
+    cy.contains('Edit Profile').click();
+    cy.get('input[name="full_name"]').clear().type('Updated Name');
+    cy.get('button').contains('Save Changes').click();
+    cy.contains('Updated Name').should('be.visible');
   });
 }); 

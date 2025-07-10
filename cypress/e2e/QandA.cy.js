@@ -8,7 +8,7 @@ describe('Q&A Flow', () => {
   });
 
   it('posts a new question', () => {
-    cy.get('button').contains('Ask a Question').click();
+    cy.contains('Ask Question', { timeout: 10000 }).should('be.visible').click();
     cy.get('input[placeholder="What\'s your question? Be specific."]').type('How do I use Cypress?');
     cy.get('textarea[placeholder="Provide more context about your question..."]').type('I want to automate my tests.');
     cy.get('button').contains('Post Question').click();

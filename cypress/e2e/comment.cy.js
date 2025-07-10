@@ -9,8 +9,8 @@ describe('Commenting Flow', () => {
 
   it('adds a comment to the first post', () => {
     cy.get('[data-cy=post-card]').first().within(() => {
-      cy.get('textarea[placeholder="Write a comment..."]').type('This is a test comment!');
-      cy.get('button').contains('Comment').click();
+      cy.get('input[placeholder="Add a comment..."]').type('This is a test comment!');
+      cy.get('button').contains('Post').click();
       cy.contains('This is a test comment!').should('be.visible');
     });
   });
