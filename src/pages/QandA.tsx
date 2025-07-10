@@ -994,7 +994,7 @@ const QandA = () => {
 
               {/* AI Answer Section */}
               <AIAnswer 
-                questionId={selectedQuestion.id.toString()}
+                questionId={selectedQuestion.id}
                 question={selectedQuestion.title + "\n\n" + selectedQuestion.body}
                 onAnswerGenerated={(answer) => {
                   // Refresh the answers list to show the AI answer
