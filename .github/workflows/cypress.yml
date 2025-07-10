@@ -17,7 +17,7 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           start: npm start             # Will now work due to new script
-          wait-on: 'http://localhost:3000'
+          wait-on: 'http://localhost:5173'
           record: true
           parallel: true
         env:
