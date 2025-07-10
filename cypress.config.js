@@ -1,5 +1,7 @@
-const { defineConfig } = require('cypress')
+import { defineConfig } from 'cypress';
 
-module.exports = defineConfi({
-    projectId: 'ft5wda',
-  })
+export default defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:5173',
+  },
+});
