@@ -4,7 +4,7 @@ describe('Q&A Flow', () => {
     cy.get('input#email').type('priyakumari@gmail.com');
     cy.get('input#password').type('user@123');
     cy.get('button[type=submit]').click();
-    cy.visit('/qa');
+    cy.visit('/app/qa');
   });
 
   it('posts a new question', () => {
