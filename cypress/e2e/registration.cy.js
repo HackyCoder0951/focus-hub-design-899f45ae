@@ -6,9 +6,10 @@ describe('Registration Flow', () => {
     cy.get('input#password').type('Test@1234');
     cy.get('input#confirmPassword').type('Test@1234');
     cy.get('input[type=radio][value=student]').check();
-    // cy.get('input#terms').check();
-    cy.get('button[type=submit]').contains('Create Account').click();
-    // Assert successful registration (update selector/message as needed)
+    // Check the terms using the label, since Checkbox is custom
+    cy.get('label[for="terms"]').click();
+    cy.get('button[type=submit]').should('not.be.disabled').click();
+    // Optionally, assert successful registration
     cy.contains('Create account').should('not.exist');
   });
 }); 
