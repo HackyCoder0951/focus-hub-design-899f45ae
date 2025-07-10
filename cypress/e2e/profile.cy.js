@@ -1,0 +1,15 @@
+describe('Profile Update', () => {
+  beforeEach(() => {
+    cy.visit('/login');
+    cy.get('input#email').type('priyakumari@gmail.com');
+    cy.get('input#password').type('user@123');
+    cy.get('button[type=submit]').click();
+    cy.visit('/profile');
+  });
+
+  it('updates profile info', () => {
+    cy.get('input#fullName').clear().type('Updated Name');
+    cy.get('button').contains('Save').click();
+    cy.contains('Profile info updated').should('be.visible');
+  });
+}); 
