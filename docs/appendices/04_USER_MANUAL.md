@@ -245,6 +245,11 @@ The platform is fully responsive and works seamlessly on:
    - Use appropriate tags
    - Check for similar questions first
 
+4. **AI Answer Generation**:
+   - After posting a question, an AI answer component will appear
+   - Click "Generate AI Answer" to get an instant response
+   - AI answers are generated using the Groq API with Llama3-8b-8192 model
+
 ### 5.3 Answering Questions
 1. **View Question**:
    - Click on any question to view details
@@ -262,16 +267,24 @@ The platform is fully responsive and works seamlessly on:
    - Include examples when possible
    - Cite sources if applicable
 
-### 5.4 AI-Powered Assistance
-1. **AI Answer Suggestions**:
-   - Click "Get AI Suggestion" on questions
-   - AI will analyze question and provide answer
-   - Review and edit AI suggestions before posting
+### 5.4 AI-Powered Answer Generation
+1. **Generate AI Answer**:
+   - Click "Generate AI Answer" button on any question
+   - AI will analyze the question and provide an instant response
+   - AI answers are generated using Groq's Llama3-8b-8192 model
 
-2. **AI Features**:
-   - **Smart Tagging**: AI suggests relevant tags
-   - **Duplicate Detection**: Identifies similar questions
-   - **Answer Quality**: Rates answer helpfulness
+2. **AI Answer Features**:
+   - **Instant Generation**: Get answers in seconds
+   - **Copy to Clipboard**: Easily copy AI answers
+   - **User Feedback**: Rate answers as helpful or not helpful
+   - **Regeneration**: Generate new answers if needed
+   - **Metadata Tracking**: View processing time and token usage
+
+3. **AI Answer Display**:
+   - AI answers appear at the top of each question
+   - Clearly marked with a sparkle icon and "AI Answer" badge
+   - Shows generation date and model used
+   - Includes feedback buttons for quality improvement
 
 ### 5.5 Voting System
 1. **Vote on Questions**:

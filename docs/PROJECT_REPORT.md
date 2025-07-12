@@ -76,10 +76,11 @@ The project encompasses:
 - **Cloud Platforms**: AWS, Google Cloud, Azure, Supabase
 
 ### 2.3 AI Integration in Education
-- **ChatGPT**: Language model for educational assistance
-- **Groq**: High-performance inference platform
-- **OpenAI API**: Natural language processing capabilities
-- **Custom AI Models**: Domain-specific educational AI
+- **Groq API**: High-performance inference platform for real-time AI answers
+- **Llama3-8b-8192**: Fast and cost-effective model for Q&A generation
+- **AI Answer Generation**: Instant, high-quality responses to user questions
+- **User Feedback System**: Rating and feedback collection for AI answers
+- **Custom AI Models**: Domain-specific educational AI assistance
 
 ### 2.4 Security and Privacy Considerations
 - **GDPR Compliance**: Data protection regulations
@@ -133,9 +134,11 @@ The project encompasses:
 - **Server-Sent Events**: Real-time updates from server to client
 
 #### 3.2.4 AI and Machine Learning
-- **Groq API**: High-performance inference platform
-- **OpenAI API**: Natural language processing capabilities
-- **Custom AI Models**: Domain-specific educational assistance
+- **Groq API**: High-performance inference platform for real-time AI answers
+- **Llama3-8b-8192**: Fast and cost-effective model for Q&A generation
+- **AI Answer Generation**: Instant, high-quality responses with metadata tracking
+- **User Feedback System**: Rating and feedback collection for AI answers
+- **Processing Analytics**: Token usage, processing time, and performance metrics
 
 #### 3.2.5 Development Tools
 - **Git**: Version control system
@@ -214,7 +217,10 @@ The project encompasses:
 #### 4.2.3 Q&A Module
 - Post questions with rich text formatting
 - Answer questions with markdown support
-- AI-powered answer suggestions
+- **AI-powered answer generation** using Groq API
+- **Instant AI responses** with Llama3-8b-8192 model
+- **User feedback system** for AI answers (helpful/not helpful)
+- **Copy and regenerate** AI answer functionality
 - Vote on questions and answers
 - Accept best answers
 - Search and filter functionality
@@ -293,28 +299,41 @@ The Focus Hub platform follows a modern, scalable architecture with the followin
 
 - **Frontend**: React-based single-page application
 - **Backend**: Supabase (PostgreSQL + Real-time + Auth)
-- **AI Integration**: Groq API for high-performance inference
+- **AI Integration**: Groq API with Llama3-8b-8192 model for high-performance inference
 - **File Storage**: Supabase Storage with CDN
 - **Deployment**: Vercel for frontend, Supabase Cloud for backend
 
-### 5.2 Database Design
+### 5.2 AI Answer Generation Architecture
+The AI answer generation system follows a comprehensive architecture:
+
+- **Frontend Components**: AIAnswer component with real-time feedback
+- **API Layer**: Express.js endpoints for AI answer generation and feedback
+- **AI Service**: Groq API integration with Llama3-8b-8192 model
+- **Database**: PostgreSQL with ai_answers table for metadata tracking
+- **Authentication**: Supabase Auth with JWT tokens
+
+For detailed flow diagrams, see [AI Answer Flow Diagrams](appendices/06_AI_ANSWER_FLOW_DIAGRAMS.md).
+
+### 5.3 Database Design
 - **Users Table**: User profiles and authentication data
 - **Posts Table**: Social feed content
 - **Comments Table**: Post comments and replies
 - **Questions Table**: Q&A module data
-- **Answers Table**: Question responses
+- **AI Answers Table**: AI-generated responses with metadata
+- **Answers Table**: User-generated question responses
 - **Chat Tables**: Real-time messaging data
 - **Resources Table**: File management data
 - **Votes Table**: User interactions and ratings
 
-### 5.3 API Design
+### 5.4 API Design
 - **RESTful APIs**: Standard HTTP methods for CRUD operations
+- **AI Answer APIs**: Generation, retrieval, and feedback endpoints
 - **Real-time Subscriptions**: WebSocket connections for live updates
 - **Authentication**: JWT tokens and session management
 - **Rate Limiting**: API usage restrictions and monitoring
 - **Error Handling**: Standardized error responses
 
-### 5.4 Security Design
+### 5.5 Security Design
 - **Row Level Security**: Database-level access control
 - **Authentication**: Multi-factor authentication support
 - **Authorization**: Role-based permissions
@@ -340,11 +359,20 @@ The Focus Hub platform follows a modern, scalable architecture with the followin
 - **Authentication**: JWT-based session management
 
 ### 6.3 AI Integration
-- **Groq API Integration**: High-performance AI inference
-- **Question Processing**: Natural language understanding
-- **Answer Generation**: Context-aware responses
+- **Groq API Integration**: High-performance AI inference with Llama3-8b-8192 model
+- **AI Answer Generation**: Instant, high-quality responses to user questions
+- **Metadata Tracking**: Token usage, processing time, and performance analytics
+- **User Feedback System**: Rating collection for AI answer quality improvement
+- **Copy and Regenerate**: Enhanced user experience with answer management
 - **Content Moderation**: AI-powered content filtering
 - **Personalization**: User-specific recommendations
+
+#### 6.3.1 AI Answer Component Implementation
+- **Frontend Component**: `AIAnswer.tsx` with real-time state management
+- **API Integration**: Express.js endpoints for generation and feedback
+- **Database Storage**: PostgreSQL with comprehensive metadata tracking
+- **User Experience**: Loading states, error handling, and feedback collection
+- **Performance**: Optimized for fast response times and minimal latency
 
 ### 6.4 Testing Implementation
 - **Unit Testing**: Component and function testing
@@ -500,21 +528,29 @@ The Focus Hub platform follows a modern, scalable architecture with the followin
 - Query optimization guidelines
 - Backup and recovery procedures
 
-### 11.3 Deployment Guide
+### 11.3 AI Answer Flow Diagrams
+- System architecture diagrams
+- Data flow visualizations
+- Sequence diagrams
+- Component interaction maps
+- User journey flows
+- Performance metrics tracking
+
+### 11.4 Deployment Guide
 - Environment setup instructions
 - Configuration management
 - Deployment procedures
 - Monitoring and logging setup
 - Troubleshooting guide
 
-### 11.4 User Manual
+### 11.5 User Manual
 - Complete user guide
 - Feature walkthroughs
 - FAQ section
 - Troubleshooting tips
 - Contact information
 
-### 11.5 Developer Guide
+### 11.6 Developer Guide
 - Code style guidelines
 - Development environment setup
 - Testing procedures

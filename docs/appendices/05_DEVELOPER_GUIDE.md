@@ -130,6 +130,21 @@ interface ApiResponse<T> {
   data: T;
   message?: string;
 }
+
+// AI Answer types
+interface AIAnswer {
+  id: string;
+  question_id: number;
+  answer_text: string;
+  generated_by: 'groq';
+  user_id: string;
+  model_used: string;
+  tokens_used: number;
+  processing_time_ms: number;
+  user_feedback_rating: number | null;
+  generation_attempts: number;
+  created_at: string;
+}
 ```
 
 #### 2.1.2 Function Definitions
@@ -286,11 +301,13 @@ src/
 ├── api/                    # API utilities and configurations
 │   ├── supabaseClient.ts   # Supabase client configuration
 │   ├── auth.ts            # Authentication utilities
+│   ├── ai-answers.js      # AI answer generation API
 │   └── types.ts           # API type definitions
 ├── components/            # Reusable React components
 │   ├── ui/               # UI components (shadcn/ui)
 │   ├── forms/            # Form components
 │   ├── layout/           # Layout components
+│   ├── AIAnswer.tsx      # AI answer component
 │   └── common/           # Common components
 ├── contexts/             # React contexts
 │   ├── AuthContext.tsx   # Authentication context
@@ -306,10 +323,12 @@ src/
 ├── pages/                # Page components
 │   ├── auth/            # Authentication pages
 │   ├── dashboard/       # Dashboard pages
+│   ├── QandA.tsx        # Q&A page with AI integration
 │   └── profile/         # Profile pages
 ├── types/                # TypeScript type definitions
 │   ├── user.ts          # User types
 │   ├── post.ts          # Post types
+│   ├── ai-answers.ts    # AI answer types
 │   └── api.ts           # API types
 ├── styles/               # Global styles
 │   ├── globals.css      # Global CSS

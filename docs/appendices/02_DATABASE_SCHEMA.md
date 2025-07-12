@@ -160,7 +160,39 @@ CREATE TYPE question_status AS ENUM ('open', 'answered', 'closed');
 - `created_at`: Creation timestamp
 - `updated_at`: Last update timestamp
 
-### 2.5 Answers Table
+### 2.5 AI Answers Table
+```sql
+CREATE TABLE ai_answers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    question_id UUID REFERENCES questions(id) ON DELETE CASCADE,
+    answer_text TEXT NOT NULL,
+    confidence_score DECIMAL(3,2) CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    model_used TEXT,
+    tokens_used INTEGER,
+    processing_time_ms INTEGER,
+    relevance_score DECIMAL(3,2),
+    completeness_score DECIMAL(3,2),
+    user_feedback_rating INTEGER CHECK (user_feedback_rating BETWEEN 1 AND 5),
+    generation_attempts INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+**Columns:**
+- `id`: Unique identifier (UUID)
+- `question_id`: Reference to questions table
+- `answer_text`: AI-generated answer content
+- `confidence_score`: AI model confidence score (0-1)
+- `model_used`: AI model identifier (e.g., "llama3-8b-8192")
+- `tokens_used`: Number of tokens consumed
+- `processing_time_ms`: Time taken to generate answer
+- `relevance_score`: Relevance score (0-1)
+- `completeness_score`: Completeness score (0-1)
+- `user_feedback_rating`: User rating (1-5)
+- `generation_attempts`: Number of generation attempts
+- `created_at`: Creation timestamp
+
+### 2.6 Answers Table
 ```sql
 CREATE TABLE answers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -383,6 +415,7 @@ erDiagram
     posts ||--o{ comments : "has"
     posts ||--o{ votes : "receives"
     
+    questions ||--o{ ai_answers : "has"
     questions ||--o{ answers : "has"
     questions ||--o{ votes : "receives"
     answers ||--o{ votes : "receives"
@@ -405,6 +438,7 @@ erDiagram
 | comments | author_id | users.id | CASCADE |
 | comments | parent_id | comments.id | CASCADE |
 | questions | author_id | users.id | CASCADE |
+| ai_answers | question_id | questions.id | CASCADE |
 | answers | question_id | questions.id | CASCADE |
 | answers | author_id | users.id | CASCADE |
 | chat_rooms | created_by | users.id | RESTRICT |
@@ -452,6 +486,10 @@ CREATE INDEX idx_questions_category ON questions(category);
 CREATE INDEX idx_questions_status ON questions(status);
 CREATE INDEX idx_questions_created_at ON questions(created_at);
 CREATE INDEX idx_questions_tags ON questions USING GIN(tags);
+
+-- AI Answers table indexes
+CREATE INDEX idx_ai_answers_question_id ON ai_answers(question_id);
+CREATE INDEX idx_ai_answers_confidence_score ON ai_answers(confidence_score DESC);
 
 -- Answers table indexes
 CREATE INDEX idx_answers_question_id ON answers(question_id);

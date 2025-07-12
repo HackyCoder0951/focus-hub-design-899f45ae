@@ -360,22 +360,85 @@ Create a new question.
 }
 ```
 
-### 4.3 Get AI Answer Suggestion
-**POST** `/questions/{questionId}/ai-suggest`
+### 4.3 Generate AI Answer
+**POST** `/api/ai-answers/generate`
 
-Get AI-powered answer suggestion.
+Generate AI-powered answer using Groq API.
+
+**Request Body:**
+```json
+{
+  "question": "What is React?",
+  "questionId": 123
+}
+```
 
 **Response (200 OK):**
 ```json
 {
   "success": true,
-  "data": {
-    "suggestion": "Based on your question about real-time features, here's a comprehensive answer...",
-    "confidence": 0.85,
-    "sources": [
-      "WebSocket API documentation",
-      "React documentation"
-    ]
+  "aiAnswer": {
+    "id": "uuid",
+    "question_id": 123,
+    "answer_text": "React is a JavaScript library for building user interfaces...",
+    "generated_by": "groq",
+    "user_id": "uuid",
+    "model_used": "llama3-8b-8192",
+    "tokens_used": 150,
+    "processing_time_ms": 250,
+    "user_feedback_rating": null,
+    "generation_attempts": 1,
+    "created_at": "2024-01-01T00:00:00Z"
+  },
+  "message": "AI answer generated successfully"
+}
+```
+
+### 4.4 Get AI Answer for Question
+**GET** `/api/ai-answers/question/{questionId}`
+
+Retrieve AI answer for a specific question.
+
+**Response (200 OK):**
+```json
+{
+  "aiAnswer": {
+    "id": "uuid",
+    "question_id": 123,
+    "answer_text": "React is a JavaScript library...",
+    "generated_by": "groq",
+    "model_used": "llama3-8b-8192",
+    "tokens_used": 150,
+    "processing_time_ms": 250,
+    "user_feedback_rating": 1,
+    "generation_attempts": 1,
+    "created_at": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+### 4.5 Update AI Answer Feedback
+**PATCH** `/api/ai-answers/{answerId}/feedback`
+
+Update user feedback rating for an AI answer.
+
+**Request Body:**
+```json
+{
+  "user_feedback_rating": 1
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "aiAnswer": {
+    "id": "uuid",
+    "question_id": 123,
+    "answer_text": "React is a JavaScript library...",
+    "user_feedback_rating": 1,
+    "updated_at": "2024-01-01T00:00:00Z"
   }
 }
 ```
