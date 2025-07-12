@@ -118,38 +118,15 @@ graph TD
 ```mermaid
 erDiagram
     ai_answers {
-        uuid id PK
-        uuid question_id FK
-        text answer_text
-        text generated_by
-        uuid user_id FK
-        text model_used
-        integer tokens_used
-        integer processing_time_ms
-        integer user_feedback_rating
-        integer generation_attempts
-        timestamp created_at
-        timestamp updated_at
+        
     }
     
     questions {
-        uuid id PK
-        uuid user_id FK
-        text title
-        text body
-        text category
-        uuid best_answer_id FK
-        timestamp created_at
-        timestamp updated_at
+        
     }
     
     profiles {
-        uuid id PK
-        text full_name
-        text avatar_url
-        text email
-        timestamp created_at
-        timestamp updated_at
+        
     }
     
     ai_answers ||--|| questions : "belongs_to"
