@@ -224,21 +224,21 @@ erDiagram
     auth_users ||--o{ auth_sessions : "has"
     
     auth_users {
-        id PK
+        id string PK
     }
     
     profiles {
-        id PK, FK
+        id string PK
     }
     
     user_roles {
-        id PK
-        user_id FK
+        id string PK
+        user_id string FK
     }
     
     auth_sessions {
-        id PK
-        user_id FK
+        id string PK
+        user_id string FK
     }
 ```
 

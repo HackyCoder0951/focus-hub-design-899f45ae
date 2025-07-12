@@ -217,18 +217,19 @@ erDiagram
     users ||--o{ questions : "asks"
     
     questions {
-        id PK
-        user_id FK
+        id INT PK
+        user_id INT FK
     }
     
     ai_answers {
-        id PK
-        question_id FK
+        id INT PK
+        question_id INT FK
     }
     
     users {
-        id PK
+        id INT PK
     }
+
 ```
 
 ---

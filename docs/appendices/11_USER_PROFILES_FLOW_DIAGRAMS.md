@@ -347,28 +347,29 @@ erDiagram
     users ||--o{ user_settings : "has"
     
     users {
-        id PK
+        id string PK
     }
     
     profiles {
-        id PK, FK
+        id string PK, FK
     }
     
     followers {
-        id PK
-        follower_id FK
-        following_id FK
+        id string PK
+        follower_id string FK
+        following_id string FK
     }
     
     user_activities {
-        id PK
-        user_id FK
+        id string PK
+        user_id string FK
     }
     
     user_settings {
-        id PK
-        user_id FK
+        id string PK
+        user_id string FK
     }
+
 ```
 ```
 

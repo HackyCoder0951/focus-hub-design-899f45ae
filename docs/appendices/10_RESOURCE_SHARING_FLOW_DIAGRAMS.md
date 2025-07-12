@@ -338,37 +338,38 @@ erDiagram
     resources ||--o{ resource_categories : "belongs_to"
     
     resources {
-        id PK
-        author_id FK
-        category_id FK
+        id string PK
+        author_id string FK
+        category_id string FK
     }
     
     resource_downloads {
-        id PK
-        resource_id FK
-        user_id FK
+        id string PK
+        resource_id string FK
+        user_id string FK
     }
     
     resource_ratings {
-        id PK
-        resource_id FK
-        user_id FK
+        id string PK
+        resource_id string FK
+        user_id string FK
     }
     
     resource_comments {
-        id PK
-        resource_id FK
-        user_id FK
-        parent_id FK
+        id string PK
+        resource_id string FK
+        user_id string FK
+        parent_id string FK
     }
     
     resource_categories {
-        id PK
+        id string PK
     }
     
     users {
-        id PK
+        id string PK
     }
+
 ```
 
 ---

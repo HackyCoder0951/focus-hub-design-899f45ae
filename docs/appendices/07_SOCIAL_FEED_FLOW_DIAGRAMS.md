@@ -270,32 +270,33 @@ erDiagram
     comments ||--o{ votes : "receives"
     
     users {
-        id PK
+        id int PK
     }
     
     posts {
-        id PK
-        author_id FK
+        id int PK
+        author_id int FK
     }
     
     comments {
-        id PK
-        post_id FK
-        author_id FK
-        parent_id FK
+        id int PK
+        post_id int FK
+        author_id int FK
+        parent_id int FK
     }
     
     votes {
-        id PK
-        user_id FK
-        votable_id FK
+        id int PK
+        user_id int FK
+        votable_id int FK
     }
     
     followers {
-        id PK
-        follower_id FK
-        following_id FK
+        id int PK
+        follower_id int FK
+        following_id int FK
     }
+
 ```
 
 ---

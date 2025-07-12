@@ -276,25 +276,26 @@ erDiagram
     chat_rooms ||--o{ chat_room_participants : "has"
     
     users {
-        id PK
+        id INTEGER PK
     }
     
     chat_rooms {
-        id PK
-        created_by FK
+        id INTEGER PK
+        created_by INTEGER FK
     }
     
     chat_messages {
-        id PK
-        room_id FK
-        sender_id FK
+        id INTEGER PK
+        room_id INTEGER FK
+        sender_id INTEGER FK
     }
     
     chat_room_participants {
-        id PK
-        room_id FK
-        user_id FK
+        id INTEGER PK
+        room_id INTEGER FK
+        user_id INTEGER FK
     }
+
 ```
 
 ---

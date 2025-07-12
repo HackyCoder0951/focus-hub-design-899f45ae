@@ -331,31 +331,32 @@ erDiagram
     users ||--o{ user_accessibility_settings : "has"
     
     user_preferences {
-        id PK
-        user_id FK
+        id string PK
+        user_id string FK
     }
     
     user_theme_settings {
-        id PK
-        user_id FK
+        id string PK
+        user_id string FK
     }
     
     user_accessibility_settings {
-        id PK
-        user_id FK
+        id string PK
+        user_id string FK
     }
     
     users {
-        id PK
+        id string PK
     }
     
     ui_components {
-        id PK
+        id string PK
     }
     
     theme_configurations {
-        id PK
+        id string PK
     }
+
 ```
 
 ---

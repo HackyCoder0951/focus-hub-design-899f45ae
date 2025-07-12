@@ -384,28 +384,29 @@ erDiagram
     users ||--o{ user_security : "has"
     
     users {
-        id PK
+        id INTEGER PK
     }
     
     user_settings {
-        id PK
-        user_id FK
+        id INTEGER PK
+        user_id INTEGER FK
     }
     
     user_preferences {
-        id PK
-        user_id FK
+        id INTEGER PK
+        user_id INTEGER FK
     }
     
     user_sessions {
-        id PK
-        user_id FK
+        id INTEGER PK
+        user_id INTEGER FK
     }
     
     user_security {
-        id PK
-        user_id FK
+        id INTEGER PK
+        user_id INTEGER FK
     }
+
 ```
 ```
 

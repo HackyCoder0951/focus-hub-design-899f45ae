@@ -336,31 +336,32 @@ erDiagram
     answers ||--o{ votes : "receives"
     
     questions {
-        id PK
-        author_id FK
-        accepted_answer_id FK
+        string id PK
+        string author_id FK
+        string accepted_answer_id FK
     }
     
     answers {
-        id PK
-        question_id FK
-        author_id FK
+        string id PK
+        string question_id FK
+        string author_id FK
     }
     
     ai_answers {
-        id PK
-        question_id FK
+        string id PK
+        string question_id FK
     }
     
     votes {
-        id PK
-        user_id FK
-        votable_id FK
+        string id PK
+        string user_id FK
+        string votable_id FK
     }
     
     tags {
-        id PK
+        string id PK
     }
+
 ```
 
 ---

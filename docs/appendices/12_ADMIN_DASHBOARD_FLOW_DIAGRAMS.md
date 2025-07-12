@@ -361,41 +361,42 @@ erDiagram
     resources ||--o{ reported_content : "reported"
     
     users {
-        id PK
+        id INTEGER PK
     }
     
     admin_logs {
-        id PK
-        admin_id FK
-        target_id FK
+        id INTEGER PK
+        admin_id INTEGER FK
+        target_id INTEGER FK
     }
     
     reported_content {
-        id PK
-        reporter_id FK
-        content_id FK
-        moderator_id FK
+        id INTEGER PK
+        reporter_id INTEGER FK
+        content_id INTEGER FK
+        moderator_id INTEGER FK
     }
     
     system_settings {
-        id PK
-        updated_by FK
+        id INTEGER PK
+        updated_by INTEGER FK
     }
     
     posts {
-        id PK
-        author_id FK
+        id INTEGER PK
+        author_id INTEGER FK
     }
     
     questions {
-        id PK
-        author_id FK
+        id INTEGER PK
+        author_id INTEGER FK
     }
     
     resources {
-        id PK
-        author_id FK
+        id INTEGER PK
+        author_id INTEGER FK
     }
+
 ```
 
 ---
