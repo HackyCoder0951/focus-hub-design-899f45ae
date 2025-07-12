@@ -276,50 +276,24 @@ erDiagram
     chat_rooms ||--o{ chat_room_participants : "has"
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR avatar_url
-        VARCHAR role
-        BOOLEAN is_online
-        TIMESTAMP last_seen
-        TIMESTAMP created_at
+        id PK
     }
     
     chat_rooms {
-        UUID id PK
-        VARCHAR name
-        TEXT description
-        VARCHAR type
-        UUID created_by FK
-        BOOLEAN is_active
-        INTEGER max_participants
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        created_by FK
     }
     
     chat_messages {
-        UUID id PK
-        UUID room_id FK
-        UUID sender_id FK
-        TEXT content
-        VARCHAR message_type
-        VARCHAR file_url
-        VARCHAR file_name
-        INTEGER file_size
-        BOOLEAN is_read
-        TIMESTAMP created_at
+        id PK
+        room_id FK
+        sender_id FK
     }
     
     chat_room_participants {
-        UUID id PK
-        UUID room_id FK
-        UUID user_id FK
-        VARCHAR role
-        BOOLEAN is_active
-        TIMESTAMP joined_at
-        TIMESTAMP last_read_at
+        id PK
+        room_id FK
+        user_id FK
     }
 ```
 

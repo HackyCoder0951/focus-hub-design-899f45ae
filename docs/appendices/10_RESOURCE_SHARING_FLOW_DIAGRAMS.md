@@ -338,72 +338,36 @@ erDiagram
     resources ||--o{ resource_categories : "belongs_to"
     
     resources {
-        UUID id PK
-        UUID author_id FK
-        VARCHAR title
-        TEXT description
-        VARCHAR file_url
-        VARCHAR file_name
-        BIGINT file_size
-        VARCHAR file_type
-        VARCHAR mime_type
-        UUID category_id FK
-        TEXT[] tags
-        INTEGER downloads_count
-        DECIMAL rating_average
-        INTEGER ratings_count
-        BOOLEAN is_public
-        BOOLEAN is_featured
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        author_id FK
+        category_id FK
     }
     
     resource_downloads {
-        UUID id PK
-        UUID resource_id FK
-        UUID user_id FK
-        VARCHAR ip_address
-        VARCHAR user_agent
-        TIMESTAMP downloaded_at
+        id PK
+        resource_id FK
+        user_id FK
     }
     
     resource_ratings {
-        UUID id PK
-        UUID resource_id FK
-        UUID user_id FK
-        INTEGER rating
-        TEXT comment
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        resource_id FK
+        user_id FK
     }
     
     resource_comments {
-        UUID id PK
-        UUID resource_id FK
-        UUID user_id FK
-        UUID parent_id FK
-        TEXT content
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        resource_id FK
+        user_id FK
+        parent_id FK
     }
     
     resource_categories {
-        UUID id PK
-        VARCHAR name
-        VARCHAR description
-        VARCHAR icon
-        INTEGER resources_count
-        TIMESTAMP created_at
+        id PK
     }
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR avatar_url
-        VARCHAR role
-        TIMESTAMP created_at
+        id PK
     }
 ```
 

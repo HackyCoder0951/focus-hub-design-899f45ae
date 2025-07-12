@@ -270,58 +270,31 @@ erDiagram
     comments ||--o{ votes : "receives"
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR avatar_url
-        TEXT bio
-        VARCHAR role
-        BOOLEAN is_verified
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
     }
     
     posts {
-        UUID id PK
-        UUID author_id FK
-        VARCHAR title
-        TEXT content
-        VARCHAR category
-        TEXT[] tags
-        VARCHAR image_url
-        INTEGER likes_count
-        INTEGER comments_count
-        BOOLEAN is_published
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        author_id FK
     }
     
     comments {
-        UUID id PK
-        UUID post_id FK
-        UUID author_id FK
-        UUID parent_id FK
-        TEXT content
-        INTEGER likes_count
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        post_id FK
+        author_id FK
+        parent_id FK
     }
     
     votes {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR votable_type
-        UUID votable_id
-        VARCHAR vote_type
-        TIMESTAMP created_at
+        id PK
+        user_id FK
+        votable_id FK
     }
     
     followers {
-        UUID id PK
-        UUID follower_id FK
-        UUID following_id FK
-        TIMESTAMP created_at
+        id PK
+        follower_id FK
+        following_id FK
     }
 ```
 

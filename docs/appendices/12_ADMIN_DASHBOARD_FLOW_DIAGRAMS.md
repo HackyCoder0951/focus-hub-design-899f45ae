@@ -361,87 +361,40 @@ erDiagram
     resources ||--o{ reported_content : "reported"
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR role
-        BOOLEAN is_verified
-        BOOLEAN is_active
-        VARCHAR status
-        TIMESTAMP last_login
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
     }
     
     admin_logs {
-        UUID id PK
-        UUID admin_id FK
-        VARCHAR action_type
-        VARCHAR target_type
-        UUID target_id
-        JSONB action_data
-        VARCHAR ip_address
-        VARCHAR user_agent
-        TIMESTAMP created_at
+        id PK
+        admin_id FK
+        target_id FK
     }
     
     reported_content {
-        UUID id PK
-        UUID reporter_id FK
-        VARCHAR content_type
-        UUID content_id
-        VARCHAR reason
-        TEXT description
-        VARCHAR status
-        UUID moderator_id FK
-        TEXT moderation_notes
-        TIMESTAMP created_at
-        TIMESTAMP moderated_at
+        id PK
+        reporter_id FK
+        content_id FK
+        moderator_id FK
     }
     
     system_settings {
-        UUID id PK
-        VARCHAR setting_key
-        TEXT setting_value
-        VARCHAR setting_type
-        VARCHAR category
-        BOOLEAN is_public
-        UUID updated_by FK
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        updated_by FK
     }
     
     posts {
-        UUID id PK
-        UUID author_id FK
-        VARCHAR title
-        TEXT content
-        VARCHAR status
-        BOOLEAN is_published
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        author_id FK
     }
     
     questions {
-        UUID id PK
-        UUID author_id FK
-        VARCHAR title
-        TEXT content
-        VARCHAR status
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        author_id FK
     }
     
     resources {
-        UUID id PK
-        UUID author_id FK
-        VARCHAR title
-        TEXT description
-        VARCHAR file_url
-        VARCHAR status
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        author_id FK
     }
 ```
 

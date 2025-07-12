@@ -384,73 +384,29 @@ erDiagram
     users ||--o{ user_security : "has"
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR avatar_url
-        VARCHAR password_hash
-        VARCHAR role
-        BOOLEAN is_verified
-        BOOLEAN is_active
-        TIMESTAMP last_login
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
     }
     
     user_settings {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR privacy_level
-        BOOLEAN email_notifications
-        BOOLEAN push_notifications
-        BOOLEAN in_app_notifications
-        VARCHAR theme_preference
-        VARCHAR language_preference
-        VARCHAR timezone
-        JSONB notification_schedule
-        JSONB privacy_settings
-        JSONB display_settings
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
     
     user_preferences {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR preference_key
-        TEXT preference_value
-        VARCHAR preference_type
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
     
     user_sessions {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR session_token
-        VARCHAR device_info
-        VARCHAR ip_address
-        VARCHAR user_agent
-        BOOLEAN is_active
-        TIMESTAMP created_at
-        TIMESTAMP last_used
-        TIMESTAMP expires_at
+        id PK
+        user_id FK
     }
     
     user_security {
-        UUID id PK
-        UUID user_id FK
-        BOOLEAN two_factor_enabled
-        VARCHAR two_factor_secret
-        JSONB backup_codes
-        INTEGER failed_login_attempts
-        TIMESTAMP last_failed_login
-        TIMESTAMP account_locked_until
-        JSONB security_log
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
+```
 ```
 
 ---

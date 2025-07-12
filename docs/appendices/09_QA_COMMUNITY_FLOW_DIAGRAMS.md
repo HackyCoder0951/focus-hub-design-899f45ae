@@ -336,60 +336,30 @@ erDiagram
     answers ||--o{ votes : "receives"
     
     questions {
-        UUID id PK
-        UUID author_id FK
-        VARCHAR title
-        TEXT content
-        VARCHAR category
-        TEXT[] tags
-        VARCHAR status
-        INTEGER votes_count
-        INTEGER answers_count
-        INTEGER views_count
-        UUID accepted_answer_id FK
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        author_id FK
+        accepted_answer_id FK
     }
     
     answers {
-        UUID id PK
-        UUID question_id FK
-        UUID author_id FK
-        TEXT content
-        BOOLEAN is_accepted
-        INTEGER votes_count
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        question_id FK
+        author_id FK
     }
     
     ai_answers {
-        UUID id PK
-        UUID question_id FK
-        TEXT answer_text
-        DECIMAL confidence_score
-        VARCHAR model_used
-        INTEGER tokens_used
-        INTEGER processing_time_ms
-        INTEGER user_feedback_rating
-        INTEGER generation_attempts
-        TIMESTAMP created_at
+        id PK
+        question_id FK
     }
     
     votes {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR votable_type
-        UUID votable_id
-        VARCHAR vote_type
-        TIMESTAMP created_at
+        id PK
+        user_id FK
+        votable_id FK
     }
     
     tags {
-        UUID id PK
-        VARCHAR name
-        VARCHAR description
-        INTEGER usage_count
-        TIMESTAMP created_at
+        id PK
     }
 ```
 

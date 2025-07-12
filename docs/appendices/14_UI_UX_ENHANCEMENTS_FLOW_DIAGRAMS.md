@@ -331,76 +331,30 @@ erDiagram
     users ||--o{ user_accessibility_settings : "has"
     
     user_preferences {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR preference_key
-        TEXT preference_value
-        VARCHAR preference_type
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
     
     user_theme_settings {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR theme_mode
-        VARCHAR color_scheme
-        VARCHAR font_size
-        VARCHAR font_family
-        BOOLEAN reduced_motion
-        BOOLEAN high_contrast
-        JSONB custom_colors
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
     
     user_accessibility_settings {
-        UUID id PK
-        UUID user_id FK
-        BOOLEAN screen_reader_enabled
-        BOOLEAN keyboard_navigation_enabled
-        BOOLEAN high_contrast_enabled
-        BOOLEAN large_text_enabled
-        BOOLEAN reduced_motion_enabled
-        VARCHAR focus_indicator_style
-        JSONB accessibility_preferences
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR role
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
     }
     
     ui_components {
-        UUID id PK
-        VARCHAR component_name
-        VARCHAR component_type
-        JSONB component_props
-        JSONB component_styles
-        JSONB accessibility_props
-        BOOLEAN is_active
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
     }
     
     theme_configurations {
-        UUID id PK
-        VARCHAR theme_name
-        VARCHAR theme_mode
-        JSONB color_palette
-        JSONB typography_scale
-        JSONB spacing_system
-        JSONB shadow_system
-        BOOLEAN is_default
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
     }
 ```
 

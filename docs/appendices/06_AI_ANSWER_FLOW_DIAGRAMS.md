@@ -214,43 +214,20 @@ graph LR
 erDiagram
     questions ||--o{ ai_answers : "has"
     users ||--o{ ai_answers : "generates"
+    users ||--o{ questions : "asks"
     
     questions {
-        UUID id PK
-        UUID user_id FK
-        TEXT title
-        TEXT body
-        VARCHAR category
-        TEXT[] tags
-        VARCHAR status
-        INTEGER view_count
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
     
     ai_answers {
-        UUID id PK
-        UUID question_id FK
-        TEXT answer_text
-        DECIMAL confidence_score
-        TEXT model_used
-        INTEGER tokens_used
-        INTEGER processing_time_ms
-        DECIMAL relevance_score
-        DECIMAL completeness_score
-        INTEGER user_feedback_rating
-        INTEGER generation_attempts
-        TIMESTAMP created_at
+        id PK
+        question_id FK
     }
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR role
-        BOOLEAN is_verified
-        TIMESTAMP created_at
+        id PK
     }
 ```
 

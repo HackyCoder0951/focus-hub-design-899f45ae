@@ -347,67 +347,29 @@ erDiagram
     users ||--o{ user_settings : "has"
     
     users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR full_name
-        VARCHAR username
-        VARCHAR role
-        BOOLEAN is_verified
-        BOOLEAN is_active
-        TIMESTAMP last_login
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
     }
     
     profiles {
-        UUID id PK, FK
-        TEXT bio
-        VARCHAR avatar_url
-        VARCHAR cover_image_url
-        VARCHAR location
-        VARCHAR website
-        VARCHAR linkedin_url
-        VARCHAR twitter_url
-        VARCHAR github_url
-        JSONB skills
-        JSONB education
-        JSONB experience
-        VARCHAR member_type
-        VARCHAR status
-        TIMESTAMP last_seen
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK, FK
     }
     
     followers {
-        UUID id PK
-        UUID follower_id FK
-        UUID following_id FK
-        TIMESTAMP created_at
+        id PK
+        follower_id FK
+        following_id FK
     }
     
     user_activities {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR activity_type
-        UUID target_id
-        VARCHAR target_type
-        JSONB metadata
-        TIMESTAMP created_at
+        id PK
+        user_id FK
     }
     
     user_settings {
-        UUID id PK
-        UUID user_id FK
-        VARCHAR privacy_level
-        BOOLEAN email_notifications
-        BOOLEAN push_notifications
-        VARCHAR theme_preference
-        JSONB notification_settings
-        JSONB privacy_settings
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK
+        user_id FK
     }
+```
 ```
 
 ---

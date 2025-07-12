@@ -221,49 +221,24 @@ graph LR
 erDiagram
     auth_users ||--o{ profiles : "has"
     profiles ||--o{ user_roles : "has"
+    auth_users ||--o{ auth_sessions : "has"
     
     auth_users {
-        UUID id PK
-        VARCHAR email
-        VARCHAR encrypted_password
-        BOOLEAN email_confirmed_at
-        VARCHAR confirmation_token
-        VARCHAR recovery_token
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
-        TIMESTAMP last_sign_in_at
+        id PK
     }
     
     profiles {
-        UUID id PK, FK
-        TEXT email
-        TEXT full_name
-        TEXT avatar_url
-        TEXT bio
-        TEXT location
-        TEXT website
-        JSONB settings
-        TEXT member_type
-        TEXT status
-        TIMESTAMP last_seen
-        TIMESTAMP created_at
-        TIMESTAMP updated_at
+        id PK, FK
     }
     
     user_roles {
-        UUID id PK
-        UUID user_id FK
-        app_role role
-        TIMESTAMP created_at
+        id PK
+        user_id FK
     }
     
     auth_sessions {
-        UUID id PK
-        UUID user_id FK
-        TEXT access_token
-        TEXT refresh_token
-        TIMESTAMP expires_at
-        TIMESTAMP created_at
+        id PK
+        user_id FK
     }
 ```
 
